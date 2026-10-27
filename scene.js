@@ -25,7 +25,7 @@
     const u = x / W;
     return H * (0.62 - 0.22 * Math.exp(-(((u - 0.33) / 0.42) ** 2))) + 1.2 * Math.sin(x * 0.009);
   };
-  // Where the darker foreground field begins
+  // Where the darker foreground field fades in
   const field = (x) => H * (0.86 - 0.05 * (x / W)) + 3 * Math.sin(x * 0.006 + 2);
 
   // Colour ramps, built once so the hot loops only index into arrays
@@ -36,20 +36,6 @@
   });
   const GRASS = ramp(12, [112, 62, 26], [84, 66, 52]);
   const LEAF = ramp(20, [104, 48, 12], [80, 56, 48]);
-
-  // Fine speckle used as a grass texture; tiny, low contrast, tiled
-  let grain;
-  function makeGrain() {
-    const g = document.createElement("canvas");
-    g.width = g.height = 160;
-    const gx = g.getContext("2d");
-    for (let i = 0; i < 5200; i++) {
-      const x = rand() * 160, y = rand() * 160, light = rand() < 0.5;
-      gx.fillStyle = light ? "rgba(235,255,170,.55)" : "rgba(10,50,0,.55)";
-      gx.fillRect(x, y, 0.8, r(1.2, 2.6)); // short vertical flecks read as grass
-    }
-    return ctx.createPattern(g, "repeat");
-  }
 
   // ---------------------------------------------------------------- hill
   function hillPath() {
@@ -94,43 +80,15 @@
     ctx.fillStyle = shade;
     ctx.fillRect(0, top - 2, W, H);
 
-    // faint mowing bands that follow the contour of the hill
-    ctx.lineCap = "round";
-    for (let i = 0; i < 9; i++) {
-      const off = 14 + i * (H - top) * 0.075;
-      ctx.strokeStyle = i % 2 ? "rgba(230, 255, 150, .035)" : "rgba(0, 50, 0, .03)";
-      ctx.lineWidth = r(14, 34) * S;
-      ctx.beginPath();
-      for (let x = -20; x <= W + 20; x += 12) ctx.lineTo(x, ridge(x) + off * (0.75 + 0.25 * x / W));
-      ctx.stroke();
-    }
-
-    // foreground field: a darker, cooler green below a soft seam
-    const fTop = Math.min(field(0), field(W));
-    const fg = ctx.createLinearGradient(0, fTop, 0, H);
-    fg.addColorStop(0, "#2f7f22");
-    fg.addColorStop(1, "#1d5e16");
+    // foreground field: a darker, cooler green that fades in with no edge
+    const fMid = (field(0) + field(W)) / 2, feather = 70 * S;
+    const fg = ctx.createLinearGradient(0, fMid - feather, 0, H);
+    const k = feather / (H - fMid + feather);
+    fg.addColorStop(0, "rgba(36, 120, 30, 0)");
+    fg.addColorStop(k, "rgba(36, 120, 30, .85)");
+    fg.addColorStop(1, "rgba(26, 92, 22, 1)");
     ctx.fillStyle = fg;
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-    for (let x = 0; x <= W + 6; x += 6) ctx.lineTo(x, field(x));
-    ctx.lineTo(W, H);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(60, 50, 20, .35)";
-    ctx.lineWidth = 2.2 * S;
-    ctx.filter = "blur(1.2px)";
-    ctx.beginPath();
-    for (let x = 0; x <= W + 6; x += 6) ctx.lineTo(x, field(x) + 1);
-    ctx.stroke();
-    ctx.filter = "none";
-
-    // fine grass grain over everything, stronger in the foreground
-    ctx.fillStyle = grain;
-    ctx.globalAlpha = 0.16;
-    ctx.fillRect(0, top - 2, W, H);
-    ctx.globalAlpha = 0.22;
-    ctx.fillRect(0, fTop, W, H);
-    ctx.globalAlpha = 1;
+    ctx.fillRect(0, fMid - feather, W, H);
     ctx.restore();
 
     // a softly fuzzy crest so the skyline isn't a hard vector edge
@@ -143,6 +101,31 @@
       p.lineTo(x + 0.5, y);
     }
     fuzz.forEach((p, i) => { ctx.fillStyle = GRASS[i]; ctx.fill(p); });
+
+    // a few slim tufts: along the skyline, then sparse on the slopes
+    for (let x = r(6, 30); x < W; x += r(26, 70)) tuft(x, ridge(x) + 1, r(5, 10) * S, rand() < 0.6 ? "#9fd544" : "#79c135");
+    const slopes = Math.round(W / 70);
+    for (let i = 0; i < slopes; i++) {
+      const x = r(0, W), y = r(ridge(x) + 18 * S, H - 6);
+      const t = clamp((y - top) / (H - top), 0, 1);
+      const light = rand() < 0.5;
+      const col = t < 0.45 ? (light ? "#9ad14a" : "#5aa92e") : (light ? "#4f9e2f" : "#22701c");
+      tuft(x, y, (5 + 9 * t) * S, col);
+    }
+  }
+
+  function tuft(x, y, h, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    const n = 3 + Math.floor(rand() * 4);
+    for (let i = 0; i < n; i++) {
+      const bx = x + (i - n / 2) * 1.3 * S, bh = h * r(0.55, 1.1);
+      const lean = (i - n / 2) * 0.9 * S + r(-1, 1.5) * S, w = 0.75 * S;
+      ctx.moveTo(bx - w, y);
+      ctx.quadraticCurveTo(bx - w * 0.2 + lean * 0.4, y - bh * 0.6, bx + lean, y - bh);
+      ctx.quadraticCurveTo(bx + w * 0.2 + lean * 0.4, y - bh * 0.6, bx + w, y);
+    }
+    ctx.fill();
   }
 
   // ---------------------------------------------------------------- tree
@@ -318,6 +301,7 @@
   let lastW = 0, lastH = 0;
   function render() {
     const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return; // hidden or not laid out yet
     if (Math.abs(rect.width - lastW) < 1 && Math.abs(rect.height - lastH) < 1) return;
     lastW = rect.width; lastH = rect.height;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -327,7 +311,6 @@
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    grain = grain || makeGrain(); // made before seeding so the tree never changes
     seed = 20261027;
 
     const ts = clamp(Math.min((H * 0.5) / 360, W / 1300), 0.42, 1);
