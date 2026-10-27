@@ -16,7 +16,7 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
 - **Work:** only Genzo for now (no link yet).
 - **Experience:** from LinkedIn.
   - Subculture Media Tech, UX Designer: intern Dec 2025 to Jun 2026, full-time from Jun 2026.
-  - Digital Nexus AI, UI UX Designer Intern: May to Dec 2025.
+  - Digital Nexus AI, UI/UX Design Intern: May to Dec 2025.
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
 - **Contact:** Email (rohitgentyal0201@gmail.com) and LinkedIn only. No GitHub link.
 
