@@ -8,7 +8,7 @@
   const canvas = document.getElementById("hill");
   const skyCanvas = document.getElementById("sky");
   const clock = document.getElementById("clock");
-  const caption = document.querySelector(".live");
+  const fade = document.querySelector(".scene .fade");
   if (!canvas || !skyCanvas) return;
   const hillCtx = canvas.getContext("2d");
   const skyCtx = skyCanvas.getContext("2d");
@@ -568,8 +568,8 @@
       intro.style.transform = `translate3d(0, ${y * 0.25}px, 0)`;
       intro.style.opacity = clamp(1 - y / (hero.offsetHeight * 0.6), 0, 1);
     }
-    // the quote and clock in the corner fade out along with the intro
-    if (caption) caption.style.opacity = clamp(1 - y / (hero.offsetHeight * 0.4), 0, 1);
+    // the foot of the hill melts into the page as it scrolls away
+    if (fade) fade.style.opacity = clamp(y / (hero.offsetHeight * 0.45), 0, 1);
   }
   window.addEventListener("scroll", () => {
     if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
