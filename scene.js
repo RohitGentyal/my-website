@@ -156,7 +156,7 @@
   }
 
   // every grass mark is drawn this much taller and a touch thicker
-  const TALL = 1.75, THICK = 1.25;
+  const TALL = 2.1, THICK = 1.35;
 
   // one blade; `bend` tips it over from the root (0 = as painted)
   function blade(g, x, y, len, ang, w, color, j, bend) {
@@ -405,7 +405,7 @@
 
   // ---------------------------------------------------------------- touch grass
   // Run the cursor over the slope and the blades under it lean away and spring
-  // back; the cursor itself disappears so it feels like a hand in the grass.
+  // back.
   let hillClip, raf = 0, pointer = null;
 
   function drawLive() {

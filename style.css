@@ -137,7 +137,6 @@ a { color: inherit; text-decoration: none; }
   height: 100%;
 }
 #sky { will-change: transform; }
-.hero.touching { cursor: none; }
 .live {
   position: absolute;
   right: 28px; bottom: 22px;
