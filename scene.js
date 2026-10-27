@@ -1,12 +1,11 @@
 // Painted hero: a teal sky, one towering cumulus, and a grassy slope with a
-// winding sandy path, a few rocks and someone lying back listening to music.
+// winding sandy path and a few rocks.
 // Everything is laid down as seeded brush marks on a canvas, so it paints the
 // same way on every visit and is redrawn only when its size changes.
 (function () {
   const hero = document.querySelector(".hero");
   const intro = document.querySelector(".intro");
   const canvas = document.getElementById("hill");
-  const listener = document.getElementById("listener");
   const clock = document.getElementById("clock");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -343,21 +342,6 @@
     }
   }
 
-  // ---------------------------------------------------------------- listener
-  // The drawing lives in the page as SVG (so it can move and be clicked);
-  // here we just set it down in the grass at the angle of the slope.
-  function placeListener(fx, k) {
-    if (!listener) return;
-    const w = 130 * k, h = 56 * k;
-    const fy = ridge(fx) + (H - ridge(fx)) * 0.18;
-    const ang = Math.atan2(ridge(fx + 30) - ridge(fx - 30), 60) * 180 / Math.PI;
-    listener.style.width = w + "px";
-    listener.style.height = h + "px";
-    listener.style.left = fx - w / 2 + "px";
-    listener.style.top = canvas.offsetTop + fy - h * (52 / 56) + "px";
-    listener.style.transform = `rotate(${ang.toFixed(2)}deg)`;
-  }
-
   // ---------------------------------------------------------------- render
   let lastW = 0, lastH = 0;
   function render() {
@@ -380,7 +364,6 @@
     drawPath();
     drawRocks();
     drawClumps();
-    placeListener(W * (narrow ? 0.26 : 0.3), Math.min(1.05, W / 420));
   }
 
   let t;
@@ -391,16 +374,16 @@
   render();
 
   // ---------------------------------------------------------------- music, clock
-  // Paste the playlist link here once it's ready; the listener on the hill opens it.
+  // Paste the playlist link here once it's ready. Any element marked
+  // data-playlist (e.g. a small "now playing" link in the intro) then points
+  // at it; until then those elements stay hidden.
   const PLAYLIST_URL = "";
-  if (listener) {
-    listener.dataset.label = PLAYLIST_URL ? "Now playing · open the playlist" : "Now playing · playlist coming soon";
-    listener.addEventListener("click", () => {
-      if (PLAYLIST_URL) window.open(PLAYLIST_URL, "_blank", "noopener");
-      else listener.classList.toggle("show-label");
-    });
-    listener.addEventListener("blur", () => listener.classList.remove("show-label"));
-  }
+  document.querySelectorAll("[data-playlist]").forEach((el) => {
+    if (!PLAYLIST_URL) { el.hidden = true; return; }
+    el.href = PLAYLIST_URL;
+    el.target = "_blank";
+    el.rel = "noopener";
+  });
 
   function tick() {
     if (!clock) return;
