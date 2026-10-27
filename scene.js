@@ -1,9 +1,10 @@
-// Painted hillside: flat, brushy planes of green, one tree, and someone lying
-// on the slope listening to music.
-// Rendered once to a canvas from a seeded random, so it looks the same every
-// visit and is redrawn only when its size changes.
+// Painted hero: a teal sky, one towering cumulus, and a grassy slope with a
+// winding sandy path, a few rocks and someone lying back listening to music.
+// Everything is laid down as seeded brush marks on a canvas, so it paints the
+// same way on every visit and is redrawn only when its size changes.
 (function () {
-  const scene = document.getElementById("scene");
+  const hero = document.querySelector(".hero");
+  const intro = document.querySelector(".intro");
   const canvas = document.getElementById("hill");
   const listener = document.getElementById("listener");
   const clock = document.getElementById("clock");
@@ -18,26 +19,128 @@
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
   const r = (a, b) => a + rand() * (b - a);
+  const pick = (arr) => arr[Math.floor(rand() * arr.length)];
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
 
-  let W, H, S;
-  // One broad, smooth hill cresting left of centre, like a summer field
+  let W, H, S, narrow;
+
+  // The ridge climbs gently from left to right
   const ridge = (x) => {
     const u = x / W;
-    return H * (0.62 - 0.22 * Math.exp(-(((u - 0.33) / 0.42) ** 2))) + 1.2 * Math.sin(x * 0.009);
+    const base = narrow ? 0.79 : 0.64, rise = narrow ? 0.11 : 0.15;
+    return H * (base - rise * Math.pow(Math.max(u, 0), 0.85)) + 3 * S * Math.sin(x * 0.012) + 1.5 * S * Math.sin(x * 0.041 + 2);
   };
-  // Where the cool shadow plane in the foreground begins
-  const shadowTop = (x) => {
-    const u = x / W;
-    return H * (0.86 - 0.1 * Math.exp(-(((u - 0.42) / 0.34) ** 2))) + 4 * S * Math.sin(x * 0.013 + 1);
-  };
+  const depth = (y, x) => clamp((y - ridge(x)) / (H - ridge(x)), 0, 1);
 
-  // A few flat tones, like a painted background plate
-  const LIT = "#a6cc5b", LIT_DARK = "#93bb4d", LIT_LIGHT = "#bcdc72";
-  const SHADE = "#5ea06c", SHADE_DARK = "#4c8b5d", SHADE_LIGHT = "#78b67d";
-  const LEAF = ["#22432f", "#2e5b3d", "#45764a", "#699553"];
+  const SKY = "#287fa8", SKY_LOW = "#2f8ab3";
+  const CLOUD_LIT = "#f6f4dc", CLOUD_TOP = "#fbfaea", CLOUD_SHADE = "#e3e8d6", CLOUD_DEEP = "#cbdbd4";
+  const GRASS = "#a3cd4c";
+  const LIGHTS = ["#b4d75a", "#bcdc63", "#aed354"];
+  const MIDS = ["#97c446", "#8fbe42", "#9cc84a"];
+  const DARKS = ["#7cb13c", "#72a838", "#83b740"];
+  const DEEPS = ["#5f9532", "#68a036", "#578b2f"];
+  const PATH = "#e6ddb5", PATH_TAN = "#cdbd8b", PATH_LIGHT = "#f3edd2";
 
-  // ---------------------------------------------------------------- hill
+  // Smooth, cheap "noise" for where the cloud shadows and dark patches fall
+  function patch(x, y) {
+    const u = x / W, v = y / H;
+    let n = Math.sin(x * 0.0075 + 1.3) * Math.sin(y * 0.021 + 0.4)
+      + 0.6 * Math.sin(x * 0.0165 - y * 0.012 + 2.1)
+      + 0.35 * Math.sin(x * 0.041 + y * 0.03);
+    // a cooler, darker hollow in the lower right where the rocks sit
+    n += 1.3 * Math.exp(-(((u - 0.8) ** 2) / 0.03 + ((v - 0.88) ** 2) / 0.012));
+    return n;
+  }
+
+  // ---------------------------------------------------------------- sky + cloud
+  function drawSky() {
+    const g = ctx.createLinearGradient(0, 0, 0, H * 0.7);
+    g.addColorStop(0, SKY);
+    g.addColorStop(1, SKY_LOW);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawCloud() {
+    // keep the cloud clear of the intro text
+    const heroTop = hero.getBoundingClientRect().top;
+    const textBottom = intro ? intro.getBoundingClientRect().bottom - heroTop : 0;
+    const cx = W * (narrow ? 0.64 : 0.68);
+    const top = narrow ? textBottom + 22 * S : H * 0.1;
+    const base = ridge(cx) + 30 * S;
+    const ch = base - top;
+    const cw = Math.min(W * (narrow ? 0.56 : 0.28), ch * 1.1);
+    if (ch < 40) return;
+
+    const lobes = [];
+    const levels = 7;
+    for (let i = 0; i < levels; i++) {
+      const t = i / (levels - 1);
+      const y = base - ch * (0.1 + 0.74 * t);
+      const half = cw * 0.5 * (1 - 0.5 * t);
+      const count = i < 2 ? 5 : i < 4 ? 4 : i < 6 ? 3 : 2;
+      for (let j = 0; j < count; j++) {
+        const x = cx + lerp(-half, half, (j + 0.5) / count) + r(-0.04, 0.04) * cw + 0.05 * cw * t;
+        lobes.push({ x, y: y + r(-0.03, 0.03) * ch, r: cw * (0.2 - 0.075 * t) * r(0.85, 1.15), t });
+      }
+    }
+    lobes.push({ x: cx + 0.07 * cw, y: base - ch * 0.93, r: cw * 0.13, t: 1 });
+    // a smaller puff beside the tower
+    const px = cx + cw * 0.66;
+    for (let j = 0; j < 4; j++) lobes.push({ x: px + (j - 1.5) * cw * 0.07, y: base - ch * r(0.08, 0.2), r: cw * r(0.06, 0.09), t: 0.1 });
+
+    // painted on its own layer so the whole cloud can be softened at once
+    const layer = document.createElement("canvas");
+    layer.width = canvas.width; layer.height = canvas.height;
+    const lc = layer.getContext("2d");
+    lc.setTransform(ctx.getTransform());
+    const disc = (g, x, y, rad, color) => { g.fillStyle = color; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill(); };
+
+    // brushy silhouette: overlapping dabs hugging the outer edge
+    lobes.forEach((l) => {
+      for (let k = 0; k < l.r * 0.7; k++) {
+        const a = r(Math.PI * 0.9, Math.PI * 2.1), d = l.r * r(0.95, 1.01);
+        lc.fillStyle = CLOUD_LIT;
+        lc.beginPath();
+        lc.ellipse(l.x + Math.cos(a) * d, l.y + Math.sin(a) * d, r(2, 4) * S, r(1.5, 3) * S, a, 0, Math.PI * 2);
+        lc.fill();
+      }
+    });
+    // back to front: each puff gets a thin, soft fold of shade underneath
+    lobes.sort((a, b) => a.y - b.y).forEach((l) => {
+      disc(lc, l.x, l.y, l.r, l.t < 0.35 ? CLOUD_DEEP : CLOUD_SHADE);
+      disc(lc, l.x - l.r * 0.06, l.y - l.r * 0.11, l.r * 0.95, l.t > 0.7 ? CLOUD_TOP : CLOUD_LIT);
+    });
+    // a pale blue cast gathering towards the base
+    const body = new Path2D();
+    lobes.forEach((l) => { body.moveTo(l.x + l.r, l.y); body.arc(l.x, l.y, l.r, 0, Math.PI * 2); });
+    lc.save();
+    lc.clip(body);
+    const cast = lc.createLinearGradient(0, base - ch * 0.55, 0, base);
+    cast.addColorStop(0, "rgba(180, 208, 206, 0)");
+    cast.addColorStop(1, "rgba(180, 208, 206, .55)");
+    lc.fillStyle = cast;
+    lc.fillRect(cx - cw, base - ch, cw * 2.4, ch);
+    // brushy highlights on the sunlit tops
+    lobes.forEach((l) => {
+      lc.fillStyle = CLOUD_TOP;
+      for (let k = 0; k < (l.t > 0.3 ? 4 : 1); k++) {
+        lc.beginPath();
+        lc.ellipse(l.x - l.r * r(0.05, 0.5), l.y - l.r * r(0.3, 0.7), r(3, 8) * S, r(1.5, 3) * S, -0.4, 0, Math.PI * 2);
+        lc.fill();
+      }
+    });
+    lc.restore();
+
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.filter = "blur(0.8px)";
+    ctx.drawImage(layer, 0, 0);
+    ctx.restore();
+  }
+
+  // ---------------------------------------------------------------- slope
   function hillPath() {
     const p = new Path2D();
     p.moveTo(0, H);
@@ -47,192 +150,211 @@
     return p;
   }
 
-  // Short upright blades along an edge, for a brushy rather than vector line
-  function fringe(edge, color, hMin, hMax) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    for (let x = 0; x < W; x += r(1, 2.6)) {
-      const y = edge(x) + 1.5, h = r(hMin, hMax) * S, lean = r(-1.2, 2.2) * S;
-      ctx.moveTo(x - 0.9 * S, y);
-      ctx.lineTo(x + lean, y - h);
-      ctx.lineTo(x + 0.9 * S, y);
-    }
-    ctx.fill();
-  }
-
-  // A handful of dry-brush marks: thin, loose, roughly parallel strokes
-  function dryBrush(x, y, color) {
+  function stroke(x, y, len, ang, w, color) {
     ctx.strokeStyle = color;
-    ctx.lineCap = "round";
-    const dir = rand() < 0.5 ? -1 : 1, ang = dir * r(0.35, 0.8);
-    for (let i = 0, n = 3 + Math.floor(rand() * 4); i < n; i++) {
-      const len = r(14, 34) * S, ox = x + i * 3 * S + r(-2, 2), oy = y + i * 1.5 * S + r(-2, 2);
-      ctx.lineWidth = r(0.8, 1.6) * S;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.quadraticCurveTo(ox + Math.cos(ang) * len * 0.5, oy - Math.sin(ang) * len * 0.5 + 2 * S,
-        ox + Math.cos(ang) * len, oy - Math.sin(ang) * len);
-      ctx.stroke();
-    }
-  }
-
-  // A soft dapple in the shade: a few short, fat strokes
-  function dapple(x, y, color) {
-    ctx.strokeStyle = color;
-    ctx.lineCap = "round";
-    for (let i = 0, n = 3 + Math.floor(rand() * 3); i < n; i++) {
-      ctx.lineWidth = r(3, 6) * S;
-      const ox = x + r(-14, 14) * S, oy = y + r(-4, 4) * S, len = r(6, 18) * S;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(ox + len, oy + r(-2, 2) * S);
-      ctx.stroke();
-    }
-  }
-
-  function drawGrass() {
-    // lit plane
-    ctx.fillStyle = LIT;
-    ctx.fill(hillPath());
-    fringe(ridge, LIT, 1.5, 4);
-    for (let i = 0, n = Math.round(W / 130); i < n; i++) {
-      const x = r(0, W), y = r(ridge(x) + 18 * S, shadowTop(x) - 14 * S);
-      if (y > ridge(x) + 12 * S) dryBrush(x, y, rand() < 0.6 ? LIT_DARK : LIT_LIGHT);
-    }
-
-    // cool shadow plane in the foreground, with a ragged grassy edge
-    ctx.fillStyle = SHADE;
+    ctx.lineWidth = w;
     ctx.beginPath();
-    ctx.moveTo(0, H);
-    for (let x = 0; x <= W + 4; x += 4) ctx.lineTo(x, shadowTop(x) + 2);
-    ctx.lineTo(W, H);
-    ctx.fill();
-    fringe(shadowTop, SHADE, 2, 7);
-    for (let i = 0, n = Math.round(W / 170); i < n; i++) {
-      const x = r(0, W), y = r(shadowTop(x) + 16 * S, H - 8);
-      if (y < H - 6) dapple(x, y, rand() < 0.6 ? SHADE_DARK : SHADE_LIGHT);
-    }
-  }
-
-  // ---------------------------------------------------------------- tree
-  function drawTree(tx, s) {
-    const ty = ridge(tx) + 2 * s;
-    const segs = [], clusters = [];
-
-    function grow(x, y, ang, len, w, depth, max) {
-      const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
-      segs.push({ x, y, x2, y2, w, w2: w * 0.66, bend: r(-0.12, 0.12) * len });
-      if (depth >= max) {
-        clusters.push({ x: x2, y: y2 - 4 * s, r: r(24, 36) * s });
-        return;
-      }
-      if (depth >= 1) clusters.push({ x: (x + x2) / 2, y: (y + y2) / 2 - 6 * s, r: r(16, 26) * s });
-      const kids = rand() < 0.55 ? 2 : 3;
-      for (let i = 0; i < kids; i++) {
-        let a = ang + (i - (kids - 1) / 2) * r(0.45, 0.7) + r(-0.15, 0.15);
-        a = a * 0.86 + -Math.PI / 2 * 0.14; // keep reaching for the light
-        grow(x2, y2, a, len * r(0.62, 0.78), w * 0.66, depth + 1, max);
-      }
-    }
-
-    // trunk forks low into broad limbs: a wide, sheltering crown
-    const fork = { x: tx - 4 * s, y: ty - 92 * s };
-    segs.push({ x: tx, y: ty, x2: fork.x, y2: fork.y, w: 24 * s, w2: 17 * s, bend: -6 * s });
-    [[-2.75, 92, 4], [-2.2, 96, 4], [-1.85, 66, 3], [-1.52, 80, 3], [-1.18, 68, 3], [-0.92, 100, 4], [-0.5, 88, 4]].forEach(([a, l, d]) =>
-      grow(fork.x, fork.y, a, l * s, 11 * s, 1, d));
-
-    // flat shadow on the grass
-    ctx.fillStyle = LIT_DARK;
-    ctx.beginPath();
-    ctx.ellipse(tx + 14 * s, ty + 1, 78 * s, 5 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // leaves behind the limbs, in shadow
-    leafPass(clusters, s, true);
-
-    // limbs and trunk
-    segs.forEach(({ x, y, x2, y2, w, w2, bend }) => {
-      const len = Math.hypot(x2 - x, y2 - y);
-      const nx = -(y2 - y) / len, ny = (x2 - x) / len;
-      const mx = (x + x2) / 2 + nx * bend, my = (y + y2) / 2 + ny * bend;
-      const g = ctx.createLinearGradient(x + nx * w, y + ny * w, x - nx * w, y - ny * w);
-      g.addColorStop(0, "#47392b");
-      g.addColorStop(0.55, "#47392b");
-      g.addColorStop(0.55, "#6f5a43");
-      g.addColorStop(1, "#6f5a43");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.moveTo(x + nx * w / 2, y + ny * w / 2);
-      ctx.quadraticCurveTo(mx + nx * (w + w2) / 4, my + ny * (w + w2) / 4, x2 + nx * w2 / 2, y2 + ny * w2 / 2);
-      ctx.lineTo(x2 - nx * w2 / 2, y2 - ny * w2 / 2);
-      ctx.quadraticCurveTo(mx - nx * (w + w2) / 4, my - ny * (w + w2) / 4, x - nx * w / 2, y - ny * w / 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x2, y2, w2 / 2, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    // root flare and bark grain
-    ctx.fillStyle = "#47392b";
-    ctx.beginPath();
-    ctx.moveTo(tx - 20 * s, ty + 1);
-    ctx.quadraticCurveTo(tx - 11 * s, ty - 3 * s, tx - 11.5 * s, ty - 16 * s);
-    ctx.lineTo(tx + 11.5 * s, ty - 16 * s);
-    ctx.quadraticCurveTo(tx + 11 * s, ty - 3 * s, tx + 22 * s, ty + 1);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(40, 30, 20, .35)";
-    ctx.lineWidth = 0.8 * s;
-    ctx.beginPath();
-    for (let i = 0; i < 16; i++) {
-      const bx = tx + r(-9, 9) * s, by = ty - r(4, 84) * s;
-      ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(bx + r(-1.5, 1.5) * s, by - 8 * s, bx + r(-1, 1) * s, by - r(10, 22) * s);
-    }
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + Math.cos(ang) * len * 0.5 + r(-1, 1), y + Math.sin(ang) * len * 0.5, x + Math.cos(ang) * len, y + Math.sin(ang) * len);
     ctx.stroke();
-
-    // sunlit leaves in front
-    leafPass(clusters, s, false);
-    return { top: Math.min(...clusters.map((c) => c.y - c.r)) };
   }
 
-  function leafPass(clusters, s, under) {
-    const buckets = Array.from({ length: LEAF.length }, () => new Path2D());
-    const lx = -0.55, ly = -0.84; // light from upper left
-    let cTop = Infinity, cBot = -Infinity;
-    clusters.forEach((c) => { cTop = Math.min(cTop, c.y); cBot = Math.max(cBot, c.y); });
-    clusters.forEach((c) => {
-      const n = Math.round((c.r * c.r) / (under ? 7 : 4.5) / (s * s));
-      for (let i = 0; i < n; i++) {
-        const a = rand() * Math.PI * 2, d = Math.sqrt(rand());
-        const ox = Math.cos(a) * d, oy = Math.sin(a) * d * 0.78;
-        const x = c.x + ox * c.r + (under ? 5 * s : 0);
-        const y = c.y + oy * c.r + (under ? 6 * s : 0);
-        let lum;
-        if (under) lum = 0;
-        else {
-          const facing = (ox * lx + oy * ly) * 0.5 + 0.5;
-          const height = 1 - (c.y - cTop) / Math.max(1, cBot - cTop);
-          lum = clamp(facing * 0.6 + height * 0.25 + r(-0.12, 0.18), 0, 1);
-        }
-        const p = buckets[Math.round(lum * (LEAF.length - 1))];
-        const rw = r(2.4, 4.6) * s, rh = rw * r(0.5, 0.75), rot = r(-1, 1) + 0.5;
-        p.moveTo(x + rw, y);
-        p.ellipse(x, y, rw, rh, rot, 0, Math.PI * 2);
+  function tone(n) {
+    if (n > 1.15) return DEEPS;
+    if (n > 0.55) return DARKS;
+    if (n < -0.75) return LIGHTS;
+    return MIDS;
+  }
+
+  function drawSlope() {
+    const hill = hillPath();
+    ctx.save();
+    ctx.clip(hill);
+    ctx.fillStyle = GRASS;
+    ctx.fillRect(0, 0, W, H);
+    ctx.lineCap = "round";
+
+    // broad patches of light and cloud shadow, laid in with flat dabs
+    const step = 7 * S;
+    for (let y = ridge(W) - 4; y < H + step; y += step * 0.7) {
+      for (let x = -step; x < W + step; x += step) {
+        const jx = x + r(-step, step), jy = y + r(-step, step) * 0.6;
+        if (jy < ridge(jx) - 2) continue;
+        const n = patch(jx, jy);
+        if (n > -0.75 && n < 0.55) continue;
+        const d = depth(jy, jx);
+        ctx.fillStyle = pick(tone(n));
+        ctx.beginPath();
+        ctx.ellipse(jx, jy, r(5, 10) * S * (0.6 + d), r(2, 4) * S * (0.6 + d), r(-0.25, 0.1), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // many small grass strokes, sized for distance
+    const count = Math.round((W * H) / 70);
+    for (let i = 0; i < count; i++) {
+      const x = r(0, W), y = r(ridge(W) - 4, H + 6);
+      if (y < ridge(x) + 1) continue;
+      const d = depth(y, x), n = patch(x, y);
+      const set = rand() < 0.5 ? tone(n) : tone(n + (rand() < 0.5 ? 0.7 : -0.7));
+      stroke(x, y, r(3, 9) * S * (0.5 + d * 1.3), -Math.PI / 2 + r(-0.6, 0.35), r(0.7, 1.6) * S * (0.6 + d), pick(set));
+    }
+    ctx.restore();
+
+    // a crisp grassy ridge against the sky
+    for (let x = 0; x < W; x += r(1, 2.4)) {
+      const y = ridge(x) + 1.5;
+      ctx.fillStyle = rand() < 0.75 ? GRASS : pick(MIDS);
+      const h = r(2, 6) * S, lean = r(-1.5, 2.5) * S;
+      ctx.beginPath();
+      ctx.moveTo(x - 1 * S, y);
+      ctx.lineTo(x + lean, y - h);
+      ctx.lineTo(x + 1 * S, y);
+      ctx.fill();
+    }
+  }
+
+  // ---------------------------------------------------------------- path
+  function pathPoints() {
+    const ctrl = [[-0.04, 1.06], [0.16, 0.98], [0.33, 0.93], [0.46, 0.86], [0.56, 0.8], [0.7, 0.77], [0.84, 0.72], [0.96, 0.69], [1.08, 0.67]];
+    const pts = ctrl.map(([u, v]) => {
+      const x = u * W;
+      return [x, Math.max(v * H, ridge(clamp(x, 0, W)) + 0.07 * H)];
+    });
+    const out = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      for (let t = 0; t < 1; t += 0.05) {
+        const t2 = t * t, t3 = t2 * t;
+        const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+        out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
+      }
+    }
+    return out;
+  }
+
+  function drawPath() {
+    const pts = pathPoints();
+    const left = [], right = [];
+    pts.forEach(([x, y], i) => {
+      const [nx2, ny2] = pts[Math.min(i + 1, pts.length - 1)], [px2, py2] = pts[Math.max(i - 1, 0)];
+      const dx = nx2 - px2, dy = ny2 - py2, len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;
+      const w = lerp(5, 34, depth(y, x)) * S * (1 + 0.25 * Math.sin(i * 0.7));
+      left.push([x + nx * w * r(0.85, 1.1), y + ny * w * r(0.85, 1.1)]);
+      right.push([x - nx * w * r(0.85, 1.1), y - ny * w * r(0.85, 1.1)]);
+    });
+    const shape = new Path2D();
+    left.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)));
+    [...right].reverse().forEach(([x, y]) => shape.lineTo(x, y));
+    shape.closePath();
+
+    ctx.fillStyle = PATH;
+    ctx.fill(shape);
+    ctx.save();
+    ctx.clip(shape);
+    // tan shading along the sides, pale wear down the middle
+    pts.forEach(([x, y]) => {
+      const d = depth(y, x);
+      for (let k = 0; k < 3; k++) {
+        ctx.fillStyle = rand() < 0.6 ? PATH_TAN : PATH_LIGHT;
+        ctx.globalAlpha = r(0.35, 0.8);
+        ctx.beginPath();
+        ctx.ellipse(x + r(-30, 30) * S * d, y + r(-8, 8) * S * d, r(4, 12) * S * (0.4 + d), r(1, 3) * S * (0.4 + d), r(-0.3, 0.1), 0, Math.PI * 2);
+        ctx.fill();
       }
     });
-    buckets.forEach((p, i) => { ctx.fillStyle = LEAF[i]; ctx.fill(p); });
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // grass spilling over both edges
+    ctx.lineCap = "round";
+    [left, right].forEach((edge) => {
+      edge.forEach(([x, y]) => {
+        const d = depth(y, x);
+        for (let k = 0; k < 3; k++) {
+          stroke(x + r(-3, 3) * S, y + r(0, 3) * S, r(3, 9) * S * (0.4 + d), -Math.PI / 2 + r(-0.7, 0.7), r(0.8, 1.6) * S * (0.5 + d), pick(rand() < 0.5 ? MIDS : DARKS));
+        }
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------- rocks
+  function drawRock(x, y, size) {
+    const n = 7, pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI + (i / (n - 1)) * Math.PI;
+      pts.push([x + Math.cos(a) * size * r(0.85, 1.1), y + Math.sin(a) * size * 0.85 * r(0.8, 1.15)]);
+    }
+    // shadow on the grass
+    ctx.fillStyle = "#4f8030";
+    ctx.beginPath();
+    ctx.ellipse(x + size * 0.2, y + 1, size * 1.15, size * 0.18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // body
+    ctx.fillStyle = "#454a51";
+    ctx.beginPath();
+    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+    ctx.lineTo(x + size, y + 2);
+    ctx.lineTo(x - size, y + 2);
+    ctx.fill();
+    // lit top plane
+    ctx.fillStyle = "#757c85";
+    ctx.beginPath();
+    ctx.moveTo(pts[1][0], pts[1][1] + size * 0.1);
+    for (let i = 2; i < n - 1; i++) ctx.lineTo(pts[i][0], pts[i][1] + 1);
+    ctx.lineTo(x + size * 0.25, y - size * 0.2);
+    ctx.lineTo(x - size * 0.45, y - size * 0.12);
+    ctx.fill();
+    ctx.strokeStyle = "#8f969e";
+    ctx.lineWidth = 1 * S;
+    ctx.beginPath();
+    ctx.moveTo(pts[2][0], pts[2][1] + 1);
+    ctx.lineTo(pts[3][0], pts[3][1] + 1);
+    ctx.stroke();
+    // grass in front of the base
+    for (let k = 0; k < size * 0.8; k++) {
+      stroke(x + r(-size, size), y + r(0, 3) * S, r(3, 8) * S, -Math.PI / 2 + r(-0.6, 0.6), r(0.8, 1.5) * S, pick(rand() < 0.6 ? DARKS : DEEPS));
+    }
+  }
+
+  function drawRocks() {
+    [[0.62, 0.9, 0.85], [0.69, 0.84, 0.7], [0.76, 0.875, 1.1], [0.86, 0.82, 0.75]].forEach(([u, v, s]) => {
+      const x = u * W, y = Math.max(v * H, ridge(x) + 0.12 * H);
+      drawRock(x, y, 32 * s * S * (0.6 + depth(y, x)));
+    });
+  }
+
+  // ---------------------------------------------------------------- clumps
+  function clump(x, y, h) {
+    const n = 5 + Math.floor(rand() * 5);
+    for (let i = 0; i < n; i++) {
+      const ang = -Math.PI / 2 + (i - n / 2) * 0.16 + r(-0.15, 0.15);
+      stroke(x + (i - n / 2) * 1.1 * S, y, h * r(0.6, 1.1), ang, r(1, 1.8) * S, pick(i % 3 ? DARKS : DEEPS));
+    }
+    for (let i = 0; i < 2; i++) stroke(x + r(-3, 3) * S, y - 1, h * r(0.5, 0.8), -Math.PI / 2 + r(-0.5, 0.5), 1 * S, pick(LIGHTS));
+  }
+
+  function drawClumps() {
+    const n = Math.round(W / 40);
+    for (let i = 0; i < n; i++) {
+      const x = r(0, W), y = r(ridge(x) + 10 * S, H + 4);
+      clump(x, y, r(5, 11) * S * (0.4 + depth(y, x) * 1.4));
+    }
   }
 
   // ---------------------------------------------------------------- listener
   // The drawing lives in the page as SVG (so it can move and be clicked);
-  // here we just set it down on the slope at the right angle.
+  // here we just set it down in the grass at the angle of the slope.
   function placeListener(fx, k) {
     if (!listener) return;
     const w = 130 * k, h = 56 * k;
+    const fy = ridge(fx) + (H - ridge(fx)) * 0.18;
     const ang = Math.atan2(ridge(fx + 30) - ridge(fx - 30), 60) * 180 / Math.PI;
     listener.style.width = w + "px";
     listener.style.height = h + "px";
     listener.style.left = fx - w / 2 + "px";
-    listener.style.top = canvas.offsetTop + ridge(fx) - h * (52 / 56) + 1 + "px";
+    listener.style.top = canvas.offsetTop + fy - h * (52 / 56) + "px";
     listener.style.transform = `rotate(${ang.toFixed(2)}deg)`;
   }
 
@@ -245,23 +367,27 @@
     lastW = rect.width; lastH = rect.height;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = rect.width; H = rect.height;
-    S = clamp(H / 560, 0.62, 1.15);
+    narrow = W < 760;
+    S = clamp(Math.min(H / 800, W / 1200), 0.6, 1.2);
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, W, H);
     seed = 20261027;
 
-    const ts = clamp(Math.min((H * 0.5) / 360, W / 1300), 0.42, 1);
-    drawGrass();
-    drawTree(W - Math.max(W * 0.17, 215 * ts), ts);
-    placeListener(W * (W < 600 ? 0.3 : 0.5), clamp(H / 560, 0.62, 1) * 1.05);
+    drawSky();
+    drawCloud();
+    drawSlope();
+    drawPath();
+    drawRocks();
+    drawClumps();
+    placeListener(W * (narrow ? 0.26 : 0.3), Math.min(1.05, W / 420));
   }
 
   let t;
   // watch the canvas itself: late font loads shift the layout without a window resize
   new ResizeObserver(() => { cancelAnimationFrame(t); t = requestAnimationFrame(render); }).observe(canvas);
-  if (document.fonts) document.fonts.ready.then(render);
+  // the cloud dodges the intro text, so repaint once the fonts have settled its height
+  if (document.fonts) document.fonts.ready.then(() => { lastW = 0; render(); });
   render();
 
   // ---------------------------------------------------------------- music, clock
