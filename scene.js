@@ -365,6 +365,75 @@
     }
   }
 
+  // ---------------------------------------------------------------- tufts
+  // long, soft wisps of grass that curl over at the tips, like a mossy meadow
+  function drawTufts() {
+    const n = Math.round(W / 22);
+    for (let i = 0; i < n; i++) {
+      const x = r(0, W), y = r(ridge(x) + 14 * S, H + 4);
+      const d = depth(y, x), h = r(14, 26) * S * (0.4 + d * 1.2);
+      const lean = r(-0.35, 0.35), blades = 6 + Math.floor(rand() * 6);
+      for (let k = 0; k < blades; k++) {
+        const ang = -Math.PI / 2 + lean + (k - blades / 2) * 0.12 + r(-0.12, 0.12);
+        blade(ctx, x + (k - blades / 2) * 1.4 * S, y, h * r(0.55, 1.05), ang, r(0.9, 1.7) * S * (0.6 + d), pick(k % 3 ? MIDS : LIGHTS), r(-3, 3) * S, r(-0.25, 0.25));
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- flowers
+  // little painted clumps of pink, orange and daisy-white blooms with leaves,
+  // drawn over the grass layer so they sit on top of the blades
+  const BLOOMS = {
+    pink: { petals: ["#e9579b", "#f07bb4", "#d9468c"], heart: "#fbd2e4" },
+    orange: { petals: ["#f39a3a", "#f7b54b", "#ec7f2c"], heart: "#ffe08a" },
+    daisy: { petals: ["#fffbea", "#f6f1da", "#ffffff"], heart: "#f4c542" },
+  };
+  const LEAVES = ["#4f8a2e", "#5f9a34", "#6eaa3a"];
+  let flowers = [];
+
+  function planFlowers(path, dpr) {
+    const spots = [[0.07, 0.8, "pink"], [0.27, 0.76, "orange"], [0.47, 0.72, "daisy"], [0.6, 0.67, "pink"], [0.92, 0.6, "orange"]];
+    spots.forEach(([u, v, kind]) => {
+      const cx = u * W, cy = Math.max(v * H, ridge(cx) + 0.06 * H);
+      const d = depth(cy, cx), R = 72 * S * (0.45 + d), pal = BLOOMS[kind];
+      const clump = { leaves: [], stems: [], heads: [] };
+      for (let k = 0; k < 60; k++) {
+        const x = cx + r(-R, R), y = cy + r(-R * 0.3, R * 0.3);
+        if (ctx.isPointInPath(path, x * dpr, y * dpr)) continue;
+        clump.leaves.push({ x, y, rx: r(3, 6.5) * S * (0.5 + d), ry: r(1.3, 2.6) * S * (0.5 + d), a: r(-0.9, 0.9), c: pick(LEAVES) });
+      }
+      const n = 26 + Math.floor(rand() * 12);
+      for (let k = 0; k < n; k++) {
+        const bx = cx + r(-R, R) * 0.9, by = cy + r(-R * 0.25, R * 0.3);
+        if (ctx.isPointInPath(path, bx * dpr, by * dpr)) continue;
+        const tall = r(8, 22) * S * (0.4 + d), hx = bx + r(-3, 3) * S, hy = by - tall;
+        const size = r(2.6, 4.4) * S * (0.45 + d);
+        clump.stems.push({ x: bx, y: by, hx, hy, w: 0.9 * S * (0.5 + d) });
+        const dabs = [];
+        const count = kind === "daisy" ? 6 : 5;
+        for (let p = 0; p < count; p++) {
+          const a = (p / count) * Math.PI * 2 + r(-0.2, 0.2);
+          dabs.push({ x: hx + Math.cos(a) * size * 0.9, y: hy + Math.sin(a) * size * 0.6, rx: size * (kind === "daisy" ? 0.75 : 0.85), ry: size * 0.5, a, c: pick(pal.petals) });
+        }
+        clump.heads.push({ dabs, x: hx, y: hy, size, heart: pal.heart });
+      }
+      flowers.push(clump);
+    });
+  }
+
+  function drawFlowers(g) {
+    flowers.forEach((f) => {
+      f.leaves.forEach((l) => { g.fillStyle = l.c; g.beginPath(); g.ellipse(l.x, l.y, l.rx, l.ry, l.a, 0, Math.PI * 2); g.fill(); });
+      g.strokeStyle = LEAVES[0];
+      f.stems.forEach((st) => { g.lineWidth = st.w; g.beginPath(); g.moveTo(st.x, st.y); g.quadraticCurveTo(st.x, (st.y + st.hy) / 2, st.hx, st.hy); g.stroke(); });
+      f.heads.forEach((h) => {
+        h.dabs.forEach((p) => { g.fillStyle = p.c; g.beginPath(); g.ellipse(p.x, p.y, p.rx, p.ry, p.a, 0, Math.PI * 2); g.fill(); });
+        g.fillStyle = h.heart;
+        g.beginPath(); g.arc(h.x, h.y, h.size * 0.38, 0, Math.PI * 2); g.fill();
+      });
+    });
+  }
+
   // ---------------------------------------------------------------- render
   let lastW = 0, lastH = 0;
   function render() {
@@ -393,6 +462,9 @@
     const path = drawPath();
     drawRocks();
     drawClumps();
+    drawTufts();
+    flowers = [];
+    planFlowers(path, dpr);
     // blades the path or a rock would have covered stay hidden
     live = live.filter((l) => {
       const tx = l.x + Math.cos(l.ang) * l.len, ty = l.y + Math.sin(l.ang) * l.len;
@@ -416,6 +488,7 @@
     touchCtx.lineCap = "round";
     live.forEach((l) => blade(touchCtx, l.x, l.y, l.len, l.ang, l.w, l.color, l.j, l.b));
     touchCtx.restore();
+    drawFlowers(touchCtx);
   }
 
   function step() {
