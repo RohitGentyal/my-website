@@ -1,4 +1,4 @@
-// Painted hillside: one rolling hill of dense grass, one tree, one small figure.
+// Painted hillside: one smooth summer-green hill, one tree, one small figure.
 // Rendered once to a canvas from a seeded random, so it looks the same every
 // visit and is redrawn only when its size changes.
 (function () {
@@ -20,11 +20,13 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   let W, H, S;
+  // One broad, smooth hill cresting left of centre, like a summer field
   const ridge = (x) => {
     const u = x / W;
-    return H * (0.56 + 0.15 * Math.exp(-(((u - 0.46) / 0.3) ** 2))) +
-      2.2 * Math.sin(x * 0.011) + 1.2 * Math.sin(x * 0.031 + 1);
+    return H * (0.62 - 0.22 * Math.exp(-(((u - 0.33) / 0.42) ** 2))) + 1.2 * Math.sin(x * 0.009);
   };
+  // Where the darker foreground field begins
+  const field = (x) => H * (0.86 - 0.05 * (x / W)) + 3 * Math.sin(x * 0.006 + 2);
 
   // Colour ramps, built once so the hot loops only index into arrays
   const ramp = (n, from, to) => Array.from({ length: n }, (_, i) => {
@@ -32,61 +34,115 @@
     const [h, s, l] = from.map((v, k) => v + (to[k] - v) * t);
     return `hsl(${h.toFixed(1)} ${s.toFixed(1)}% ${l.toFixed(1)}%)`;
   });
-  const GRASS = ramp(28, [78, 42, 14], [58, 52, 58]);
-  const LEAF = ramp(20, [96, 40, 11], [72, 50, 50]);
+  const GRASS = ramp(12, [112, 62, 26], [84, 66, 52]);
+  const LEAF = ramp(20, [104, 48, 12], [80, 56, 48]);
 
-  // ---------------------------------------------------------------- grass
+  // Fine speckle used as a grass texture; tiny, low contrast, tiled
+  let grain;
+  function makeGrain() {
+    const g = document.createElement("canvas");
+    g.width = g.height = 160;
+    const gx = g.getContext("2d");
+    for (let i = 0; i < 5200; i++) {
+      const x = rand() * 160, y = rand() * 160, light = rand() < 0.5;
+      gx.fillStyle = light ? "rgba(235,255,170,.55)" : "rgba(10,50,0,.55)";
+      gx.fillRect(x, y, 0.8, r(1.2, 2.6)); // short vertical flecks read as grass
+    }
+    return ctx.createPattern(g, "repeat");
+  }
+
+  // ---------------------------------------------------------------- hill
+  function hillPath() {
+    const p = new Path2D();
+    p.moveTo(0, H);
+    for (let x = 0; x <= W + 4; x += 3) p.lineTo(x, ridge(x));
+    p.lineTo(W, H);
+    p.closePath();
+    return p;
+  }
+
   function drawGrass() {
     let top = Infinity;
-    for (let x = 0; x <= W; x += 8) top = Math.min(top, ridge(x));
+    for (let x = 0; x <= W; x += 6) top = Math.min(top, ridge(x));
+    const hill = hillPath();
+    const crestX = W * 0.33;
 
-    const base = ctx.createLinearGradient(0, top, 0, H);
-    base.addColorStop(0, "#a3a24a");
-    base.addColorStop(0.35, "#7c8634");
-    base.addColorStop(1, "#46561d");
-    ctx.fillStyle = base;
+    ctx.save();
+    ctx.clip(hill);
+
+    // body: sunlit yellow-green on the crest, deepening to emerald below
+    const body = ctx.createLinearGradient(0, top, 0, H);
+    body.addColorStop(0, "#a6d640");
+    body.addColorStop(0.18, "#7cc232");
+    body.addColorStop(0.5, "#3f9a26");
+    body.addColorStop(1, "#24741b");
+    ctx.fillStyle = body;
+    ctx.fillRect(0, top - 2, W, H - top + 2);
+
+    // broad light from the upper left, across the crest
+    const sun = ctx.createRadialGradient(crestX - W * 0.05, top, 0, crestX - W * 0.05, top, W * 0.55);
+    sun.addColorStop(0, "rgba(214, 240, 120, .55)");
+    sun.addColorStop(0.5, "rgba(170, 220, 80, .18)");
+    sun.addColorStop(1, "rgba(170, 220, 80, 0)");
+    ctx.fillStyle = sun;
+    ctx.fillRect(0, top - 2, W, H);
+
+    // the far side of the hill falls into soft shade
+    const shade = ctx.createRadialGradient(W * 0.95, H * 0.78, 0, W * 0.95, H * 0.78, W * 0.5);
+    shade.addColorStop(0, "rgba(10, 70, 20, .45)");
+    shade.addColorStop(1, "rgba(10, 70, 20, 0)");
+    ctx.fillStyle = shade;
+    ctx.fillRect(0, top - 2, W, H);
+
+    // faint mowing bands that follow the contour of the hill
+    ctx.lineCap = "round";
+    for (let i = 0; i < 9; i++) {
+      const off = 14 + i * (H - top) * 0.075;
+      ctx.strokeStyle = i % 2 ? "rgba(230, 255, 150, .035)" : "rgba(0, 50, 0, .03)";
+      ctx.lineWidth = r(14, 34) * S;
+      ctx.beginPath();
+      for (let x = -20; x <= W + 20; x += 12) ctx.lineTo(x, ridge(x) + off * (0.75 + 0.25 * x / W));
+      ctx.stroke();
+    }
+
+    // foreground field: a darker, cooler green below a soft seam
+    const fTop = Math.min(field(0), field(W));
+    const fg = ctx.createLinearGradient(0, fTop, 0, H);
+    fg.addColorStop(0, "#2f7f22");
+    fg.addColorStop(1, "#1d5e16");
+    ctx.fillStyle = fg;
     ctx.beginPath();
     ctx.moveTo(0, H);
-    for (let x = 0; x <= W + 4; x += 4) ctx.lineTo(x, ridge(x) + 3);
+    for (let x = 0; x <= W + 6; x += 6) ctx.lineTo(x, field(x));
     ctx.lineTo(W, H);
     ctx.fill();
+    ctx.strokeStyle = "rgba(60, 50, 20, .35)";
+    ctx.lineWidth = 2.2 * S;
+    ctx.filter = "blur(1.2px)";
+    ctx.beginPath();
+    for (let x = 0; x <= W + 6; x += 6) ctx.lineTo(x, field(x) + 1);
+    ctx.stroke();
+    ctx.filter = "none";
 
-    const span = H - top;
-    for (let y0 = top - 2; y0 < H + 24; ) {
-      const t = clamp((y0 - top) / span, 0, 1);
-      const step = 1.1 + t * 2.4;
-      const buckets = Array.from({ length: GRASS.length }, () => new Path2D());
-      const count = W / (1.5 + t * 2.6);
-      for (let i = 0; i < count; i++) {
-        const x = rand() * W;
-        const y = y0 + rand() * step;
-        if (y < ridge(x) - 0.5) continue;
-        const h = (6 + 30 * t) * r(0.55, 1.35) * S;
-        const lean = (0.22 + r(-0.35, 0.35)) * h;
-        const w = (0.55 + t * 1.5) * r(0.7, 1.3) * S;
-        // far grass catches the light; near grass sits in shade
-        const light = clamp((1 - t) * 0.62 + r(-0.05, 0.38), 0, 1);
-        const p = buckets[Math.round(light * (GRASS.length - 1))];
-        p.moveTo(x - w, y);
-        p.quadraticCurveTo(x - w * 0.3 + lean * 0.35, y - h * 0.55, x + lean, y - h);
-        p.quadraticCurveTo(x + w * 0.3 + lean * 0.35, y - h * 0.55, x + w, y);
-      }
-      buckets.forEach((p, i) => { ctx.fillStyle = GRASS[i]; ctx.fill(p); });
+    // fine grass grain over everything, stronger in the foreground
+    ctx.fillStyle = grain;
+    ctx.globalAlpha = 0.16;
+    ctx.fillRect(0, top - 2, W, H);
+    ctx.globalAlpha = 0.22;
+    ctx.fillRect(0, fTop, W, H);
+    ctx.globalAlpha = 1;
+    ctx.restore();
 
-      // sparse straw-coloured tips, the glints you see in a real field
-      ctx.strokeStyle = "hsla(55 60% 86% / .75)";
-      ctx.lineWidth = 0.6 * S;
-      ctx.beginPath();
-      for (let i = 0; i < count * 0.02; i++) {
-        const x = rand() * W, y = y0 + rand() * step;
-        if (y < ridge(x)) continue;
-        const h = (5 + 22 * t) * r(0.5, 1.1) * S;
-        ctx.moveTo(x, y - h * 0.4);
-        ctx.lineTo(x + h * 0.18, y - h);
-      }
-      ctx.stroke();
-      y0 += step;
+    // a softly fuzzy crest so the skyline isn't a hard vector edge
+    const fuzz = Array.from({ length: GRASS.length }, () => new Path2D());
+    for (let x = 0; x < W; x += r(0.8, 1.8)) {
+      const y = ridge(x) + r(0, 1.5), h = r(1, 3.2) * S;
+      const p = fuzz[Math.floor(clamp(0.55 + 0.45 * Math.exp(-(((x - crestX) / (W * 0.4)) ** 2)) + r(-0.15, 0.1), 0, 0.999) * GRASS.length)];
+      p.moveTo(x - 0.5, y);
+      p.lineTo(x + r(-0.4, 0.8), y - h);
+      p.lineTo(x + 0.5, y);
     }
+    fuzz.forEach((p, i) => { ctx.fillStyle = GRASS[i]; ctx.fill(p); });
   }
 
   // ---------------------------------------------------------------- tree
@@ -118,8 +174,8 @@
 
     // soft shadow on the grass
     const sh = ctx.createRadialGradient(tx + 12 * s, ty, 0, tx + 12 * s, ty, 150 * s);
-    sh.addColorStop(0, "rgba(38, 48, 12, .32)");
-    sh.addColorStop(1, "rgba(38, 48, 12, 0)");
+    sh.addColorStop(0, "rgba(10, 60, 10, .35)");
+    sh.addColorStop(1, "rgba(10, 60, 10, 0)");
     ctx.fillStyle = sh;
     ctx.save();
     ctx.translate(0, ty);
@@ -210,7 +266,7 @@
     const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(fx + x * u, fy - (y + h) * u, w * u, h * u); };
     const SKIN = "#8a5a3c", KIT = "#b04a36", SHORTS = "#24262b", SOCK = "#efece4";
 
-    ctx.fillStyle = "rgba(30, 40, 10, .28)";
+    ctx.fillStyle = "rgba(10, 60, 10, .3)";
     ctx.beginPath();
     ctx.ellipse(fx + 2 * u, fy, 7 * u, 1.3 * u, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -241,7 +297,7 @@
     ctx.fillRect(fx - 4.2 * u, fy - 32 * u, 2 * u, 11 * u);
 
     // a few blades in front of the boots so the figure stands in the grass
-    ctx.fillStyle = GRASS[16];
+    ctx.fillStyle = "#79bf33";
     ctx.beginPath();
     for (let i = 0; i < 26; i++) {
       const x = fx + r(-9, 12) * u, y = fy + r(0, 1.6) * u, h = r(1.5, 3.6) * u, l = r(0, 1.4) * u;
@@ -271,16 +327,19 @@
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+    grain = grain || makeGrain(); // made before seeding so the tree never changes
     seed = 20261027;
 
     const ts = clamp(Math.min((H * 0.5) / 360, W / 1300), 0.42, 1);
     drawGrass();
     drawTree(W - Math.max(W * 0.17, 215 * ts), ts);
-    drawFigure(W * 0.47, clamp(H / 560, 0.75, 1.15));
+    drawFigure(W * (W < 600 ? 0.3 : 0.47), clamp(H / 560, 0.75, 1.15));
   }
 
   let t;
-  window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+  // watch the canvas itself: late font loads shift the layout without a window resize
+  new ResizeObserver(() => { cancelAnimationFrame(t); t = requestAnimationFrame(render); }).observe(canvas);
+  if (document.fonts) document.fonts.ready.then(render);
   render();
 
   // ---------------------------------------------------------------- hobbies, clock
