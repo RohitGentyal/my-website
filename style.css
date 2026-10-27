@@ -195,6 +195,7 @@ h2.sub { margin: 40px 0 0; }
 .links a { color: var(--ink) !important; border-bottom: 1px solid var(--rule); transition: border-color .2s; }
 .links a:hover { border-color: var(--ink); }
 
+.foot s { text-decoration-thickness: 1px; opacity: .75; }
 .foot {
   display: flex;
   justify-content: space-between;
