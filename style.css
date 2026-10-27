@@ -56,6 +56,7 @@ a { color: inherit; text-decoration: none; }
   min-height: 680px;
   padding-top: clamp(110px, 18vh, 180px);
   background: #287fa8;
+  overflow: hidden;
 }
 .hero .intro {
   position: relative;
@@ -64,6 +65,7 @@ a { color: inherit; text-decoration: none; }
   width: auto;
   max-width: 540px;
   padding: 0;
+  will-change: transform, opacity;
 }
 .intro h1 {
   font: italic 400 44px/1.1 var(--serif);
@@ -129,6 +131,7 @@ a { color: inherit; text-decoration: none; }
   width: 100%;
   height: 100%;
 }
+#sky { will-change: transform; }
 .live {
   position: absolute;
   right: 28px; bottom: 22px;

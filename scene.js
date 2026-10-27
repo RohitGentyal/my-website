@@ -6,9 +6,13 @@
   const hero = document.querySelector(".hero");
   const intro = document.querySelector(".intro");
   const canvas = document.getElementById("hill");
+  const skyCanvas = document.getElementById("sky");
   const clock = document.getElementById("clock");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  if (!canvas || !skyCanvas) return;
+  const hillCtx = canvas.getContext("2d");
+  const skyCtx = skyCanvas.getContext("2d");
+  // sky and cloud paint on their own layer so they can drift behind the hill
+  let ctx = skyCtx;
 
   let seed;
   const rand = () => {
@@ -353,13 +357,17 @@
     W = rect.width; H = rect.height;
     narrow = W < 760;
     S = clamp(Math.min(H / 800, W / 1200), 0.6, 1.2);
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    [canvas, skyCanvas].forEach((c) => {
+      c.width = Math.round(W * dpr);
+      c.height = Math.round(H * dpr);
+      c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+    });
     seed = 20261027;
 
+    ctx = skyCtx;
     drawSky();
     drawCloud();
+    ctx = hillCtx;
     drawSlope();
     drawPath();
     drawRocks();
@@ -372,6 +380,26 @@
   // the cloud dodges the intro text, so repaint once the fonts have settled its height
   if (document.fonts) document.fonts.ready.then(() => { lastW = 0; render(); });
   render();
+
+  // ---------------------------------------------------------------- parallax
+  // On scroll the sky and cloud sink slower than the hill, and the intro
+  // lifts away gently, so the scene reads as layers with depth.
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let ticking = false;
+  function parallax() {
+    ticking = false;
+    const y = still.matches ? 0 : clamp(window.scrollY, 0, hero.offsetHeight);
+    skyCanvas.style.transform = `translate3d(0, ${y * 0.45}px, 0)`;
+    if (intro) {
+      intro.style.transform = `translate3d(0, ${y * 0.25}px, 0)`;
+      intro.style.opacity = clamp(1 - y / (hero.offsetHeight * 0.6), 0, 1);
+    }
+  }
+  window.addEventListener("scroll", () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
+  }, { passive: true });
+  still.addEventListener("change", parallax);
+  parallax();
 
   // ---------------------------------------------------------------- music, clock
   // Paste the playlist link here once it's ready. Any element marked
