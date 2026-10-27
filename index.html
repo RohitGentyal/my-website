@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=exp1">
+  <link rel="stylesheet" href="style.css?v=listen2">
 </head>
 <body>
   <header class="top">
@@ -27,7 +27,7 @@
         <p>I'm a UX designer at Subculture Media Tech, where I lead product design for the Native Universe app. I like turning messy, half-formed ideas into calm, usable products.</p>
         <p class="hobbies">When I'm not designing,
           <span class="tiles">
-            <button class="tile" data-kick data-label="Football" aria-label="Football">
+            <button class="tile" data-label="Football" aria-label="Football">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path class="fill" d="M12 8.6l3.2 2.3-1.2 3.8h-4l-1.2-3.8z"/><path d="M12 8.6V3.6M15.2 10.9l4.6-1.5M14 14.7l2.9 4M10 14.7l-2.9 4M8.8 10.9L4.2 9.4"/></svg>
             </button>
             <button class="tile" data-label="Gym" aria-label="Gym">
@@ -43,9 +43,52 @@
         </p>
       </div>
 
-      <figure class="scene" id="scene" aria-label="A painted grassy hill with a broad tree on the right and a small footballer standing in the dip with a ball at their feet.">
+      <figure class="scene" id="scene" aria-label="A painted grassy hill with a broad tree on the right, and someone lying on the slope with their hands behind their head, listening to music.">
         <canvas id="hill"></canvas>
-        <span class="ball" id="ball" aria-hidden="true"></span>
+        <button class="listener" id="listener" type="button" aria-label="Now playing: playlist coming soon">
+          <svg viewBox="0 0 130 56" aria-hidden="true">
+            <ellipse class="ground-shadow" cx="62" cy="52.5" rx="58" ry="3"/>
+            <!-- far leg, straight, toes up -->
+            <path class="o trousers-dark" d="M62 42 L101 44.5 L101 52 L62 52 Z"/>
+            <path class="o shoe" d="M100 52 L100 41.5 Q100 37.5 104 37.5 Q108.5 38.5 108.5 44 L108.5 52 Z"/>
+            <rect class="sole" x="107" y="40" width="2.2" height="12" rx="1"/>
+            <!-- near leg, knee up, foot tapping -->
+            <path class="limb-o" d="M64 45 L81 27 L90 47"/>
+            <path class="limb trousers" d="M64 45 L81 27 L90 47"/>
+            <g class="tap">
+              <path class="o shoe" d="M86.5 52 L86.5 46 Q87 43.5 90 43.5 L95 44 Q100 45 100.5 49.5 L100.5 52 Z"/>
+              <rect class="sole" x="86.5" y="50.6" width="14" height="1.9" rx=".8"/>
+            </g>
+            <!-- arm up, hand tucked behind the head -->
+            <path class="limb-o arm" d="M31 39 L23 24.5 L12 37"/>
+            <path class="limb arm sleeve" d="M31 39 L23 24.5 L12 37"/>
+            <!-- sweatshirt -->
+            <path class="o sweat" d="M23 52 L23 41 Q25 34.5 33 33.5 L58 35 Q68 36.5 68 44 L68 52 Z"/>
+            <path class="sweat-shade" d="M24 48.5 H67 V51.3 H24 Z"/>
+            <path class="crease" d="M63 36.5 V51 M40 38 q6 2 12 0.5"/>
+            <!-- head, face turned up to the sky -->
+            <circle class="o skin" cx="16" cy="42" r="7.3"/>
+            <path class="o skin" d="M17.2 35.1 Q18.6 32.3 20.6 35.3 Z"/>
+            <path class="o hair" d="M14.6 34.7 L11.4 33.6 L11.4 35.6 L8 35.7 L9.2 37.8 L5.8 39.4 L8 40.8 L5.4 43 L8 44 L6.6 46.9 L9.8 46.8 L10.2 49.6 L12.8 48.4 L15.4 50.2 C13.2 47.2 12.4 44.2 12.8 41.2 C13.2 38.6 14.4 36.4 14.6 34.7 Z"/>
+            <path class="line" d="M13.9 37.6 q1.4 1.1 2.8 0.1"/>
+            <path class="line" d="M20.4 38.4 q1.2 1.4 2.6 0.9"/>
+            <circle class="o bud" cx="15.4" cy="43" r="1.5"/>
+            <!-- cord to the player -->
+            <path class="cord" d="M15.6 44.5 C17 52 28 47.5 34 50.5 S42 50 44.5 49.2"/>
+            <rect class="o player" x="44" y="46.2" width="8.5" height="5.8" rx="1.3"/>
+            <rect class="screen" x="45.6" y="47.5" width="3.4" height="2.4" rx=".5"/>
+            <!-- a record propped in the grass -->
+            <g transform="rotate(-10 121 44)">
+              <ellipse class="o vinyl" cx="121" cy="44" rx="6.2" ry="8.4"/>
+              <ellipse class="groove" cx="121" cy="44" rx="4.3" ry="5.9"/>
+              <ellipse class="label" cx="121" cy="44" rx="1.9" ry="2.6"/>
+            </g>
+            <!-- notes drifting up -->
+            <g class="note n1"><ellipse cx="30" cy="20" rx="2.1" ry="1.5" transform="rotate(-20 30 20)"/><path d="M31.8 19.5 V11 L36 12.2"/></g>
+            <g class="note n2"><ellipse cx="42" cy="14" rx="2.1" ry="1.5" transform="rotate(-20 42 14)"/><path d="M43.8 13.5 V5 L48 6.2"/></g>
+            <g class="note n3"><ellipse cx="53" cy="22" rx="2.1" ry="1.5" transform="rotate(-20 53 22)"/><path d="M54.8 21.5 V13"/></g>
+          </svg>
+        </button>
         <figcaption class="live">
           <span class="line">“the grass keeps every footstep, and returns none.”</span>
           <span class="clock" id="clock"></span>
@@ -97,6 +140,6 @@
     <span>Drawn and built by hand.</span>
   </footer>
 
-  <script src="scene.js?v=exp1"></script>
+  <script src="scene.js?v=listen2"></script>
 </body>
 </html>

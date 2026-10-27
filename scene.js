@@ -1,10 +1,11 @@
-// Painted hillside: one smooth summer-green hill, one tree, one small figure.
+// Painted hillside: flat, brushy planes of green, one tree, and someone lying
+// on the slope listening to music.
 // Rendered once to a canvas from a seeded random, so it looks the same every
 // visit and is redrawn only when its size changes.
 (function () {
   const scene = document.getElementById("scene");
   const canvas = document.getElementById("hill");
-  const ball = document.getElementById("ball");
+  const listener = document.getElementById("listener");
   const clock = document.getElementById("clock");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -25,17 +26,16 @@
     const u = x / W;
     return H * (0.62 - 0.22 * Math.exp(-(((u - 0.33) / 0.42) ** 2))) + 1.2 * Math.sin(x * 0.009);
   };
-  // Where the darker foreground field fades in
-  const field = (x) => H * (0.86 - 0.05 * (x / W)) + 3 * Math.sin(x * 0.006 + 2);
+  // Where the cool shadow plane in the foreground begins
+  const shadowTop = (x) => {
+    const u = x / W;
+    return H * (0.86 - 0.1 * Math.exp(-(((u - 0.42) / 0.34) ** 2))) + 4 * S * Math.sin(x * 0.013 + 1);
+  };
 
-  // Colour ramps, built once so the hot loops only index into arrays
-  const ramp = (n, from, to) => Array.from({ length: n }, (_, i) => {
-    const t = i / (n - 1);
-    const [h, s, l] = from.map((v, k) => v + (to[k] - v) * t);
-    return `hsl(${h.toFixed(1)} ${s.toFixed(1)}% ${l.toFixed(1)}%)`;
-  });
-  const GRASS = ramp(12, [112, 62, 26], [84, 66, 52]);
-  const LEAF = ramp(20, [104, 48, 12], [80, 56, 48]);
+  // A few flat tones, like a painted background plate
+  const LIT = "#a6cc5b", LIT_DARK = "#93bb4d", LIT_LIGHT = "#bcdc72";
+  const SHADE = "#5ea06c", SHADE_DARK = "#4c8b5d", SHADE_LIGHT = "#78b67d";
+  const LEAF = ["#22432f", "#2e5b3d", "#45764a", "#699553"];
 
   // ---------------------------------------------------------------- hill
   function hillPath() {
@@ -47,85 +47,71 @@
     return p;
   }
 
-  function drawGrass() {
-    let top = Infinity;
-    for (let x = 0; x <= W; x += 6) top = Math.min(top, ridge(x));
-    const hill = hillPath();
-    const crestX = W * 0.33;
-
-    ctx.save();
-    ctx.clip(hill);
-
-    // body: sunlit yellow-green on the crest, deepening to emerald below
-    const body = ctx.createLinearGradient(0, top, 0, H);
-    body.addColorStop(0, "#a6d640");
-    body.addColorStop(0.18, "#7cc232");
-    body.addColorStop(0.5, "#3f9a26");
-    body.addColorStop(1, "#24741b");
-    ctx.fillStyle = body;
-    ctx.fillRect(0, top - 2, W, H - top + 2);
-
-    // broad light from the upper left, across the crest
-    const sun = ctx.createRadialGradient(crestX - W * 0.05, top, 0, crestX - W * 0.05, top, W * 0.55);
-    sun.addColorStop(0, "rgba(214, 240, 120, .55)");
-    sun.addColorStop(0.5, "rgba(170, 220, 80, .18)");
-    sun.addColorStop(1, "rgba(170, 220, 80, 0)");
-    ctx.fillStyle = sun;
-    ctx.fillRect(0, top - 2, W, H);
-
-    // the far side of the hill falls into soft shade
-    const shade = ctx.createRadialGradient(W * 0.95, H * 0.78, 0, W * 0.95, H * 0.78, W * 0.5);
-    shade.addColorStop(0, "rgba(10, 70, 20, .45)");
-    shade.addColorStop(1, "rgba(10, 70, 20, 0)");
-    ctx.fillStyle = shade;
-    ctx.fillRect(0, top - 2, W, H);
-
-    // foreground field: a darker, cooler green that fades in with no edge
-    const fMid = (field(0) + field(W)) / 2, feather = 70 * S;
-    const fg = ctx.createLinearGradient(0, fMid - feather, 0, H);
-    const k = feather / (H - fMid + feather);
-    fg.addColorStop(0, "rgba(36, 120, 30, 0)");
-    fg.addColorStop(k, "rgba(36, 120, 30, .85)");
-    fg.addColorStop(1, "rgba(26, 92, 22, 1)");
-    ctx.fillStyle = fg;
-    ctx.fillRect(0, fMid - feather, W, H);
-    ctx.restore();
-
-    // a softly fuzzy crest so the skyline isn't a hard vector edge
-    const fuzz = Array.from({ length: GRASS.length }, () => new Path2D());
-    for (let x = 0; x < W; x += r(0.8, 1.8)) {
-      const y = ridge(x) + r(0, 1.5), h = r(1, 3.2) * S;
-      const p = fuzz[Math.floor(clamp(0.55 + 0.45 * Math.exp(-(((x - crestX) / (W * 0.4)) ** 2)) + r(-0.15, 0.1), 0, 0.999) * GRASS.length)];
-      p.moveTo(x - 0.5, y);
-      p.lineTo(x + r(-0.4, 0.8), y - h);
-      p.lineTo(x + 0.5, y);
+  // Short upright blades along an edge, for a brushy rather than vector line
+  function fringe(edge, color, hMin, hMax) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let x = 0; x < W; x += r(1, 2.6)) {
+      const y = edge(x) + 1.5, h = r(hMin, hMax) * S, lean = r(-1.2, 2.2) * S;
+      ctx.moveTo(x - 0.9 * S, y);
+      ctx.lineTo(x + lean, y - h);
+      ctx.lineTo(x + 0.9 * S, y);
     }
-    fuzz.forEach((p, i) => { ctx.fillStyle = GRASS[i]; ctx.fill(p); });
+    ctx.fill();
+  }
 
-    // a few slim tufts: along the skyline, then sparse on the slopes
-    for (let x = r(6, 30); x < W; x += r(26, 70)) tuft(x, ridge(x) + 1, r(5, 10) * S, rand() < 0.6 ? "#9fd544" : "#79c135");
-    const slopes = Math.round(W / 70);
-    for (let i = 0; i < slopes; i++) {
-      const x = r(0, W), y = r(ridge(x) + 18 * S, H - 6);
-      const t = clamp((y - top) / (H - top), 0, 1);
-      const light = rand() < 0.5;
-      const col = t < 0.45 ? (light ? "#9ad14a" : "#5aa92e") : (light ? "#4f9e2f" : "#22701c");
-      tuft(x, y, (5 + 9 * t) * S, col);
+  // A handful of dry-brush marks: thin, loose, roughly parallel strokes
+  function dryBrush(x, y, color) {
+    ctx.strokeStyle = color;
+    ctx.lineCap = "round";
+    const dir = rand() < 0.5 ? -1 : 1, ang = dir * r(0.35, 0.8);
+    for (let i = 0, n = 3 + Math.floor(rand() * 4); i < n; i++) {
+      const len = r(14, 34) * S, ox = x + i * 3 * S + r(-2, 2), oy = y + i * 1.5 * S + r(-2, 2);
+      ctx.lineWidth = r(0.8, 1.6) * S;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.quadraticCurveTo(ox + Math.cos(ang) * len * 0.5, oy - Math.sin(ang) * len * 0.5 + 2 * S,
+        ox + Math.cos(ang) * len, oy - Math.sin(ang) * len);
+      ctx.stroke();
     }
   }
 
-  function tuft(x, y, h, color) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    const n = 3 + Math.floor(rand() * 4);
-    for (let i = 0; i < n; i++) {
-      const bx = x + (i - n / 2) * 1.3 * S, bh = h * r(0.55, 1.1);
-      const lean = (i - n / 2) * 0.9 * S + r(-1, 1.5) * S, w = 0.75 * S;
-      ctx.moveTo(bx - w, y);
-      ctx.quadraticCurveTo(bx - w * 0.2 + lean * 0.4, y - bh * 0.6, bx + lean, y - bh);
-      ctx.quadraticCurveTo(bx + w * 0.2 + lean * 0.4, y - bh * 0.6, bx + w, y);
+  // A soft dapple in the shade: a few short, fat strokes
+  function dapple(x, y, color) {
+    ctx.strokeStyle = color;
+    ctx.lineCap = "round";
+    for (let i = 0, n = 3 + Math.floor(rand() * 3); i < n; i++) {
+      ctx.lineWidth = r(3, 6) * S;
+      const ox = x + r(-14, 14) * S, oy = y + r(-4, 4) * S, len = r(6, 18) * S;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + len, oy + r(-2, 2) * S);
+      ctx.stroke();
     }
+  }
+
+  function drawGrass() {
+    // lit plane
+    ctx.fillStyle = LIT;
+    ctx.fill(hillPath());
+    fringe(ridge, LIT, 1.5, 4);
+    for (let i = 0, n = Math.round(W / 130); i < n; i++) {
+      const x = r(0, W), y = r(ridge(x) + 18 * S, shadowTop(x) - 14 * S);
+      if (y > ridge(x) + 12 * S) dryBrush(x, y, rand() < 0.6 ? LIT_DARK : LIT_LIGHT);
+    }
+
+    // cool shadow plane in the foreground, with a ragged grassy edge
+    ctx.fillStyle = SHADE;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let x = 0; x <= W + 4; x += 4) ctx.lineTo(x, shadowTop(x) + 2);
+    ctx.lineTo(W, H);
     ctx.fill();
+    fringe(shadowTop, SHADE, 2, 7);
+    for (let i = 0, n = Math.round(W / 170); i < n; i++) {
+      const x = r(0, W), y = r(shadowTop(x) + 16 * S, H - 8);
+      if (y < H - 6) dapple(x, y, rand() < 0.6 ? SHADE_DARK : SHADE_LIGHT);
+    }
   }
 
   // ---------------------------------------------------------------- tree
@@ -155,18 +141,11 @@
     [[-2.75, 92, 4], [-2.2, 96, 4], [-1.85, 66, 3], [-1.52, 80, 3], [-1.18, 68, 3], [-0.92, 100, 4], [-0.5, 88, 4]].forEach(([a, l, d]) =>
       grow(fork.x, fork.y, a, l * s, 11 * s, 1, d));
 
-    // soft shadow on the grass
-    const sh = ctx.createRadialGradient(tx + 12 * s, ty, 0, tx + 12 * s, ty, 150 * s);
-    sh.addColorStop(0, "rgba(10, 60, 10, .35)");
-    sh.addColorStop(1, "rgba(10, 60, 10, 0)");
-    ctx.fillStyle = sh;
-    ctx.save();
-    ctx.translate(0, ty);
-    ctx.scale(1, 0.09);
+    // flat shadow on the grass
+    ctx.fillStyle = LIT_DARK;
     ctx.beginPath();
-    ctx.arc(tx + 12 * s, 0, 150 * s, 0, Math.PI * 2);
+    ctx.ellipse(tx + 14 * s, ty + 1, 78 * s, 5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
 
     // leaves behind the limbs, in shadow
     leafPass(clusters, s, true);
@@ -177,9 +156,10 @@
       const nx = -(y2 - y) / len, ny = (x2 - x) / len;
       const mx = (x + x2) / 2 + nx * bend, my = (y + y2) / 2 + ny * bend;
       const g = ctx.createLinearGradient(x + nx * w, y + ny * w, x - nx * w, y - ny * w);
-      g.addColorStop(0, "#4a3a28");
-      g.addColorStop(0.55, "#7a6448");
-      g.addColorStop(1, "#a28a68");
+      g.addColorStop(0, "#47392b");
+      g.addColorStop(0.55, "#47392b");
+      g.addColorStop(0.55, "#6f5a43");
+      g.addColorStop(1, "#6f5a43");
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.moveTo(x + nx * w / 2, y + ny * w / 2);
@@ -192,7 +172,7 @@
       ctx.fill();
     });
     // root flare and bark grain
-    ctx.fillStyle = "#5c4a34";
+    ctx.fillStyle = "#47392b";
     ctx.beginPath();
     ctx.moveTo(tx - 20 * s, ty + 1);
     ctx.quadraticCurveTo(tx - 11 * s, ty - 3 * s, tx - 11.5 * s, ty - 16 * s);
@@ -227,14 +207,14 @@
         const x = c.x + ox * c.r + (under ? 5 * s : 0);
         const y = c.y + oy * c.r + (under ? 6 * s : 0);
         let lum;
-        if (under) lum = r(0, 0.22);
+        if (under) lum = 0;
         else {
           const facing = (ox * lx + oy * ly) * 0.5 + 0.5;
           const height = 1 - (c.y - cTop) / Math.max(1, cBot - cTop);
           lum = clamp(facing * 0.6 + height * 0.25 + r(-0.12, 0.18), 0, 1);
         }
         const p = buckets[Math.round(lum * (LEAF.length - 1))];
-        const rw = r(1.6, 3.4) * s, rh = rw * r(0.45, 0.7), rot = r(-1, 1) + 0.5;
+        const rw = r(2.4, 4.6) * s, rh = rw * r(0.5, 0.75), rot = r(-1, 1) + 0.5;
         p.moveTo(x + rw, y);
         p.ellipse(x, y, rw, rh, rot, 0, Math.PI * 2);
       }
@@ -242,59 +222,18 @@
     buckets.forEach((p, i) => { ctx.fillStyle = LEAF[i]; ctx.fill(p); });
   }
 
-  // ---------------------------------------------------------------- figure
-  // A small footballer, facing the tree, ball at their feet.
-  function drawFigure(fx, u) {
-    const fy = ridge(fx) + 1;
-    const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(fx + x * u, fy - (y + h) * u, w * u, h * u); };
-    const SKIN = "#8a5a3c", KIT = "#b04a36", SHORTS = "#24262b", SOCK = "#efece4";
-
-    ctx.fillStyle = "rgba(10, 60, 10, .3)";
-    ctx.beginPath();
-    ctx.ellipse(fx + 2 * u, fy, 7 * u, 1.3 * u, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    rect(-3.4, 0, 3.2, 1.3, "#1d1d1f"); rect(0.6, 0, 3.4, 1.3, "#1d1d1f");      // boots
-    rect(-2.9, 1.2, 2.4, 8.5, SOCK);   rect(0.7, 1.2, 2.4, 8.5, SOCK);           // socks
-    rect(-2.9, 9.6, 2.4, 5.4, SKIN);   rect(0.7, 9.6, 2.4, 5.4, SKIN);           // legs
-    rect(-3.6, 14.8, 7.4, 5.6, SHORTS);                                           // shorts
-    ctx.fillStyle = KIT;                                                           // shirt
-    ctx.beginPath();
-    ctx.moveTo(fx - 3.9 * u, fy - 20 * u);
-    ctx.lineTo(fx - 4.5 * u, fy - 32.5 * u);
-    ctx.quadraticCurveTo(fx, fy - 34.4 * u, fx + 4.5 * u, fy - 32.5 * u);
-    ctx.lineTo(fx + 3.9 * u, fy - 20 * u);
-    ctx.fill();
-    rect(-6.1, 25.5, 2, 7, KIT); rect(4.1, 25.5, 2, 7, KIT);                       // sleeves
-    rect(-6, 19.6, 1.8, 6.2, SKIN); rect(4.2, 19.6, 1.8, 6.2, SKIN);              // arms
-    rect(-1.1, 33.2, 2.2, 2.2, SKIN);                                              // neck
-    ctx.fillStyle = SKIN;
-    ctx.beginPath();
-    ctx.ellipse(fx + 0.4 * u, fy - 38.4 * u, 3.3 * u, 3.8 * u, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#17120f";                                                     // hair
-    ctx.beginPath();
-    ctx.ellipse(fx - 0.2 * u, fy - 40.2 * u, 3.5 * u, 2.6 * u, -0.15, Math.PI * 0.95, Math.PI * 2.05);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,.18)";                                        // light on the shirt
-    ctx.fillRect(fx - 4.2 * u, fy - 32 * u, 2 * u, 11 * u);
-
-    // a few blades in front of the boots so the figure stands in the grass
-    ctx.fillStyle = "#79bf33";
-    ctx.beginPath();
-    for (let i = 0; i < 26; i++) {
-      const x = fx + r(-9, 12) * u, y = fy + r(0, 1.6) * u, h = r(1.5, 3.6) * u, l = r(0, 1.4) * u;
-      ctx.moveTo(x - 0.4 * u, y); ctx.lineTo(x + l, y - h); ctx.lineTo(x + 0.4 * u, y);
-    }
-    ctx.fill();
-
-    // place the ball (a DOM element so it can roll on hover)
-    if (ball) {
-      const bs = Math.max(6, 5.2 * u);
-      ball.style.width = ball.style.height = bs + "px";
-      ball.style.left = fx + 7 * u - bs / 2 + "px";
-      ball.style.top = canvas.offsetTop + ridge(fx + 7 * u) - bs + 0.6 * u + "px";
-    }
+  // ---------------------------------------------------------------- listener
+  // The drawing lives in the page as SVG (so it can move and be clicked);
+  // here we just set it down on the slope at the right angle.
+  function placeListener(fx, k) {
+    if (!listener) return;
+    const w = 130 * k, h = 56 * k;
+    const ang = Math.atan2(ridge(fx + 30) - ridge(fx - 30), 60) * 180 / Math.PI;
+    listener.style.width = w + "px";
+    listener.style.height = h + "px";
+    listener.style.left = fx - w / 2 + "px";
+    listener.style.top = canvas.offsetTop + ridge(fx) - h * (52 / 56) + 1 + "px";
+    listener.style.transform = `rotate(${ang.toFixed(2)}deg)`;
   }
 
   // ---------------------------------------------------------------- render
@@ -316,7 +255,7 @@
     const ts = clamp(Math.min((H * 0.5) / 360, W / 1300), 0.42, 1);
     drawGrass();
     drawTree(W - Math.max(W * 0.17, 215 * ts), ts);
-    drawFigure(W * (W < 600 ? 0.3 : 0.47), clamp(H / 560, 0.75, 1.15));
+    placeListener(W * (W < 600 ? 0.3 : 0.5), clamp(H / 560, 0.62, 1) * 1.05);
   }
 
   let t;
@@ -325,14 +264,17 @@
   if (document.fonts) document.fonts.ready.then(render);
   render();
 
-  // ---------------------------------------------------------------- hobbies, clock
-  const kickers = document.querySelectorAll('[data-kick]');
-  kickers.forEach((k) => {
-    k.addEventListener("mouseenter", () => scene.classList.add("kick"));
-    k.addEventListener("mouseleave", () => scene.classList.remove("kick"));
-    k.addEventListener("focus", () => scene.classList.add("kick"));
-    k.addEventListener("blur", () => scene.classList.remove("kick"));
-  });
+  // ---------------------------------------------------------------- music, clock
+  // Paste the playlist link here once it's ready; the listener on the hill opens it.
+  const PLAYLIST_URL = "";
+  if (listener) {
+    listener.dataset.label = PLAYLIST_URL ? "Now playing · open the playlist" : "Now playing · playlist coming soon";
+    listener.addEventListener("click", () => {
+      if (PLAYLIST_URL) window.open(PLAYLIST_URL, "_blank", "noopener");
+      else listener.classList.toggle("show-label");
+    });
+    listener.addEventListener("blur", () => listener.classList.remove("show-label"));
+  }
 
   function tick() {
     if (!clock) return;
