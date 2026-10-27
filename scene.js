@@ -156,7 +156,7 @@
   }
 
   // every grass mark is drawn this much taller and a touch thicker
-  const TALL = 1.4, THICK = 1.15;
+  const TALL = 1.75, THICK = 1.25;
 
   // one blade; `bend` tips it over from the root (0 = as painted)
   function blade(g, x, y, len, ang, w, color, j, bend) {
