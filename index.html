@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rohit — Product Designer</title>
+  <meta name="description" content="Product designer. Football, the gym, games and poetry when I'm not designing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="mark" href="#">Rohit</a>
+    <nav>
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a href="mailto:hello@example.com">Email</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="col intro">
+        <h1>Rohit</h1>
+        <p>I'm a product designer at Native Universe, a consumer app for discovering the places and people around you. I like turning messy, half-formed ideas into calm, usable products.</p>
+        <p class="hobbies">Off the clock:
+          <button class="thing" data-thing="football">football</button>,
+          the <button class="thing" data-thing="gym">gym</button>,
+          <button class="thing" data-thing="gaming">games</button> and
+          <button class="thing" data-thing="poetry">poetry</button>.
+        </p>
+      </div>
+
+      <figure class="scene" id="scene" aria-label="A hand-drawn hillside: a football goal, a game controller whose cable runs into the roots of a tree, a kettlebell by the trunk, and pages of poems drifting from the branches.">
+        <svg id="scene-svg" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMax slice" role="img" aria-hidden="true"></svg>
+        <figcaption id="caption" aria-live="polite">&nbsp;</figcaption>
+      </figure>
+    </section>
+
+    <section class="col" id="work">
+      <h2>Work</h2>
+      <ol class="work">
+        <li>
+          <a href="#" aria-disabled="true">
+            <span class="w-title">Rebuilding Search &amp; Explore</span>
+            <span class="w-meta">Native Universe</span>
+            <span class="w-year">2026</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" aria-disabled="true">
+            <span class="w-title">Designing for creators and local businesses</span>
+            <span class="w-meta">Native Universe</span>
+            <span class="w-year">2026</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" aria-disabled="true">
+            <span class="w-title">Genzo — a component library</span>
+            <span class="w-meta">Side project</span>
+            <span class="w-year">2026</span>
+          </a>
+        </li>
+      </ol>
+      <p class="soon">Case studies are being written. Ask me for a walkthrough in the meantime.</p>
+    </section>
+
+    <section class="col" id="about">
+      <h2>About</h2>
+      <p>Hey, I'm Rohit.</p>
+      <p>I've spent the last year as the designer at an early-stage startup, which mostly means talking to people, drawing boxes, deleting boxes, and shipping.</p>
+      <p>Outside work you'll find me on a football pitch, under a barbell, a few levels deep in a game, or writing short poems in my notes app.</p>
+
+      <dl class="exp">
+        <div><dt>Native Universe</dt><dd>Product Designer</dd><dd class="when">2025 → Present</dd></div>
+      </dl>
+
+      <p class="links">
+        <a href="mailto:hello@example.com">Email</a>
+        <a href="https://www.linkedin.com/" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/RohitGentyal" rel="noopener">GitHub</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="col foot">
+    <span>© <span id="yr">2026</span> Rohit</span>
+    <span>Drawn and built by hand.</span>
+  </footer>
+
+  <script src="scene.js"></script>
+</body>
+</html>
