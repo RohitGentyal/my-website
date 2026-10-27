@@ -389,11 +389,14 @@
     daisy: { petals: ["#fffbea", "#f6f1da", "#ffffff"], heart: "#f4c542" },
   };
   const LEAVES = ["#4f8a2e", "#5f9a34", "#6eaa3a"];
-  let flowers = [];
+  let flowers = [], stems = [];
 
   function planFlowers(path, dpr) {
-    const spots = [[0.07, 0.8, "pink"], [0.27, 0.76, "orange"], [0.47, 0.72, "daisy"], [0.6, 0.67, "pink"], [0.92, 0.6, "orange"]];
+    const spots = [[0.07, 0.8, "pink"], [0.27, 0.76, "orange"], [0.47, 0.72, "daisy"], [0.6, 0.67, "pink"], [0.92, 0.6, "orange"],
+      [0.17, 0.72, "daisy"], [0.37, 0.66, "pink"], [0.78, 0.6, "daisy"], [0.53, 0.94, "orange"], [0.06, 0.95, "daisy"]];
     spots.forEach(([u, v, kind]) => {
+      // on phones the caption spans the bottom, so keep the low clumps for wide screens
+      if (narrow && v > 0.88) return;
       const cx = u * W, cy = Math.max(v * H, ridge(cx) + 0.06 * H);
       const d = depth(cy, cx), R = 72 * S * (0.45 + d), pal = BLOOMS[kind];
       const clump = { leaves: [], stems: [], heads: [] };
@@ -408,14 +411,16 @@
         if (ctx.isPointInPath(path, bx * dpr, by * dpr)) continue;
         const tall = r(8, 22) * S * (0.4 + d), hx = bx + r(-3, 3) * S, hy = by - tall;
         const size = r(2.6, 4.4) * S * (0.45 + d);
-        clump.stems.push({ x: bx, y: by, hx, hy, w: 0.9 * S * (0.5 + d) });
+        const stem = { x: bx, y: by, hx, hy, w: 0.9 * S * (0.5 + d), b: 0, v: 0 };
+        clump.stems.push(stem);
+        stems.push(stem);
         const dabs = [];
         const count = kind === "daisy" ? 6 : 5;
         for (let p = 0; p < count; p++) {
           const a = (p / count) * Math.PI * 2 + r(-0.2, 0.2);
           dabs.push({ x: hx + Math.cos(a) * size * 0.9, y: hy + Math.sin(a) * size * 0.6, rx: size * (kind === "daisy" ? 0.75 : 0.85), ry: size * 0.5, a, c: pick(pal.petals) });
         }
-        clump.heads.push({ dabs, x: hx, y: hy, size, heart: pal.heart });
+        clump.heads.push({ dabs, x: hx, y: hy, size, heart: pal.heart, stem });
       }
       flowers.push(clump);
     });
@@ -425,11 +430,19 @@
     flowers.forEach((f) => {
       f.leaves.forEach((l) => { g.fillStyle = l.c; g.beginPath(); g.ellipse(l.x, l.y, l.rx, l.ry, l.a, 0, Math.PI * 2); g.fill(); });
       g.strokeStyle = LEAVES[0];
-      f.stems.forEach((st) => { g.lineWidth = st.w; g.beginPath(); g.moveTo(st.x, st.y); g.quadraticCurveTo(st.x, (st.y + st.hy) / 2, st.hx, st.hy); g.stroke(); });
+      // a brushed stem swings its head around the root
+      f.stems.forEach((st) => {
+        const dx = st.hx - st.x, dy = st.hy - st.y, c = Math.cos(st.b), sn = Math.sin(st.b);
+        st.ox = st.x + dx * c - dy * sn - st.hx;
+        st.oy = st.y + dx * sn + dy * c - st.hy;
+        g.lineWidth = st.w; g.beginPath(); g.moveTo(st.x, st.y);
+        g.quadraticCurveTo(st.x + st.ox * 0.3, (st.y + st.hy) / 2, st.hx + st.ox, st.hy + st.oy); g.stroke();
+      });
       f.heads.forEach((h) => {
-        h.dabs.forEach((p) => { g.fillStyle = p.c; g.beginPath(); g.ellipse(p.x, p.y, p.rx, p.ry, p.a, 0, Math.PI * 2); g.fill(); });
+        const ox = h.stem.ox, oy = h.stem.oy;
+        h.dabs.forEach((p) => { g.fillStyle = p.c; g.beginPath(); g.ellipse(p.x + ox, p.y + oy, p.rx, p.ry, p.a, 0, Math.PI * 2); g.fill(); });
         g.fillStyle = h.heart;
-        g.beginPath(); g.arc(h.x, h.y, h.size * 0.38, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.arc(h.x + ox, h.y + oy, h.size * 0.38, 0, Math.PI * 2); g.fill();
       });
     });
   }
@@ -463,7 +476,7 @@
     drawRocks();
     drawClumps();
     drawTufts();
-    flowers = [];
+    flowers = []; stems = [];
     planFlowers(path, dpr);
     // blades the path or a rock would have covered stay hidden
     live = live.filter((l) => {
@@ -494,7 +507,7 @@
   function step() {
     raf = 0;
     let moving = false;
-    live.forEach((l) => {
+    [live, stems].flat().forEach((l) => {
       l.v = (l.v - l.b * 0.08) * 0.84;
       l.b = clamp(l.b + l.v, -1.3, 1.3);
       if (Math.abs(l.b) > 0.002 || Math.abs(l.v) > 0.002) moving = true;
@@ -512,6 +525,12 @@
       if (dist > reach) return;
       const f = 1 - dist / reach;
       l.v += (clamp(dx, -30, 30) * 0.02 + Math.sign(mx - x || 1) * 0.08) * f;
+    });
+    stems.forEach((st) => {
+      const dist = Math.hypot(st.hx - x, st.hy - y);
+      if (dist > reach) return;
+      const f = 1 - dist / reach;
+      st.v += (clamp(dx, -30, 30) * 0.015 + Math.sign(st.hx - x || 1) * 0.06) * f;
     });
     if (!raf) raf = requestAnimationFrame(step);
   }
