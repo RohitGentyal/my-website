@@ -11,6 +11,8 @@
   if (!canvas || !skyCanvas) return;
   const hillCtx = canvas.getContext("2d");
   const skyCtx = skyCanvas.getContext("2d");
+  const touch = document.getElementById("touch");
+  const touchCtx = touch && touch.getContext("2d");
   // sky and cloud paint on their own layer so they can drift behind the hill
   let ctx = skyCtx;
 
@@ -153,14 +155,25 @@
     return p;
   }
 
-  function stroke(x, y, len, ang, w, color) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = w;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.quadraticCurveTo(x + Math.cos(ang) * len * 0.5 + r(-1, 1), y + Math.sin(ang) * len * 0.5, x + Math.cos(ang) * len, y + Math.sin(ang) * len);
-    ctx.stroke();
+  // every grass mark is drawn this much taller and a touch thicker
+  const TALL = 1.4, THICK = 1.15;
+
+  // one blade; `bend` tips it over from the root (0 = as painted)
+  function blade(g, x, y, len, ang, w, color, j, bend) {
+    g.strokeStyle = color;
+    g.lineWidth = w;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.quadraticCurveTo(x + Math.cos(ang + bend * 0.4) * len * 0.5 + j, y + Math.sin(ang + bend * 0.4) * len * 0.5, x + Math.cos(ang + bend) * len, y + Math.sin(ang + bend) * len);
+    g.stroke();
   }
+
+  function stroke(x, y, len, ang, w, color) {
+    blade(ctx, x, y, len * TALL, ang, w * THICK, color, r(-1, 1), 0);
+  }
+
+  // a share of the slope's blades live on their own layer so they can be brushed
+  let live = [];
 
   function tone(n) {
     if (n > 1.15) return DEEPS;
@@ -200,7 +213,9 @@
       if (y < ridge(x) + 1) continue;
       const d = depth(y, x), n = patch(x, y);
       const set = rand() < 0.5 ? tone(n) : tone(n + (rand() < 0.5 ? 0.7 : -0.7));
-      stroke(x, y, r(3, 9) * S * (0.5 + d * 1.3), -Math.PI / 2 + r(-0.6, 0.35), r(0.7, 1.6) * S * (0.6 + d), pick(set));
+      const len = r(3, 9) * S * (0.5 + d * 1.3), ang = -Math.PI / 2 + r(-0.6, 0.35), w = r(0.7, 1.6) * S * (0.6 + d), color = pick(set);
+      if (i % 3 === 0) live.push({ x, y, len: len * TALL, ang, w: w * THICK, color, j: r(-1, 1), b: 0, v: 0 });
+      else stroke(x, y, len, ang, w, color);
     }
     ctx.restore();
 
@@ -208,7 +223,7 @@
     for (let x = 0; x < W; x += r(1, 2.4)) {
       const y = ridge(x) + 1.5;
       ctx.fillStyle = rand() < 0.75 ? GRASS : pick(MIDS);
-      const h = r(2, 6) * S, lean = r(-1.5, 2.5) * S;
+      const h = r(2, 6) * S * TALL, lean = r(-1.5, 2.5) * S;
       ctx.beginPath();
       ctx.moveTo(x - 1 * S, y);
       ctx.lineTo(x + lean, y - h);
@@ -280,6 +295,7 @@
         }
       });
     });
+    return shape;
   }
 
   // ---------------------------------------------------------------- rocks
@@ -324,9 +340,12 @@
   function drawRocks() {
     [[0.62, 0.9, 0.85], [0.69, 0.84, 0.7], [0.76, 0.875, 1.1], [0.86, 0.82, 0.75]].forEach(([u, v, s]) => {
       const x = u * W, y = Math.max(v * H, ridge(x) + 0.12 * H);
-      drawRock(x, y, 32 * s * S * (0.6 + depth(y, x)));
+      const size = 32 * s * S * (0.6 + depth(y, x));
+      drawRock(x, y, size);
+      rocks.push({ x, y, size });
     });
   }
+  let rocks = [];
 
   // ---------------------------------------------------------------- clumps
   function clump(x, y, h) {
@@ -357,7 +376,8 @@
     W = rect.width; H = rect.height;
     narrow = W < 760;
     S = clamp(Math.min(H / 800, W / 1200), 0.6, 1.2);
-    [canvas, skyCanvas].forEach((c) => {
+    [canvas, skyCanvas, touch].forEach((c) => {
+      if (!c) return;
       c.width = Math.round(W * dpr);
       c.height = Math.round(H * dpr);
       c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -368,10 +388,71 @@
     drawSky();
     drawCloud();
     ctx = hillCtx;
+    live = []; rocks = [];
     drawSlope();
-    drawPath();
+    const path = drawPath();
     drawRocks();
     drawClumps();
+    // blades the path or a rock would have covered stay hidden
+    live = live.filter((l) => {
+      const tx = l.x + Math.cos(l.ang) * l.len, ty = l.y + Math.sin(l.ang) * l.len;
+      if (ctx.isPointInPath(path, l.x * dpr, l.y * dpr) || ctx.isPointInPath(path, tx * dpr, ty * dpr)) return false;
+      return !rocks.some((k) => Math.abs(l.x - k.x) < k.size * 1.1 && l.y > k.y - k.size && l.y < k.y + 4);
+    });
+    hillClip = hillPath();
+    drawLive();
+  }
+
+  // ---------------------------------------------------------------- touch grass
+  // Run the cursor over the slope and the blades under it lean away and spring
+  // back; the cursor itself disappears so it feels like a hand in the grass.
+  let hillClip, raf = 0, pointer = null;
+
+  function drawLive() {
+    if (!touchCtx) return;
+    touchCtx.clearRect(0, 0, W, H);
+    touchCtx.save();
+    touchCtx.clip(hillClip);
+    touchCtx.lineCap = "round";
+    live.forEach((l) => blade(touchCtx, l.x, l.y, l.len, l.ang, l.w, l.color, l.j, l.b));
+    touchCtx.restore();
+  }
+
+  function step() {
+    raf = 0;
+    let moving = false;
+    live.forEach((l) => {
+      l.v = (l.v - l.b * 0.08) * 0.84;
+      l.b = clamp(l.b + l.v, -1.3, 1.3);
+      if (Math.abs(l.b) > 0.002 || Math.abs(l.v) > 0.002) moving = true;
+      else l.b = l.v = 0;
+    });
+    drawLive();
+    if (moving) raf = requestAnimationFrame(step);
+  }
+
+  function brush(x, y, dx) {
+    const reach = 60 * S;
+    live.forEach((l) => {
+      const mx = l.x + Math.cos(l.ang) * l.len * 0.6, my = l.y + Math.sin(l.ang) * l.len * 0.6;
+      const dist = Math.hypot(mx - x, my - y);
+      if (dist > reach) return;
+      const f = 1 - dist / reach;
+      l.v += (clamp(dx, -30, 30) * 0.02 + Math.sign(mx - x || 1) * 0.08) * f;
+    });
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+
+  if (touch) {
+    hero.addEventListener("pointermove", (e) => {
+      const rect = touch.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const onGrass = !e.target.closest(".intro, .live") && y > ridge(x);
+      hero.classList.toggle("touching", onGrass);
+      if (onGrass) brush(x, y, pointer ? x - pointer.x : 0);
+      pointer = onGrass ? { x, y } : null;
+    });
+    hero.addEventListener("pointerleave", () => { hero.classList.remove("touching"); pointer = null; });
   }
 
   let t;

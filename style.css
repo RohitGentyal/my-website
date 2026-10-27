@@ -41,12 +41,12 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
   align-items: center;
   padding: 22px 28px;
-  font-size: 16px;
+  font-size: 18px;
   z-index: 2;
 }
 .mark { font-weight: 500; color: var(--on-sky); }
 .top nav { display: flex; gap: 22px; }
-.top nav a { color: var(--on-sky-soft); transition: color .2s; }
+.top nav a { color: var(--on-sky-soft); transition: color .2s, background-size .35s ease; }
 .top nav a:hover { color: var(--on-sky); }
 
 /* Hero: a full-bleed painted panel, text sitting on the sky */
@@ -137,6 +137,7 @@ a { color: inherit; text-decoration: none; }
   height: 100%;
 }
 #sky { will-change: transform; }
+.hero.touching { cursor: none; }
 .live {
   position: absolute;
   right: 28px; bottom: 22px;
@@ -197,8 +198,13 @@ h2.sub { margin: 40px 0 0; }
 }
 .exp .when { color: var(--ink-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .links { display: flex; gap: 20px; }
-.links a { color: var(--ink) !important; border-bottom: 1px solid var(--rule); transition: border-color .2s; }
-.links a:hover { border-color: var(--ink); }
+.links a { color: var(--ink) !important; transition: background-size .35s ease; }
+/* a line draws in under the word on hover and slides back out on leave */
+.top nav a, .links a {
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
+  padding-bottom: 2px;
+}
+.top nav a:hover, .links a:hover, .top nav a:focus-visible, .links a:focus-visible { background-size: 100% 1px; }
 
 .foot s { text-decoration-thickness: 1px; opacity: .75; }
 .foot {
@@ -215,7 +221,7 @@ h2.sub { margin: 40px 0 0; }
   /* phones keep the previous, one-step-smaller sizes */
   section.col { font-size: 16px; }
   body { font-size: 16px; }
-  .top { font-size: 15px; }
+  .top { font-size: 16px; }
   h2 { font-size: 14px; }
   .w-desc, .w-meta, .w-year, .soon, .exp dd { font-size: 15px; }
   .foot { font-size: 14px; }
