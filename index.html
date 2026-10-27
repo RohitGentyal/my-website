@@ -25,17 +25,31 @@
       <div class="col intro">
         <h1>Rohit</h1>
         <p>I'm a product designer at Native Universe, a consumer app for discovering the places and people around you. I like turning messy, half-formed ideas into calm, usable products.</p>
-        <p class="hobbies">Off the clock:
-          <button class="thing" data-thing="football">football</button>,
-          the <button class="thing" data-thing="gym">gym</button>,
-          <button class="thing" data-thing="gaming">games</button> and
-          <button class="thing" data-thing="poetry">poetry</button>.
+        <p class="hobbies">When I'm not designing,
+          <span class="tiles">
+            <button class="tile" data-kick data-label="Football" aria-label="Football">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path class="fill" d="M12 8.6l3.2 2.3-1.2 3.8h-4l-1.2-3.8z"/><path d="M12 8.6V3.6M15.2 10.9l4.6-1.5M14 14.7l2.9 4M10 14.7l-2.9 4M8.8 10.9L4.2 9.4"/></svg>
+            </button>
+            <button class="tile" data-label="Gym" aria-label="Gym">
+              <svg viewBox="0 0 24 24"><path d="M7 12h10"/><rect class="fill" x="4" y="7.5" width="3" height="9" rx="1"/><rect class="fill" x="17" y="7.5" width="3" height="9" rx="1"/><path d="M2.5 10v4M21.5 10v4"/></svg>
+            </button>
+            <button class="tile" data-label="Gaming" aria-label="Gaming">
+              <svg viewBox="0 0 24 24"><path d="M7.5 7.5h9c2.6 0 4 2 4.4 4.6l.6 3.9c.3 2-1.9 3.1-3.3 1.7L16 15.5H8l-2.2 2.2c-1.4 1.4-3.6.3-3.3-1.7l.6-3.9C3.5 9.5 4.9 7.5 7.5 7.5z"/><path d="M7.5 10.2v3.2M5.9 11.8h3.2"/><circle class="fill" cx="15.6" cy="10.8" r=".9"/><circle class="fill" cx="17.4" cy="12.8" r=".9"/></svg>
+            </button>
+            <button class="tile" data-label="Poetry" aria-label="Poetry">
+              <svg viewBox="0 0 24 24"><path d="M19.5 3.5C12 4.5 7.5 10 6 17.5"/><path d="M19.5 3.5c.5 6-3.5 10.5-9.5 11.5"/><path d="M4 20.5h9"/></svg>
+            </button>
+          </span>
         </p>
       </div>
 
-      <figure class="scene" id="scene" aria-label="A hand-drawn hillside: a football goal, a game controller whose cable runs into the roots of a tree, a kettlebell by the trunk, and pages of poems drifting from the branches.">
-        <svg id="scene-svg" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMax slice" role="img" aria-hidden="true"></svg>
-        <figcaption id="caption" aria-live="polite">&nbsp;</figcaption>
+      <figure class="scene" id="scene" aria-label="A painted grassy hill with a broad tree on the right and a small footballer standing in the dip with a ball at their feet.">
+        <canvas id="hill"></canvas>
+        <span class="ball" id="ball" aria-hidden="true"></span>
+        <figcaption class="live">
+          <span class="line">“the grass keeps every footstep, and returns none.”</span>
+          <span class="clock" id="clock"></span>
+        </figcaption>
       </figure>
     </section>
 
