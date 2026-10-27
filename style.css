@@ -96,6 +96,11 @@ a { color: inherit; text-decoration: none; }
   stroke-linecap: round; stroke-linejoin: round;
 }
 .tile svg .fill { fill: currentColor; stroke: none; }
+.tile svg .cream { fill: #fffbea; }
+.tile svg .grass { fill: #a3cd4c; }
+.tile svg .sky { fill: #7fbcd6; }
+.tile svg .screen { fill: #cfe28c; }
+.tile svg .soft { stroke: #9a957f; }
 .tile:hover, .tile:focus-visible {
   transform: translateY(-2px) rotate(-3deg);
   box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 6px 12px -4px rgba(60,50,20,.25);
