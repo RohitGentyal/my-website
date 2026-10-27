@@ -172,18 +172,22 @@ h2 {
 
 #about p { color: var(--ink-soft); margin: 0 0 14px; }
 #about p:first-of-type { color: var(--ink); }
-.exp { margin: 28px 0; padding: 0; }
-.exp div {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  column-gap: 20px;
-  padding: 12px 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+h2.sub { margin: 40px 0 0; }
+.exp { margin: 0 0 32px; padding: 0; }
+.exp div { padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.exp div:first-child { border-top: 1px solid var(--rule); margin-top: 18px; }
+.exp dt { color: var(--ink); margin-bottom: 4px; }
+.exp dd {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 3px 0;
 }
-.exp dt { color: var(--ink); }
-.exp dd { margin: 0; color: var(--ink-faint); font-size: 14px; }
-.exp dd.when { grid-column: 2; grid-row: 1; font-variant-numeric: tabular-nums; }
+.exp .when { color: var(--ink-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .links { display: flex; gap: 20px; }
 .links a { color: var(--ink) !important; border-bottom: 1px solid var(--rule); transition: border-color .2s; }
 .links a:hover { border-color: var(--ink); }
