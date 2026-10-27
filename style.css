@@ -156,7 +156,7 @@ h2 {
 
 .work { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
 .work li { border-bottom: 1px solid var(--rule); }
-.work a {
+.work .w-row {
   display: grid;
   grid-template-columns: 1fr auto auto;
   gap: 20px;
@@ -164,7 +164,7 @@ h2 {
   padding: 14px 0;
   transition: padding .25s;
 }
-.work a:hover { padding-left: 6px; }
+.w-desc { grid-column: 1 / -1; margin: -12px 0 0; color: var(--ink-soft); font-size: 14px; }
 .w-title { color: var(--ink); }
 .w-meta, .w-year { color: var(--ink-faint); font-size: 14px; }
 .w-year { font-variant-numeric: tabular-nums; }
@@ -205,7 +205,8 @@ h2 {
   .hero { min-height: 720px; }
   .live { right: 16px; left: 16px; bottom: 16px; }
   .live .line { font-size: 15px; }
-  .work a { grid-template-columns: 1fr auto; gap: 4px 16px; }
+  .work .w-row { grid-template-columns: 1fr auto; gap: 4px 16px; }
+  .w-desc { margin-top: 4px; }
   .w-meta { grid-column: 1; grid-row: 2; }
   .w-year { grid-column: 2; grid-row: 1; }
   .foot { flex-direction: column; gap: 4px; }
