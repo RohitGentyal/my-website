@@ -190,15 +190,26 @@
   }
 
   // ---------------------------------------------------------------- shadows
-  // Every blade and flower casts a thin shadow away from the sun or moon, on its
-  // own layer under the grass. Low light stretches them long; they fade out at
-  // dusk and the moon brings them back (and the reverse at dawn). They're
-  // batched into three strokes so the layer can repaint every frame the light
-  // or the grass moves.
+  // Shadows fall away from the sun or moon onto their own softly blurred layer
+  // under the grass: a pool of shade behind every tuft, grass clump and flower
+  // clump, plus a tapered sliver behind each of their blades and stems. Low
+  // light stretches them long (and fainter); they fade out at dusk and the moon
+  // brings them back. Each kind is one batched fill, so the layer can repaint
+  // every frame the light or the grass moves.
+  let casters = [];
   function lightAt(p) {
     const s = sunUp(p), m = moonUp(p), src = s >= m ? sunAt(p) : moonNow(p);
     const elev = clamp((ridge(src.x) - src.y) / (H * 0.45), 0.05, 1);
-    return { x: src.x, y: src.y, strength: s >= m ? 0.42 * s : 0.6 * m, reach: clamp(0.5 / elev, 0.5, 3.5) };
+    const reach = clamp(0.55 / elev, 0.55, 2.6);
+    // longer shadows are paler, like real raking light
+    return { x: src.x, y: src.y, reach, strength: (s >= m ? 0.3 * s : 0.42 * m) / (0.7 + 0.3 * reach) };
+  }
+
+  // where a point `h` tall at (x, y) throws its shadow tip, on the slope
+  function cast(L, x, y, h) {
+    const vx = x - L.x, vy = y - L.y;
+    const d = Math.hypot(vx, vy) || 1, k = h * L.reach;
+    return { dx: (vx / d) * k, dy: (vy / d) * k * 0.35 };
   }
 
   function drawShade() {
@@ -206,24 +217,37 @@
     const g = shadeCtx, L = lightAt(glowT);
     g.clearRect(0, 0, W, H);
     if (L.strength < 0.01) return;
-    const paths = [new Path2D(), new Path2D(), new Path2D()], thin = 1.3 * S, mid = 2.1 * S;
+    // soft pools behind each clump of growth
+    const pools = new Path2D();
+    casters.forEach((c) => {
+      const { dx, dy } = cast(L, c.x, c.y, c.h), len = Math.hypot(dx, dy);
+      const rx = len * 0.5 + c.w * 0.35, ry = c.w * 0.45 + 2 * S, a = Math.atan2(dy, dx);
+      const cx = c.x + dx * 0.5, cy = c.y + dy * 0.5;
+      pools.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx);
+      pools.ellipse(cx, cy, rx, ry, a, 0, Math.PI * 2);
+    });
+    g.fillStyle = `rgba(20, 42, 26, ${L.strength * 0.75})`;
+    g.fill(pools);
+    // a tapered sliver behind each standing blade and stem: a thin stroke the
+    // whole length over a wider one near the root (strokes batch far faster
+    // than thousands of filled shapes). The dense slope blades are left out;
+    // their shadows only muddied the grass.
+    const full = new Path2D(), root = new Path2D();
     live.forEach((o) => {
-      if (o.leaf) return;
+      if (o.leaf || o.slope) return;
       let tx, ty;
       if (o.stem) { tx = o.hx + (o.ox || 0); ty = o.hy + (o.oy || 0); }
       else { const a = o.ang + o.b0 + o.b; tx = o.x + Math.cos(a) * o.len; ty = o.y + Math.sin(a) * o.len; }
       const h = o.y - ty;
       if (h <= 0) return;
-      let vx = o.x - L.x, vy = o.y - L.y;
-      const d = Math.hypot(vx, vy) || 1, k = h * L.reach;
-      vx /= d; vy /= d;
-      const p = paths[o.w < thin ? 0 : o.w < mid ? 1 : 2];
-      p.moveTo(o.x, o.y);
-      p.lineTo(o.x + (tx - o.x) * 0.4 + vx * k, o.y + vy * k * 0.3);
+      const { dx, dy } = cast(L, o.x, o.y, h), ex = (tx - o.x) * 0.35 + dx;
+      full.moveTo(o.x, o.y); full.lineTo(o.x + ex, o.y + dy);
+      root.moveTo(o.x, o.y); root.lineTo(o.x + ex * 0.4, o.y + dy * 0.4);
     });
     g.lineCap = "round";
-    g.strokeStyle = `rgba(22, 44, 14, ${L.strength})`;
-    [1.1, 1.9, 3].forEach((w, i) => { g.lineWidth = w * S; g.stroke(paths[i]); });
+    g.strokeStyle = `rgba(20, 42, 26, ${L.strength * 0.8})`;
+    g.lineWidth = 1.2 * S; g.stroke(full);
+    g.lineWidth = 2.6 * S; g.stroke(root);
   }
 
   // the moon's light pooling on the slope and catching the ridge, screened on top
@@ -543,6 +567,7 @@
       stroke(x + (i - n / 2) * 1.1 * S, y, h * r(0.6, 1.1), ang, r(1, 1.8) * S, pick(i % 3 ? DARKS : DEEPS));
     }
     for (let i = 0; i < 2; i++) stroke(x + r(-3, 3) * S, y - 1, h * r(0.5, 0.8), -Math.PI / 2 + r(-0.5, 0.5), 1 * S, pick(LIGHTS));
+    casters.push({ x, y, w: n * 1.1 * S, h: h * TALL * 0.8 });
   }
 
   function drawClumps() {
@@ -561,6 +586,7 @@
       const x = r(0, W), y = r(ridge(x) + 14 * S, H + 4);
       const d = depth(y, x), h = r(15, 28) * S * (0.4 + d * 1.2);
       const lean = r(-0.35, 0.35), blades = 6 + Math.floor(rand() * 6);
+      casters.push({ x, y, w: blades * 1.4 * S, h: h * 0.75 });
       for (let k = 0; k < blades; k++) {
         const ang = -Math.PI / 2 + lean + (k - blades / 2) * 0.12 + r(-0.12, 0.12);
         live.push({ x: x + (k - blades / 2) * 1.4 * S, y, len: h * r(0.55, 1.05), ang, w: r(0.9, 1.7) * S * (0.6 + d), color: pick(k % 3 ? MIDS : LIGHTS), j: r(-3, 3) * S, b0: r(-0.25, 0.25), b: 0, v: 0 });
@@ -594,6 +620,7 @@
       const cx = u * W, cy = Math.max(v * H, ridge(cx) + 0.06 * H);
       const d = depth(cy, cx), R = 80 * S * (0.45 + d), accent = pick(KINDS);
       const clump = { heads: [] };
+      casters.push({ x: cx, y: cy + R * 0.15, w: R * 1.5, h: 16 * S * (0.4 + d) });
       for (let k = 0; k < 70; k++) {
         const x = cx + r(-R, R), y = cy + r(-R * 0.3, R * 0.3);
         if (ctx.isPointInPath(path, x * dpr, y * dpr)) continue;
@@ -679,7 +706,7 @@
     }
     seed = resume;
     ctx = hillCtx;
-    live = []; rocks = [];
+    live = []; rocks = []; casters = [];
     drawSlope();
     const path = drawPath();
     drawRocks();
@@ -806,7 +833,9 @@
     if (dusk) dusk.style.opacity = d;
     // day → a warm dusk → cool moonlight, in one filter so it blends smoothly
     const f = p || d ? `brightness(${lerp(1, 0.48, p) - 0.08 * d}) sepia(${0.4 * d}) saturate(${lerp(1, 0.7, p) + 0.2 * d}) hue-rotate(${lerp(0, 16, p) - 12 * d}deg)` : "";
-    [canvas, shade, touch].forEach((el) => { if (el) el.style.filter = f; });
+    [canvas, touch].forEach((el) => { if (el) el.style.filter = f; });
+    // the shade layer is also blurred so every shadow has a soft edge
+    if (shade) shade.style.filter = `blur(${(1.4 * S).toFixed(2)}px) ${f}`;
     drawShade();
   }
 
