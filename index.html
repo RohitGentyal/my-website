@@ -8,12 +8,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=icons3">
+  <script>try { if (localStorage.getItem("theme") === "night") document.documentElement.dataset.theme = "night"; } catch (e) {}</script>
+  <link rel="stylesheet" href="style.css?v=night1">
 </head>
 <body>
   <header class="top">
     <a class="mark" href="#">Rohit</a>
     <nav>
+      <button class="mode" id="mode" type="button" aria-label="Night mode" aria-pressed="false">
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></svg>
+      </button>
       <a href="#work">Work</a>
       <a href="#about">About</a>
       <a href="mailto:rohitgentyal0201@gmail.com">Email</a>
@@ -45,8 +50,10 @@
 
       <figure class="scene" id="scene" aria-label="A painted summer hillside under a teal sky with one towering cloud, and a sandy path winding up the grassy slope past a few rocks.">
         <canvas id="sky"></canvas>
+        <canvas id="skyNight"></canvas>
         <canvas id="hill"></canvas>
         <canvas id="touch"></canvas>
+        <canvas id="glow"></canvas>
         <canvas id="bees"></canvas>
         <div class="fade" aria-hidden="true"></div>
         <figcaption class="live">
@@ -100,6 +107,6 @@
     <span>Drawn, <s>erased</s>, framed, <s>deleted</s>, and finally built by hand.</span>
   </footer>
 
-  <script src="scene.js?v=icons3"></script>
+  <script src="scene.js?v=night1"></script>
 </body>
 </html>

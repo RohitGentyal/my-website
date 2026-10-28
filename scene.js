@@ -14,6 +14,10 @@
   const skyCtx = skyCanvas.getContext("2d");
   const touch = document.getElementById("touch");
   const touchCtx = touch && touch.getContext("2d");
+  const skyNight = document.getElementById("skyNight");
+  const nightCtx = skyNight && skyNight.getContext("2d");
+  const glowCanvas = document.getElementById("glow");
+  const glowCtx = glowCanvas && glowCanvas.getContext("2d");
   // sky and cloud paint on their own layer so they can drift behind the hill
   let ctx = skyCtx;
 
@@ -40,7 +44,8 @@
   const depth = (y, x) => clamp((y - ridge(x)) / (H - ridge(x)), 0, 1);
 
   const SKY = "#287fa8", SKY_LOW = "#2f8ab3";
-  const CLOUD_LIT = "#f6f4dc", CLOUD_TOP = "#fbfaea", CLOUD_SHADE = "#e3e8d6", CLOUD_DEEP = "#cbdbd4";
+  const DAY_CLOUD = { lit: "#f6f4dc", top: "#fbfaea", shade: "#e3e8d6", deep: "#cbdbd4", cast: "180, 208, 206" };
+  const NIGHT_CLOUD = { lit: "#a9b6d3", top: "#c4cee4", shade: "#7d8cb0", deep: "#5f6f97", cast: "40, 58, 104" };
   const GRASS = "#a3cd4c";
   const LIGHTS = ["#b4d75a", "#bcdc63", "#aed354"];
   const MIDS = ["#97c446", "#8fbe42", "#9cc84a"];
@@ -60,15 +65,92 @@
   }
 
   // ---------------------------------------------------------------- sky + cloud
-  function drawSky() {
+  function drawSky(top = SKY, low = SKY_LOW) {
     const g = ctx.createLinearGradient(0, 0, 0, H * 0.7);
-    g.addColorStop(0, SKY);
-    g.addColorStop(1, SKY_LOW);
+    g.addColorStop(0, top);
+    g.addColorStop(1, low);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
   }
 
-  function drawCloud() {
+  // ---------------------------------------------------------------- night sky
+  // Where the moon hangs: top right on wide screens; on phones the intro fills
+  // the top, so it sits low on the left beside the cloud.
+  function moonAt() {
+    const heroTop = hero.getBoundingClientRect().top;
+    const textBottom = intro ? intro.getBoundingClientRect().bottom - heroTop : 0;
+    return narrow
+      ? { x: W * 0.17, y: Math.min(textBottom + 60 * S, ridge(W * 0.17) - 70 * S), r: 20 * S }
+      : { x: W * 0.88, y: H * 0.17, r: 28 * S };
+  }
+
+  function drawStars(moon) {
+    const box = intro && intro.getBoundingClientRect(), heroTop = hero.getBoundingClientRect().top;
+    const n = narrow ? 26 : 48;
+    for (let i = 0, tries = 0; i < n && tries < 600; tries++) {
+      const x = r(0, W), y = r(0, H * 0.75);
+      if (y > ridge(x) - 20 * S || Math.hypot(x - moon.x, y - moon.y) < moon.r * 3) continue;
+      // keep the intro text clean
+      if (box && x > box.left - 10 && x < box.right + 10 && y > box.top - heroTop - 10 && y < box.bottom - heroTop + 10) continue;
+      i++;
+      const size = r(0.5, 1.4) * S, a = r(0.45, 1);
+      ctx.fillStyle = `rgba(255, 250, 225, ${a})`;
+      ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
+      // a few bright ones get a soft four-point twinkle
+      if (rand() < 0.15) {
+        ctx.strokeStyle = `rgba(255, 250, 225, ${a * 0.55})`;
+        ctx.lineWidth = 0.7 * S;
+        ctx.beginPath();
+        ctx.moveTo(x - size * 4, y); ctx.lineTo(x + size * 4, y);
+        ctx.moveTo(x, y - size * 4); ctx.lineTo(x, y + size * 4);
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawMoon(m) {
+    const halo = ctx.createRadialGradient(m.x, m.y, m.r * 0.8, m.x, m.y, m.r * 6);
+    halo.addColorStop(0, "rgba(210, 222, 255, .28)");
+    halo.addColorStop(1, "rgba(210, 222, 255, 0)");
+    ctx.fillStyle = halo;
+    ctx.fillRect(m.x - m.r * 6, m.y - m.r * 6, m.r * 12, m.r * 12);
+    ctx.fillStyle = "#f6f2dc";
+    ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2); ctx.fill();
+    // soft grey seas
+    ctx.fillStyle = "rgba(196, 192, 168, .55)";
+    [[-0.3, -0.25, 0.28], [0.25, 0.1, 0.2], [-0.05, 0.38, 0.16], [0.35, -0.38, 0.1]].forEach(([dx, dy, s]) => {
+      ctx.beginPath(); ctx.ellipse(m.x + dx * m.r, m.y + dy * m.r, s * m.r, s * m.r * 0.8, 0.4, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+
+  // the moon's light pooling on the slope and catching the ridge, screened on top
+  function drawGlow(m) {
+    const g = glowCtx;
+    g.clearRect(0, 0, W, H);
+    g.save();
+    g.clip(hillPath());
+    const px = narrow ? W * 0.35 : W * 0.66, py = lerp(ridge(px), H, 0.3);
+    const pool = g.createRadialGradient(px, py, 0, px, py, Math.max(W, H) * 0.55);
+    pool.addColorStop(0, "rgba(120, 150, 215, .38)");
+    pool.addColorStop(0.5, "rgba(80, 105, 170, .16)");
+    pool.addColorStop(1, "rgba(60, 80, 140, 0)");
+    g.fillStyle = pool;
+    g.fillRect(0, 0, W, H);
+    g.restore();
+    // a soft, blurred sheen on the crest, strongest under the moon
+    g.save();
+    g.filter = `blur(${4 * S}px)`;
+    g.lineCap = "round";
+    for (let x = 0; x < W; x += 6) {
+      const near = 1 - clamp(Math.abs(x - m.x) / (W * 0.7), 0, 1);
+      g.strokeStyle = `rgba(150, 178, 240, ${0.04 + 0.16 * near})`;
+      g.lineWidth = 7 * S;
+      g.beginPath(); g.moveTo(x, ridge(x) + 6 * S); g.lineTo(x + 6, ridge(x + 6) + 6 * S); g.stroke();
+    }
+    g.restore();
+  }
+
+  function drawCloud(pal) {
     // keep the cloud clear of the intro text
     const heroTop = hero.getBoundingClientRect().top;
     const textBottom = intro ? intro.getBoundingClientRect().bottom - heroTop : 0;
@@ -107,7 +189,7 @@
     lobes.forEach((l) => {
       for (let k = 0; k < l.r * 0.7; k++) {
         const a = r(Math.PI * 0.9, Math.PI * 2.1), d = l.r * r(0.95, 1.01);
-        lc.fillStyle = CLOUD_LIT;
+        lc.fillStyle = pal.lit;
         lc.beginPath();
         lc.ellipse(l.x + Math.cos(a) * d, l.y + Math.sin(a) * d, r(2, 4) * S, r(1.5, 3) * S, a, 0, Math.PI * 2);
         lc.fill();
@@ -115,8 +197,8 @@
     });
     // back to front: each puff gets a thin, soft fold of shade underneath
     lobes.sort((a, b) => a.y - b.y).forEach((l) => {
-      disc(lc, l.x, l.y, l.r, l.t < 0.35 ? CLOUD_DEEP : CLOUD_SHADE);
-      disc(lc, l.x - l.r * 0.06, l.y - l.r * 0.11, l.r * 0.95, l.t > 0.7 ? CLOUD_TOP : CLOUD_LIT);
+      disc(lc, l.x, l.y, l.r, l.t < 0.35 ? pal.deep : pal.shade);
+      disc(lc, l.x - l.r * 0.06, l.y - l.r * 0.11, l.r * 0.95, l.t > 0.7 ? pal.top : pal.lit);
     });
     // a pale blue cast gathering towards the base
     const body = new Path2D();
@@ -124,13 +206,13 @@
     lc.save();
     lc.clip(body);
     const cast = lc.createLinearGradient(0, base - ch * 0.55, 0, base);
-    cast.addColorStop(0, "rgba(180, 208, 206, 0)");
-    cast.addColorStop(1, "rgba(180, 208, 206, .55)");
+    cast.addColorStop(0, `rgba(${pal.cast}, 0)`);
+    cast.addColorStop(1, `rgba(${pal.cast}, .55)`);
     lc.fillStyle = cast;
     lc.fillRect(cx - cw, base - ch, cw * 2.4, ch);
     // brushy highlights on the sunlit tops
     lobes.forEach((l) => {
-      lc.fillStyle = CLOUD_TOP;
+      lc.fillStyle = pal.top;
       for (let k = 0; k < (l.t > 0.3 ? 4 : 1); k++) {
         lc.beginPath();
         lc.ellipse(l.x - l.r * r(0.05, 0.5), l.y - l.r * r(0.3, 0.7), r(3, 8) * S, r(1.5, 3) * S, -0.4, 0, Math.PI * 2);
@@ -468,7 +550,7 @@
     W = rect.width; H = rect.height;
     narrow = W < 760;
     S = clamp(Math.min(H / 800, W / 1200), 0.6, 1.2);
-    [canvas, skyCanvas, touch, beeCanvas].forEach((c) => {
+    [canvas, skyCanvas, skyNight, touch, glowCanvas, beeCanvas].forEach((c) => {
       if (!c) return;
       c.width = Math.round(W * dpr);
       c.height = Math.round(H * dpr);
@@ -478,7 +560,21 @@
 
     ctx = skyCtx;
     drawSky();
-    drawCloud();
+    drawCloud(DAY_CLOUD);
+    // the night sky reuses the same seed so its cloud has the same shape, then
+    // hands the sequence back so the hill paints as it always has
+    const resume = seed;
+    if (nightCtx) {
+      ctx = nightCtx;
+      const moon = moonAt();
+      drawSky("#0b1633", "#23426f");
+      drawStars(moon);
+      drawMoon(moon);
+      seed = 20261027;
+      drawCloud(NIGHT_CLOUD);
+      if (glowCtx) drawGlow(moon);
+    }
+    seed = resume;
     ctx = hillCtx;
     live = []; rocks = [];
     drawSlope();
@@ -583,11 +679,15 @@
 
   // ---------------------------------------------------------------- bees
   // A few bees potter about the flowers. Get the cursor close and they buzz off
-  // in an arc to another clump, every time.
+  // in an arc to another clump, every time. At night they slowly turn into
+  // fireflies and drift about more lazily.
   const beeCanvas = document.getElementById("bees");
   const beeCtx = beeCanvas && beeCanvas.getContext("2d");
   const still = window.matchMedia("(prefers-reduced-motion: reduce)");
-  let bees = [], beeRaf = 0, heroOnScreen = true;
+  let bees = [], beeRaf = 0, heroOnScreen = true, lastBuzz = 0;
+  // 0 = bees, 1 = fireflies; eases towards the current mode
+  const root = document.documentElement;
+  let isNight = root.dataset.theme === "night", glowT = isNight ? 1 : 0;
 
   const headAt = (h) => ({ x: h.x + h.stem.ox, y: h.y + h.stem.oy - h.size * 1.4 - 5 * S });
 
@@ -605,7 +705,7 @@
     const n = Math.min(narrow ? 2 : 4, flowers.length);
     const order = flowers.map((f, i) => [rand(), f]).sort((a, b) => a[0] - b[0]).map((p) => p[1]);
     for (let i = 0; i < n; i++) {
-      const b = { phase: r(0, 10), face: rand() < 0.5 ? -1 : 1, tilt: 0 };
+      const b = { phase: r(0, 10), clock: 0, face: rand() < 0.5 ? -1 : 1, tilt: 0 };
       land(b, order[i]);
       const p = headAt(b.head);
       b.x = p.x; b.y = p.y;
@@ -620,7 +720,7 @@
     const away = ax === undefined ? 0 : Math.sign(b.x - ax || 1);
     const mx = (b.x + to.x) / 2 + away * r(30, 70) * S, my = Math.min(b.y, to.y) - r(away ? 60 : 15, away ? 130 : 35) * S;
     const dist = Math.hypot(to.x - b.x, to.y - b.y);
-    b.flight = { sx: b.x, sy: b.y, mx, my, head, clump, t0: performance.now(), dur: clamp(dist * 3.2, 600, 1900) };
+    b.flight = { sx: b.x, sy: b.y, mx, my, head, clump, t0: performance.now(), dur: clamp(dist * 3.2, 600, 1900) * (1 + 0.6 * glowT) };
   }
 
   function scare(x, y) {
@@ -635,7 +735,11 @@
   }
 
   function moveBees(now) {
+    const dt = lastBuzz ? Math.min(now - lastBuzz, 100) : 16;
+    lastBuzz = now;
+    glowT = clamp(glowT + (isNight ? 1 : -1) * dt / 1800, 0, 1);
     bees.forEach((b) => {
+      b.clock += dt * (1 - 0.5 * glowT);
       const px = b.x;
       if (b.flight) {
         const f = b.flight, t = clamp((now - f.t0) / f.dur, 0, 1);
@@ -645,9 +749,10 @@
         if (t >= 1) { land(b, f.clump); b.head = f.head; }
       } else {
         // bob about over the flower, easing in after landing
-        const p = headAt(b.head), s = clamp((now - b.landed) / 700, 0, 1), k = now / 1000 + b.phase;
-        b.x = p.x + Math.sin(k * 1.3) * 9 * S * s;
-        b.y = p.y + Math.sin(k * 2.3) * 4 * S * s;
+        const p = headAt(b.head), s = clamp((now - b.landed) / 700, 0, 1), k = b.clock / 1000 + b.phase;
+        // fireflies float wider and a little higher than bees
+        b.x = p.x + Math.sin(k * 1.3) * (9 + 7 * glowT) * S * s;
+        b.y = p.y + (Math.sin(k * 2.3) * (4 + 4 * glowT) - 8 * glowT) * S * s;
         if (now > b.hop) fly(b, b.clump);
       }
       const vx = b.x - px;
@@ -657,6 +762,38 @@
   }
 
   function drawBee(g, b, now) {
+    if (glowT < 1) { g.globalAlpha = 1 - glowT; drawHoneybee(g, b, now); }
+    if (glowT > 0) { g.globalAlpha = glowT; drawFirefly(g, b, now); }
+    g.globalAlpha = 1;
+  }
+
+  function drawFirefly(g, b, now) {
+    const pulse = still.matches ? 0.8 : 0.55 + 0.45 * Math.sin(now * 0.004 + b.phase * 3);
+    const R = 26 * S * (0.75 + 0.35 * pulse);
+    const halo = g.createRadialGradient(b.x, b.y, 0, b.x, b.y, R);
+    halo.addColorStop(0, `rgba(240, 255, 170, ${0.95 * pulse})`);
+    halo.addColorStop(0.25, `rgba(200, 245, 100, ${0.45 * pulse})`);
+    halo.addColorStop(1, "rgba(190, 240, 90, 0)");
+    g.fillStyle = halo;
+    g.fillRect(b.x - R, b.y - R, R * 2, R * 2);
+    const k = 1.3 * S;
+    g.save();
+    g.translate(b.x, b.y);
+    g.rotate(b.tilt);
+    g.scale(b.face * k, k);
+    const flap = still.matches ? 0.8 : 0.5 + 0.5 * Math.abs(Math.sin(now * 0.03 + b.phase));
+    g.fillStyle = "rgba(200, 215, 255, .35)";
+    g.beginPath(); g.ellipse(0.5, -2.8, 2.2, 3.2 * flap, -0.3, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2d2b24";
+    g.beginPath(); g.ellipse(1.6, 0, 3, 1.9, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(4.4, 0, 1.4, 0, Math.PI * 2); g.fill();
+    // the lantern
+    g.fillStyle = "#f3ffb8";
+    g.beginPath(); g.ellipse(-2.2, 0.2, 2.6, 2.2, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+  }
+
+  function drawHoneybee(g, b, now) {
     const k = 1.55 * S;
     g.save();
     g.translate(b.x, b.y);
@@ -695,8 +832,30 @@
   function wake() {
     if (!beeRaf && bees.length && heroOnScreen && !still.matches) beeRaf = requestAnimationFrame(buzz);
   }
-  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; wake(); }).observe(hero);
-  still.addEventListener("change", () => drawBees(performance.now()));
+  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; lastBuzz = 0; wake(); }).observe(hero);
+  still.addEventListener("change", () => { glowT = isNight ? 1 : 0; drawBees(performance.now()); });
+
+  // ---------------------------------------------------------------- day / night
+  // The moon in the top bar switches the whole page to night (and the sun back);
+  // the choice is remembered. The sky, hill and moonlight cross-fade in CSS.
+  const modeBtn = document.getElementById("mode");
+  function showMode() {
+    if (!modeBtn) return;
+    modeBtn.setAttribute("aria-pressed", isNight);
+    modeBtn.setAttribute("aria-label", isNight ? "Day mode" : "Night mode");
+  }
+  if (modeBtn) {
+    showMode();
+    modeBtn.addEventListener("click", () => {
+      isNight = !isNight;
+      if (isNight) root.dataset.theme = "night"; else delete root.dataset.theme;
+      try { localStorage.setItem("theme", isNight ? "night" : "day"); } catch (e) {}
+      showMode();
+      if (still.matches) { glowT = isNight ? 1 : 0; drawBees(performance.now()); }
+      lastBuzz = 0;
+      wake();
+    });
+  }
 
   if (touch) {
     hero.addEventListener("pointermove", (e) => {
@@ -726,6 +885,7 @@
     ticking = false;
     const y = still.matches ? 0 : clamp(window.scrollY, 0, hero.offsetHeight);
     skyCanvas.style.transform = `translate3d(0, ${y * 0.45}px, 0)`;
+    if (skyNight) skyNight.style.transform = skyCanvas.style.transform;
     if (intro) {
       intro.style.transform = `translate3d(0, ${y * 0.25}px, 0)`;
       intro.style.opacity = clamp(1 - y / (hero.offsetHeight * 0.6), 0, 1);
