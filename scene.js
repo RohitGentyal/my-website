@@ -157,7 +157,7 @@
   }
 
   // every grass mark is drawn this much taller and a touch thicker
-  const TALL = 2.1, THICK = 1.35;
+  const TALL = 2.4, THICK = 1.35;
 
   // one blade; `bend` tips it over from the root (0 = as painted)
   function blade(g, x, y, len, ang, w, color, j, bend) {
@@ -169,12 +169,15 @@
     g.stroke();
   }
 
-  function stroke(x, y, len, ang, w, color) {
-    blade(ctx, x, y, len * TALL, ang, w * THICK, color, r(-1, 1), 0);
-  }
-
-  // a share of the slope's blades live on their own layer so they can be brushed
+  // every blade lives on the touch layer, in paint order, so any of them can be
+  // brushed; `slope` blades hide under the path, and the few that could poke
+  // over the ridge stay painted on the hill, clipped to it
   let live = [];
+  function stroke(x, y, len, ang, w, color, slope) {
+    const o = { x, y, len: len * TALL, ang, w: w * THICK, color, j: r(-1, 1), b0: 0, b: 0, v: 0, slope };
+    if (slope && y - o.len - Math.abs(o.j) - 6 * S < ridge(x)) blade(ctx, x, y, o.len, ang, o.w, color, o.j, 0);
+    else live.push(o);
+  }
 
   function tone(n) {
     if (n > 1.15) return DEEPS;
@@ -208,15 +211,13 @@
     }
 
     // many small grass strokes, sized for distance
-    const count = Math.round((W * H) / 70);
+    const count = Math.round((W * H) / 60);
     for (let i = 0; i < count; i++) {
       const x = r(0, W), y = r(ridge(W) - 4, H + 6);
       if (y < ridge(x) + 1) continue;
       const d = depth(y, x), n = patch(x, y);
       const set = rand() < 0.5 ? tone(n) : tone(n + (rand() < 0.5 ? 0.7 : -0.7));
-      const len = r(3, 9) * S * (0.5 + d * 1.3), ang = -Math.PI / 2 + r(-0.6, 0.35), w = r(0.7, 1.6) * S * (0.6 + d), color = pick(set);
-      if (i % 3 === 0) live.push({ x, y, len: len * TALL, ang, w: w * THICK, color, j: r(-1, 1), b: 0, v: 0 });
-      else stroke(x, y, len, ang, w, color);
+      stroke(x, y, r(3, 9) * S * (0.5 + d * 1.3), -Math.PI / 2 + r(-0.6, 0.35), r(0.7, 1.6) * S * (0.6 + d), pick(set), true);
     }
     ctx.restore();
 
@@ -369,83 +370,90 @@
   // ---------------------------------------------------------------- tufts
   // long, soft wisps of grass that curl over at the tips, like a mossy meadow
   function drawTufts() {
-    const n = Math.round(W / 22);
+    const n = Math.round(W / 16);
     for (let i = 0; i < n; i++) {
       const x = r(0, W), y = r(ridge(x) + 14 * S, H + 4);
-      const d = depth(y, x), h = r(14, 26) * S * (0.4 + d * 1.2);
+      const d = depth(y, x), h = r(15, 28) * S * (0.4 + d * 1.2);
       const lean = r(-0.35, 0.35), blades = 6 + Math.floor(rand() * 6);
       for (let k = 0; k < blades; k++) {
         const ang = -Math.PI / 2 + lean + (k - blades / 2) * 0.12 + r(-0.12, 0.12);
-        blade(ctx, x + (k - blades / 2) * 1.4 * S, y, h * r(0.55, 1.05), ang, r(0.9, 1.7) * S * (0.6 + d), pick(k % 3 ? MIDS : LIGHTS), r(-3, 3) * S, r(-0.25, 0.25));
+        live.push({ x: x + (k - blades / 2) * 1.4 * S, y, len: h * r(0.55, 1.05), ang, w: r(0.9, 1.7) * S * (0.6 + d), color: pick(k % 3 ? MIDS : LIGHTS), j: r(-3, 3) * S, b0: r(-0.25, 0.25), b: 0, v: 0 });
       }
     }
   }
 
   // ---------------------------------------------------------------- flowers
-  // little painted clumps of pink, orange and daisy-white blooms with leaves,
-  // drawn over the grass layer so they sit on top of the blades
+  // little painted clumps of blooms with leaves, each with a sprinkle of a
+  // second colour; they join the touch layer on top of the blades
   const BLOOMS = {
     pink: { petals: ["#e9579b", "#f07bb4", "#d9468c"], heart: "#fbd2e4" },
     orange: { petals: ["#f39a3a", "#f7b54b", "#ec7f2c"], heart: "#ffe08a" },
     daisy: { petals: ["#fffbea", "#f6f1da", "#ffffff"], heart: "#f4c542" },
+    purple: { petals: ["#9b6fd6", "#b48ce6", "#8257c4"], heart: "#f6ecff" },
+    yellow: { petals: ["#f7d038", "#ffe066", "#f2c12e"], heart: "#e8892b" },
+    red: { petals: ["#ef5b4c", "#f47c6a", "#e04a3f"], heart: "#ffd27a" },
+    blue: { petals: ["#5a9fe6", "#7bb6f0", "#4a8bd6"], heart: "#fff4c2" },
   };
+  const KINDS = Object.keys(BLOOMS);
   const LEAVES = ["#4f8a2e", "#5f9a34", "#6eaa3a"];
-  let flowers = [], stems = [];
+  let flowers = [];
 
   function planFlowers(path, dpr) {
-    const spots = [[0.07, 0.8, "pink"], [0.27, 0.76, "orange"], [0.47, 0.72, "daisy"], [0.6, 0.67, "pink"], [0.92, 0.6, "orange"],
-      [0.17, 0.72, "daisy"], [0.37, 0.66, "pink"], [0.78, 0.6, "daisy"], [0.53, 0.94, "orange"], [0.06, 0.95, "daisy"]];
+    const spots = [[0.07, 0.8, "pink"], [0.27, 0.76, "orange"], [0.47, 0.72, "daisy"], [0.6, 0.67, "red"], [0.92, 0.6, "orange"],
+      [0.17, 0.72, "blue"], [0.37, 0.66, "pink"], [0.78, 0.6, "purple"], [0.53, 0.94, "yellow"], [0.06, 0.95, "daisy"],
+      [0.13, 0.87, "purple"], [0.33, 0.84, "yellow"], [0.69, 0.7, "daisy"], [0.42, 0.79, "red"], [0.24, 0.66, "pink"], [0.86, 0.66, "blue"]];
     spots.forEach(([u, v, kind]) => {
       // on phones the caption spans the bottom, so keep the low clumps for wide screens
-      if (narrow && v > 0.88) return;
+      if (narrow && v > 0.86) return;
       const cx = u * W, cy = Math.max(v * H, ridge(cx) + 0.06 * H);
-      const d = depth(cy, cx), R = 72 * S * (0.45 + d), pal = BLOOMS[kind];
-      const clump = { leaves: [], stems: [], heads: [] };
-      for (let k = 0; k < 60; k++) {
+      const d = depth(cy, cx), R = 80 * S * (0.45 + d), accent = pick(KINDS);
+      const clump = { heads: [] };
+      for (let k = 0; k < 70; k++) {
         const x = cx + r(-R, R), y = cy + r(-R * 0.3, R * 0.3);
         if (ctx.isPointInPath(path, x * dpr, y * dpr)) continue;
-        clump.leaves.push({ x, y, rx: r(3, 6.5) * S * (0.5 + d), ry: r(1.3, 2.6) * S * (0.5 + d), a: r(-0.9, 0.9), c: pick(LEAVES) });
+        live.push({ leaf: true, x, y, rx: r(3, 7) * S * (0.5 + d), ry: r(1.3, 2.8) * S * (0.5 + d), a: r(-0.9, 0.9), c: pick(LEAVES) });
       }
-      const n = 26 + Math.floor(rand() * 12);
+      const n = 32 + Math.floor(rand() * 14);
       for (let k = 0; k < n; k++) {
         const bx = cx + r(-R, R) * 0.9, by = cy + r(-R * 0.25, R * 0.3);
         if (ctx.isPointInPath(path, bx * dpr, by * dpr)) continue;
-        const tall = r(8, 22) * S * (0.4 + d), hx = bx + r(-3, 3) * S, hy = by - tall;
-        const size = r(2.6, 4.4) * S * (0.45 + d);
-        const stem = { x: bx, y: by, hx, hy, w: 0.9 * S * (0.5 + d), b: 0, v: 0 };
-        clump.stems.push(stem);
-        stems.push(stem);
+        const kd = rand() < 0.28 ? accent : kind, pal = BLOOMS[kd];
+        const tall = r(9, 24) * S * (0.4 + d), hx = bx + r(-3, 3) * S, hy = by - tall;
+        const size = r(3, 5) * S * (0.45 + d);
         const dabs = [];
-        const count = kind === "daisy" ? 6 : 5;
+        const count = kd === "daisy" ? 6 : 5;
         for (let p = 0; p < count; p++) {
           const a = (p / count) * Math.PI * 2 + r(-0.2, 0.2);
-          dabs.push({ x: hx + Math.cos(a) * size * 0.9, y: hy + Math.sin(a) * size * 0.6, rx: size * (kind === "daisy" ? 0.75 : 0.85), ry: size * 0.5, a, c: pick(pal.petals) });
+          dabs.push({ x: hx + Math.cos(a) * size * 0.9, y: hy + Math.sin(a) * size * 0.6, rx: size * (kd === "daisy" ? 0.75 : 0.85), ry: size * 0.5, a, c: pick(pal.petals) });
         }
-        clump.heads.push({ dabs, x: hx, y: hy, size, heart: pal.heart, stem });
+        const head = { dabs, x: hx, y: hy, size, heart: pal.heart };
+        const stem = { stem: true, x: bx, y: by, hx, hy, w: 0.9 * S * (0.5 + d), head, b: 0, v: 0, ox: 0, oy: 0 };
+        head.stem = stem;
+        live.push(stem);
+        clump.heads.push(head);
       }
-      flowers.push(clump);
+      if (clump.heads.length) flowers.push(clump);
     });
   }
 
-  function drawFlowers(g) {
-    flowers.forEach((f) => {
-      f.leaves.forEach((l) => { g.fillStyle = l.c; g.beginPath(); g.ellipse(l.x, l.y, l.rx, l.ry, l.a, 0, Math.PI * 2); g.fill(); });
-      g.strokeStyle = LEAVES[0];
+  function paint(g, o) {
+    if (o.leaf) {
+      g.fillStyle = o.c; g.beginPath(); g.ellipse(o.x, o.y, o.rx, o.ry, o.a, 0, Math.PI * 2); g.fill();
+    } else if (o.stem) {
       // a brushed stem swings its head around the root
-      f.stems.forEach((st) => {
-        const dx = st.hx - st.x, dy = st.hy - st.y, c = Math.cos(st.b), sn = Math.sin(st.b);
-        st.ox = st.x + dx * c - dy * sn - st.hx;
-        st.oy = st.y + dx * sn + dy * c - st.hy;
-        g.lineWidth = st.w; g.beginPath(); g.moveTo(st.x, st.y);
-        g.quadraticCurveTo(st.x + st.ox * 0.3, (st.y + st.hy) / 2, st.hx + st.ox, st.hy + st.oy); g.stroke();
-      });
-      f.heads.forEach((h) => {
-        const ox = h.stem.ox, oy = h.stem.oy;
-        h.dabs.forEach((p) => { g.fillStyle = p.c; g.beginPath(); g.ellipse(p.x + ox, p.y + oy, p.rx, p.ry, p.a, 0, Math.PI * 2); g.fill(); });
-        g.fillStyle = h.heart;
-        g.beginPath(); g.arc(h.x + ox, h.y + oy, h.size * 0.38, 0, Math.PI * 2); g.fill();
-      });
-    });
+      const dx = o.hx - o.x, dy = o.hy - o.y, c = Math.cos(o.b), sn = Math.sin(o.b);
+      o.ox = o.x + dx * c - dy * sn - o.hx;
+      o.oy = o.y + dx * sn + dy * c - o.hy;
+      g.strokeStyle = LEAVES[0];
+      g.lineWidth = o.w; g.beginPath(); g.moveTo(o.x, o.y);
+      g.quadraticCurveTo(o.x + o.ox * 0.3, (o.y + o.hy) / 2, o.hx + o.ox, o.hy + o.oy); g.stroke();
+      const h = o.head;
+      h.dabs.forEach((p) => { g.fillStyle = p.c; g.beginPath(); g.ellipse(p.x + o.ox, p.y + o.oy, p.rx, p.ry, p.a, 0, Math.PI * 2); g.fill(); });
+      g.fillStyle = h.heart;
+      g.beginPath(); g.arc(h.x + o.ox, h.y + o.oy, h.size * 0.38, 0, Math.PI * 2); g.fill();
+    } else {
+      blade(g, o.x, o.y, o.len, o.ang, o.w, o.color, o.j, o.b0 + o.b);
+    }
   }
 
   // ---------------------------------------------------------------- render
@@ -459,7 +467,7 @@
     W = rect.width; H = rect.height;
     narrow = W < 760;
     S = clamp(Math.min(H / 800, W / 1200), 0.6, 1.2);
-    [canvas, skyCanvas, touch].forEach((c) => {
+    [canvas, skyCanvas, touch, beeCanvas].forEach((c) => {
       if (!c) return;
       c.width = Math.round(W * dpr);
       c.height = Math.round(H * dpr);
@@ -477,64 +485,217 @@
     drawRocks();
     drawClumps();
     drawTufts();
-    flowers = []; stems = [];
+    flowers = [];
     planFlowers(path, dpr);
-    // blades the path or a rock would have covered stay hidden
+    // slope blades the path or a rock would have covered stay hidden
     live = live.filter((l) => {
+      if (!l.slope) return true;
       const tx = l.x + Math.cos(l.ang) * l.len, ty = l.y + Math.sin(l.ang) * l.len;
       if (ctx.isPointInPath(path, l.x * dpr, l.y * dpr) || ctx.isPointInPath(path, tx * dpr, ty * dpr)) return false;
       return !rocks.some((k) => Math.abs(l.x - k.x) < k.size * 1.1 && l.y > k.y - k.size && l.y < k.y + 4);
     });
-    hillClip = hillPath();
-    drawLive();
+    indexLive();
+    active.clear();
+    redraw(null);
+    planBees();
   }
 
   // ---------------------------------------------------------------- touch grass
-  // Run the cursor over the slope and the blades under it lean away and spring
-  // back.
-  let hillClip, raf = 0, pointer = null;
+  // Run the cursor over the slope and every blade and flower under it leans
+  // away and springs back. Only the grid cells around moving blades are
+  // repainted each frame, so all of the grass can stay live.
+  const CELL = 48;
+  let raf = 0, pointer = null, cols = 0, rows = 0, grid = [];
+  const active = new Set();
 
-  function drawLive() {
+  // how far from its root a mark can reach, bent or not
+  const reachOf = (o) => o.leaf ? Math.max(o.rx, o.ry) + 1 : o.stem ? Math.hypot(o.hx - o.x, o.hy - o.y) + o.head.size * 1.6 : o.len + Math.abs(o.j) + o.w;
+
+  function cellsOf(o, fn) {
+    const k = reachOf(o);
+    const x0 = clamp(Math.floor((o.x - k) / CELL), 0, cols - 1), x1 = clamp(Math.floor((o.x + k) / CELL), 0, cols - 1);
+    const y0 = clamp(Math.floor((o.y - k) / CELL), 0, rows - 1), y1 = clamp(Math.floor((o.y + k) / CELL), 0, rows - 1);
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) fn(cy * cols + cx);
+  }
+
+  function indexLive() {
+    cols = Math.ceil(W / CELL) + 1; rows = Math.ceil(H / CELL) + 1;
+    grid = Array.from({ length: cols * rows }, () => []);
+    live.forEach((o, i) => { o.i = i; cellsOf(o, (c) => grid[c].push(o)); });
+  }
+
+  // repaint one block of cells [x0..x1] × [y0..y1] (or everything when `box`
+  // is null), in paint order; a single rectangle keeps the clip cheap
+  function redraw(box) {
     if (!touchCtx) return;
-    touchCtx.clearRect(0, 0, W, H);
-    touchCtx.save();
-    touchCtx.clip(hillClip);
-    touchCtx.lineCap = "round";
-    live.forEach((l) => blade(touchCtx, l.x, l.y, l.len, l.ang, l.w, l.color, l.j, l.b));
-    touchCtx.restore();
-    drawFlowers(touchCtx);
+    const g = touchCtx;
+    let marks = live;
+    g.save();
+    if (box) {
+      const seen = new Set();
+      for (let cy = box.y0; cy <= box.y1; cy++) for (let cx = box.x0; cx <= box.x1; cx++) grid[cy * cols + cx].forEach((o) => seen.add(o));
+      const x = box.x0 * CELL, y = box.y0 * CELL, w = (box.x1 - box.x0 + 1) * CELL, h = (box.y1 - box.y0 + 1) * CELL;
+      g.clearRect(x, y, w, h);
+      g.beginPath(); g.rect(x, y, w, h); g.clip();
+      marks = [...seen].sort((a, b) => a.i - b.i);
+    } else {
+      g.clearRect(0, 0, W, H);
+    }
+    g.lineCap = "round";
+    marks.forEach((o) => paint(g, o));
+    g.restore();
   }
 
   function step() {
     raf = 0;
-    let moving = false;
-    [live, stems].flat().forEach((l) => {
+    const box = { x0: cols, y0: rows, x1: -1, y1: -1 };
+    active.forEach((l) => {
       l.v = (l.v - l.b * 0.08) * 0.84;
       l.b = clamp(l.b + l.v, -1.3, 1.3);
-      if (Math.abs(l.b) > 0.002 || Math.abs(l.v) > 0.002) moving = true;
-      else l.b = l.v = 0;
+      if (Math.abs(l.b) < 0.002 && Math.abs(l.v) < 0.002) { l.b = l.v = 0; active.delete(l); }
+      cellsOf(l, (c) => {
+        const cx = c % cols, cy = (c - cx) / cols;
+        box.x0 = Math.min(box.x0, cx); box.x1 = Math.max(box.x1, cx);
+        box.y0 = Math.min(box.y0, cy); box.y1 = Math.max(box.y1, cy);
+      });
     });
-    drawLive();
-    if (moving) raf = requestAnimationFrame(step);
+    if (box.x1 >= 0) redraw(box);
+    if (active.size) raf = requestAnimationFrame(step);
   }
 
   function brush(x, y, dx) {
-    const reach = 60 * S;
-    live.forEach((l) => {
-      const mx = l.x + Math.cos(l.ang) * l.len * 0.6, my = l.y + Math.sin(l.ang) * l.len * 0.6;
+    const reach = 60 * S, seen = new Set();
+    const x0 = clamp(Math.floor((x - reach) / CELL), 0, cols - 1), x1 = clamp(Math.floor((x + reach) / CELL), 0, cols - 1);
+    const y0 = clamp(Math.floor((y - reach) / CELL), 0, rows - 1), y1 = clamp(Math.floor((y + reach) / CELL), 0, rows - 1);
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) grid[cy * cols + cx].forEach((o) => seen.add(o));
+    seen.forEach((o) => {
+      if (o.leaf) return;
+      const mx = o.stem ? o.hx : o.x + Math.cos(o.ang) * o.len * 0.6, my = o.stem ? o.hy : o.y + Math.sin(o.ang) * o.len * 0.6;
       const dist = Math.hypot(mx - x, my - y);
       if (dist > reach) return;
       const f = 1 - dist / reach;
-      l.v += (clamp(dx, -30, 30) * 0.02 + Math.sign(mx - x || 1) * 0.08) * f;
+      o.v += (clamp(dx, -30, 30) * (o.stem ? 0.015 : 0.02) + Math.sign(mx - x || 1) * (o.stem ? 0.06 : 0.08)) * f;
+      active.add(o);
     });
-    stems.forEach((st) => {
-      const dist = Math.hypot(st.hx - x, st.hy - y);
-      if (dist > reach) return;
-      const f = 1 - dist / reach;
-      st.v += (clamp(dx, -30, 30) * 0.015 + Math.sign(st.hx - x || 1) * 0.06) * f;
-    });
-    if (!raf) raf = requestAnimationFrame(step);
+    if (!raf && active.size) raf = requestAnimationFrame(step);
   }
+
+  // ---------------------------------------------------------------- bees
+  // A few bees potter about the flowers. Get the cursor close and they buzz off
+  // in an arc to another clump, every time.
+  const beeCanvas = document.getElementById("bees");
+  const beeCtx = beeCanvas && beeCanvas.getContext("2d");
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let bees = [], beeRaf = 0, heroOnScreen = true;
+
+  const headAt = (h) => ({ x: h.x + h.stem.ox, y: h.y + h.stem.oy - h.size * 1.4 - 5 * S });
+
+  function land(b, clump) {
+    b.clump = clump;
+    b.head = pick(clump.heads);
+    b.landed = performance.now();
+    b.hop = b.landed + r(1800, 4200);
+    b.flight = null;
+  }
+
+  function planBees() {
+    bees = [];
+    if (!beeCtx || !flowers.length) return;
+    const n = Math.min(narrow ? 2 : 4, flowers.length);
+    const order = flowers.map((f, i) => [rand(), f]).sort((a, b) => a[0] - b[0]).map((p) => p[1]);
+    for (let i = 0; i < n; i++) {
+      const b = { phase: r(0, 10), face: rand() < 0.5 ? -1 : 1, tilt: 0 };
+      land(b, order[i]);
+      const p = headAt(b.head);
+      b.x = p.x; b.y = p.y;
+      bees.push(b);
+    }
+    drawBees(performance.now());
+  }
+
+  // a curved flight to a flower: in another clump when spooked, or a short hop
+  function fly(b, clump, ax, ay) {
+    const head = pick(clump.heads), to = headAt(head);
+    const away = ax === undefined ? 0 : Math.sign(b.x - ax || 1);
+    const mx = (b.x + to.x) / 2 + away * r(30, 70) * S, my = Math.min(b.y, to.y) - r(away ? 60 : 15, away ? 130 : 35) * S;
+    const dist = Math.hypot(to.x - b.x, to.y - b.y);
+    b.flight = { sx: b.x, sy: b.y, mx, my, head, clump, t0: performance.now(), dur: clamp(dist * 3.2, 600, 1900) };
+  }
+
+  function scare(x, y) {
+    if (still.matches || flowers.length < 2) return;
+    bees.forEach((b) => {
+      if (b.flight && b.flight.clump !== b.clump) return; // already fleeing
+      if (Math.hypot(b.x - x, b.y - y) > 48 * S) return;
+      const others = flowers.filter((f) => f !== b.clump);
+      fly(b, pick(others), x, y);
+    });
+    wake();
+  }
+
+  function moveBees(now) {
+    bees.forEach((b) => {
+      const px = b.x;
+      if (b.flight) {
+        const f = b.flight, t = clamp((now - f.t0) / f.dur, 0, 1);
+        const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        b.x = (1 - e) * (1 - e) * f.sx + 2 * (1 - e) * e * f.mx + e * e * headAt(f.head).x;
+        b.y = (1 - e) * (1 - e) * f.sy + 2 * (1 - e) * e * f.my + e * e * headAt(f.head).y;
+        if (t >= 1) { land(b, f.clump); b.head = f.head; }
+      } else {
+        // bob about over the flower, easing in after landing
+        const p = headAt(b.head), s = clamp((now - b.landed) / 700, 0, 1), k = now / 1000 + b.phase;
+        b.x = p.x + Math.sin(k * 1.3) * 9 * S * s;
+        b.y = p.y + Math.sin(k * 2.3) * 4 * S * s;
+        if (now > b.hop) fly(b, b.clump);
+      }
+      const vx = b.x - px;
+      if (Math.abs(vx) > 0.3) b.face = vx > 0 ? 1 : -1;
+      b.tilt = lerp(b.tilt, clamp(vx * 0.08, -0.35, 0.35), 0.2);
+    });
+  }
+
+  function drawBee(g, b, now) {
+    const k = 1.55 * S;
+    g.save();
+    g.translate(b.x, b.y);
+    g.rotate(b.tilt);
+    g.scale(b.face * k, k);
+    const flap = still.matches ? 0.8 : 0.45 + 0.55 * Math.abs(Math.sin(now * 0.05 + b.phase));
+    g.fillStyle = "rgba(255, 255, 255, .55)";
+    g.beginPath(); g.ellipse(-1.5, -4, 2.6, 4.4 * flap, -0.5, 0, Math.PI * 2); g.fill();
+    // body with two stripes, a dark head and a tiny sting
+    g.fillStyle = "#f6c23e";
+    g.beginPath(); g.ellipse(0, 0, 5.4, 3.7, 0, 0, Math.PI * 2); g.fill();
+    g.save(); g.clip();
+    g.fillStyle = "#3b2d1f";
+    g.fillRect(-2.2, -4, 1.5, 8); g.fillRect(0.9, -4, 1.5, 8);
+    g.restore();
+    g.fillStyle = "#3b2d1f";
+    g.beginPath(); g.arc(5.2, 0.3, 2.3, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(-5.2, -0.6); g.lineTo(-7.4, 0.3); g.lineTo(-5.2, 1.1); g.fill();
+    g.fillStyle = "rgba(255, 255, 255, .8)";
+    g.beginPath(); g.ellipse(1, -4.4, 2.3, 4 * flap, 0.35, 0, Math.PI * 2); g.fill();
+    g.restore();
+  }
+
+  function drawBees(now) {
+    if (!beeCtx) return;
+    beeCtx.clearRect(0, 0, W, H);
+    bees.forEach((b) => drawBee(beeCtx, b, now));
+  }
+
+  function buzz(now) {
+    beeRaf = 0;
+    moveBees(now);
+    drawBees(now);
+    wake();
+  }
+  function wake() {
+    if (!beeRaf && bees.length && heroOnScreen && !still.matches) beeRaf = requestAnimationFrame(buzz);
+  }
+  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; wake(); }).observe(hero);
+  still.addEventListener("change", () => drawBees(performance.now()));
 
   if (touch) {
     hero.addEventListener("pointermove", (e) => {
@@ -542,6 +703,7 @@
       const x = e.clientX - rect.left, y = e.clientY - rect.top;
       const onGrass = !e.target.closest(".intro, .live") && y > ridge(x);
       hero.classList.toggle("touching", onGrass);
+      scare(x, y);
       if (onGrass) brush(x, y, pointer ? x - pointer.x : 0);
       pointer = onGrass ? { x, y } : null;
     });
@@ -558,7 +720,6 @@
   // ---------------------------------------------------------------- parallax
   // On scroll the sky and cloud sink slower than the hill, and the intro
   // lifts away gently, so the scene reads as layers with depth.
-  const still = window.matchMedia("(prefers-reduced-motion: reduce)");
   let ticking = false;
   function parallax() {
     ticking = false;
