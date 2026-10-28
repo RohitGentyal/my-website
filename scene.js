@@ -216,7 +216,50 @@
     if (!shadeCtx || !moon) return;
     const g = shadeCtx, L = lightAt(glowT);
     g.clearRect(0, 0, W, H);
+    // contact shade hugging the roots of each clump, whatever the light
+    const contact = new Path2D();
+    casters.forEach((c) => {
+      contact.moveTo(c.x + c.w * 0.55, c.y);
+      contact.ellipse(c.x, c.y, c.w * 0.55, c.w * 0.14 + 1.5 * S, 0, 0, Math.PI * 2);
+    });
+    g.fillStyle = "rgba(24, 48, 40, .14)";
+    g.fill(contact);
     if (L.strength < 0.01) return;
+    // shadows take the colour of the light's opposite: teal-green at noon,
+    // violet as the sun gets low, deep blue under the moon
+    const low = sunUp(glowT) >= moonUp(glowT) ? sunAt(glowT).e : 0, night = moonUp(glowT) > sunUp(glowT);
+    const tint = night ? [14, 24, 64] : [Math.round(lerp(22, 74, low)), Math.round(lerp(52, 40, low)), Math.round(lerp(42, 96, low))].join(", ");
+    const ink = (a) => `rgba(${tint}, ${a})`;
+    // faint dappled shade across the meadow from a sample of the slope blades
+    const dapple = new Path2D();
+    for (let i = 0; i < live.length; i += 9) {
+      const o = live[i];
+      if (!o.slope) continue;
+      const { dx, dy } = cast(L, o.x, o.y, o.len * 0.6);
+      dapple.moveTo(o.x, o.y); dapple.lineTo(o.x + dx, o.y + dy);
+    }
+    g.lineCap = "round";
+    g.strokeStyle = ink(L.strength * 0.4);
+    g.lineWidth = 3.4 * S;
+    g.stroke(dapple);
+    // each rock throws a long shadow; the rocks themselves stay unshaded
+    if (rocks.length) {
+      g.save();
+      const outside = new Path2D();
+      outside.rect(0, 0, W, H);
+      rocks.forEach((k) => outside.addPath(k.body));
+      g.clip(outside, "evenodd");
+      const stones = new Path2D();
+      rocks.forEach((k) => {
+        const { dx, dy } = cast(L, k.x, k.y, k.size * 0.9), len = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+        const rx = len * 0.55 + k.size * 0.75, cx = k.x + dx * 0.5, cy = k.y + 1 + dy * 0.5;
+        stones.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx);
+        stones.ellipse(cx, cy, rx, k.size * 0.3, a, 0, Math.PI * 2);
+      });
+      g.fillStyle = ink(Math.min(L.strength * 1.25, 0.6));
+      g.fill(stones);
+      g.restore();
+    }
     // soft pools behind each clump of growth
     const pools = new Path2D();
     casters.forEach((c) => {
@@ -226,7 +269,7 @@
       pools.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx);
       pools.ellipse(cx, cy, rx, ry, a, 0, Math.PI * 2);
     });
-    g.fillStyle = `rgba(20, 42, 26, ${L.strength * 0.75})`;
+    g.fillStyle = ink(L.strength * 0.75);
     g.fill(pools);
     // a tapered sliver behind each standing blade and stem: a thin stroke the
     // whole length over a wider one near the root (strokes batch far faster
@@ -245,7 +288,7 @@
       root.moveTo(o.x, o.y); root.lineTo(o.x + ex * 0.4, o.y + dy * 0.4);
     });
     g.lineCap = "round";
-    g.strokeStyle = `rgba(20, 42, 26, ${L.strength * 0.8})`;
+    g.strokeStyle = ink(L.strength * 0.8);
     g.lineWidth = 1.2 * S; g.stroke(full);
     g.lineWidth = 2.6 * S; g.stroke(root);
   }
@@ -517,18 +560,19 @@
       const a = Math.PI + (i / (n - 1)) * Math.PI;
       pts.push([x + Math.cos(a) * size * r(0.85, 1.1), y + Math.sin(a) * size * 0.85 * r(0.8, 1.15)]);
     }
-    // shadow on the grass
+    // a tight contact shadow where it sits (the cast shadow moves with the light)
     ctx.fillStyle = "#4f8030";
     ctx.beginPath();
-    ctx.ellipse(x + size * 0.2, y + 1, size * 1.15, size * 0.18, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 1, size * 0.95, size * 0.13, 0, 0, Math.PI * 2);
     ctx.fill();
     // body
+    const body = new Path2D();
+    pts.forEach(([px, py], i) => (i ? body.lineTo(px, py) : body.moveTo(px, py)));
+    body.lineTo(x + size, y + 2);
+    body.lineTo(x - size, y + 2);
+    body.closePath();
     ctx.fillStyle = "#454a51";
-    ctx.beginPath();
-    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
-    ctx.lineTo(x + size, y + 2);
-    ctx.lineTo(x - size, y + 2);
-    ctx.fill();
+    ctx.fill(body);
     // lit top plane
     ctx.fillStyle = "#757c85";
     ctx.beginPath();
@@ -547,14 +591,14 @@
     for (let k = 0; k < size * 0.8; k++) {
       stroke(x + r(-size, size), y + r(0, 3) * S, r(3, 8) * S, -Math.PI / 2 + r(-0.6, 0.6), r(0.8, 1.5) * S, pick(rand() < 0.6 ? DARKS : DEEPS));
     }
+    return body;
   }
 
   function drawRocks() {
     [[0.62, 0.9, 0.85], [0.69, 0.84, 0.7], [0.76, 0.875, 1.1], [0.86, 0.82, 0.75]].forEach(([u, v, s]) => {
       const x = u * W, y = Math.max(v * H, ridge(x) + 0.12 * H);
       const size = 32 * s * S * (0.6 + depth(y, x));
-      drawRock(x, y, size);
-      rocks.push({ x, y, size });
+      rocks.push({ x, y, size, body: drawRock(x, y, size) });
     });
   }
   let rocks = [];
