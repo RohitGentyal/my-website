@@ -170,13 +170,13 @@
   }
 
   // every blade lives on the touch layer, in paint order, so any of them can be
-  // brushed; `slope` blades hide under the path, and the few that could poke
-  // over the ridge stay painted on the hill, clipped to it
+  // brushed; `slope` blades hide under the path, and ones rooted just under
+  // the ridge are trimmed so they only fringe the sky a little
   let live = [];
   function stroke(x, y, len, ang, w, color, slope) {
     const o = { x, y, len: len * TALL, ang, w: w * THICK, color, j: r(-1, 1), b0: 0, b: 0, v: 0, slope };
-    if (slope && y - o.len - Math.abs(o.j) - 6 * S < ridge(x)) blade(ctx, x, y, o.len, ang, o.w, color, o.j, 0);
-    else live.push(o);
+    if (slope) o.len = Math.min(o.len, y - ridge(x) + 7 * S);
+    live.push(o);
   }
 
   function tone(n) {
@@ -216,8 +216,9 @@
       const x = r(0, W), y = r(ridge(W) - 4, H + 6);
       if (y < ridge(x) + 1) continue;
       const d = depth(y, x), n = patch(x, y);
-      const set = rand() < 0.5 ? tone(n) : tone(n + (rand() < 0.5 ? 0.7 : -0.7));
-      stroke(x, y, r(3, 9) * S * (0.5 + d * 1.3), -Math.PI / 2 + r(-0.6, 0.35), r(0.7, 1.6) * S * (0.6 + d), pick(set), true);
+      // far blades lean a shade darker so the upper slope reads as grass, not a flat wash
+      const set = rand() < 0.35 + 0.35 * (1 - d) ? tone(n + 0.7) : rand() < 0.5 ? tone(n) : tone(n - 0.7);
+      stroke(x, y, r(3, 9) * S * (0.95 + d * 0.9), -Math.PI / 2 + r(-0.6, 0.35), r(0.7, 1.6) * S * (0.85 + d * 0.75), pick(set), true);
     }
     ctx.restore();
 
