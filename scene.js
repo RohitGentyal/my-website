@@ -738,6 +738,20 @@
   still.addEventListener("change", parallax);
   parallax();
 
+  // ---------------------------------------------------------------- hobby sounds
+  // Clicking a hobby tile plays its sound from the start, cutting off any other.
+  let playing = null;
+  document.querySelectorAll(".tile[data-sound]").forEach((tile) => {
+    const sound = new Audio(tile.dataset.sound);
+    sound.preload = "auto";
+    tile.addEventListener("click", () => {
+      if (playing && playing !== sound) playing.pause();
+      sound.currentTime = 0;
+      sound.play().catch(() => {});
+      playing = sound;
+    });
+  });
+
   // ---------------------------------------------------------------- music, clock
   // Paste the playlist link here once it's ready. Any element marked
   // data-playlist (e.g. a small "now playing" link in the intro) then points
