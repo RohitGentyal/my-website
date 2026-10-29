@@ -54,3 +54,4 @@ Earlier (2026-10-27): scroll parallax, larger type, darker greys, link hover und
 - speckle-noise grass
 - spiky noisy grass blades
 - the person lying on the grass with a music player (removed at my request)
+- an automatic day/night cycle on a hidden timer (a minute of day, a minute of night): tried 2026-10-29, I didn't like it
