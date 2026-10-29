@@ -861,28 +861,13 @@
   const beeCtx = beeCanvas && beeCanvas.getContext("2d");
   const still = window.matchMedia("(prefers-reduced-motion: reduce)");
   let bees = [], beeRaf = 0, heroOnScreen = true, lastBuzz = 0;
-  // How far into night the scene is: `nightT` walks 0 → 1 (or back), and
-  // `glowT` is that eased. Everything keys off glowT: the sky darkening, a warm
-  // dusk glow that peaks halfway, the hill cooling to moonlight, the moon
-  // rising, stars coming out, and bees becoming fireflies.
-  // A hidden clock starts when the page opens: a minute of day, a minute of
-  // night, and so on. The last TURN of each minute is a slow sunset (or
-  // sunrise). The button skips ahead, chasing the clock at SWITCH speed.
-  const root = document.documentElement, SWITCH = 2800, DAY = 60000, TURN = 24000;
-  let isNight = false, nightT = 0, glowT = 0, clock0 = performance.now();
+  // How far into night the scene is: `nightT` walks 0 → 1 (or back) over the
+  // switch, and `glowT` is that eased. Everything keys off glowT: the sky
+  // darkening, a warm dusk glow that peaks halfway, the hill cooling to
+  // moonlight, the moon rising, stars coming out, and bees becoming fireflies.
+  const root = document.documentElement, SWITCH = 2800;
+  let isNight = root.dataset.theme === "night", nightT = isNight ? 1 : 0, glowT = nightT;
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-
-  function clockAt(now) {
-    const t = (now - clock0) % (2 * DAY), k = clamp((t % DAY - (DAY - TURN)) / TURN, 0, 1);
-    return t < DAY ? k : 1 - k;
-  }
-
-  function setTheme(night) {
-    if (night === isNight) return;
-    isNight = night;
-    if (night) root.dataset.theme = "night"; else delete root.dataset.theme;
-    showMode();
-  }
 
   function applyNight() {
     const p = glowT, d = Math.sin(Math.PI * p);
@@ -898,14 +883,12 @@
     drawShade();
   }
 
-  function stepNight(dt, now) {
-    const target = clockAt(now), step = dt / SWITCH;
-    if (nightT === target) return false;
-    nightT = Math.abs(target - nightT) <= step ? target : nightT + Math.sign(target - nightT) * step;
+  function stepNight(dt) {
+    const target = isNight ? 1 : 0;
+    if (nightT === target) return;
+    nightT = clamp(nightT + (isNight ? 1 : -1) * dt / SWITCH, 0, 1);
     glowT = ease(nightT);
-    setTheme(nightT > 0.5);
     applyNight();
-    return true;
   }
 
   const headAt = (h) => ({ x: h.x + h.stem.ox, y: h.y + h.stem.oy - h.size * 1.4 - 5 * S });
@@ -956,7 +939,7 @@
   function moveBees(now) {
     const dt = lastBuzz ? Math.min(now - lastBuzz, 100) : 16;
     lastBuzz = now;
-    const turning = stepNight(dt, now);
+    stepNight(dt);
     bees.forEach((b) => {
       b.clock += dt * (1 - 0.5 * glowT);
       const px = b.x;
@@ -978,7 +961,6 @@
       if (Math.abs(vx) > 0.3) b.face = vx > 0 ? 1 : -1;
       b.tilt = lerp(b.tilt, clamp(vx * 0.08, -0.35, 0.35), 0.2);
     });
-    return turning;
   }
 
   function drawBee(g, b, now) {
@@ -1045,9 +1027,9 @@
 
   function buzz(now) {
     beeRaf = 0;
-    const turning = moveBees(now);
+    moveBees(now);
     drawBees(now);
-    if (glowT > 0 || turning) drawCelestial(glowT, now);
+    if (glowT > 0 || nightT !== (isNight ? 1 : 0)) drawCelestial(glowT, now);
     wake();
   }
   function wake() {
@@ -1057,24 +1039,15 @@
   // jump straight to the current mode (reduced motion, or nothing animating)
   function settleNight() {
     nightT = glowT = isNight ? 1 : 0;
-    clock0 = performance.now() - (isNight ? DAY : 0);
     applyNight();
     drawCelestial(glowT, performance.now());
     drawBees(performance.now());
   }
   still.addEventListener("change", settleNight);
 
-  // While the hero is off screen nothing animates, but the clock keeps going
-  // and the page below still turns to night and back. Reduced motion holds
-  // the clock still, so only the button changes the light.
-  setInterval(() => {
-    if (still.matches) { clock0 += 1000; return; }
-    if (!beeRaf) setTheme(clockAt(performance.now()) > 0.5);
-  }, 1000);
-
   // ---------------------------------------------------------------- day / night
-  // The moon in the top bar skips ahead to night (and the sun back to day); the
-  // clock carries on from there.
+  // The moon in the top bar switches the whole page to night (and the sun back);
+  // the choice is remembered. The sky, hill and moonlight cross-fade in CSS.
   const modeBtn = document.getElementById("mode");
   function showMode() {
     if (!modeBtn) return;
@@ -1084,8 +1057,10 @@
   if (modeBtn) {
     showMode();
     modeBtn.addEventListener("click", () => {
-      setTheme(!isNight);
-      clock0 = performance.now() - (isNight ? DAY : 0);
+      isNight = !isNight;
+      if (isNight) root.dataset.theme = "night"; else delete root.dataset.theme;
+      try { localStorage.setItem("theme", isNight ? "night" : "day"); } catch (e) {}
+      showMode();
       lastBuzz = 0;
       if (still.matches || !heroOnScreen || !bees.length) settleNight();
       else wake();
