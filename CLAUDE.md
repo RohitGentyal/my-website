@@ -20,7 +20,7 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
   - No hard rim line on the ridge: that read as the rejected seam.
 - **Hobby sounds:** clicking a hobby tile plays its sound (`data-sound` on the tile, files in `sounds/`): Football → "SIUUU", Gym → "Yeah buddy, lightweight baby", Gaming → "Bingo bango bongo". Each click restarts it and cuts off any other. Poetry has no sound yet.
 - **Loader** (`loader.js`, 2026-11-02, after Skiper UI skiper8 / dennissnellenberg.com): on every load a near-black curtain (#1c1b17) shows "· Hello" in cream Instrument Serif italic for 1s, then Bonjour, Ciao, Olà, やあ, Hallå, Guten tag, नमस्ते at 150ms each; then it lifts off the top in 0.9s with a curved lower edge that flattens as it rises. The head script adds `.loading` (so without JS there is no loader); reduced motion gets a quick fade instead. `[hidden] { display: none !important; }` guards it.
-- **Cursor trail** (`trail.js`, 2026-11-02): a rainbow *band* (six side-by-side stripes, red to violet, 2.6px each, 0.5 opacity) streaming from the lower end of the cursor arrow (`TAIL`, offset 9,17 from the tip), not from the tip, and not a single line: I asked for both. It narrows and fades over 900ms (`LIFE`), and its start eases after the arrow (`FOLLOW` 0.14 per frame; lower lags more). Drawn on a fixed `pointer-events: none` canvas. Mouse only, off on touch and under reduced motion.
+- **Cursor trail** (`trail.js`, 2026-11-02): magic-dust style, from a reference I shared (glowing smoky streaks full of sparkles): a soft rainbow mist (pre-drawn radial glows stamped along the path, 0.16 opacity, `MIST` / `GLOW`) plus tiny twinkling sparkles, some with a four-point glint, that drift out and sink a little (`SPARKS`). The colour moves with distance travelled, so a sweep shows the whole rainbow. It streams from the lower end of the arrow (`TAIL`, offset 9,17 from the tip), not the tip, fades over 900ms (`LIFE`), and eases after the arrow (`FOLLOW` 0.14). Rejected along the way: a thin line from the tip, and a striped rainbow band. Fixed `pointer-events: none` canvas; mouse only, off on touch and under reduced motion.
 - **Links:** nav and Email/LinkedIn draw a 1px line left to right on hover and retract on leave. A caption in the bottom right shows a quote plus the local time.
 - **Intro:** "I'm a UX designer at Subculture Media Tech, where I lead product design for the Native Universe app…" plus hobby icons (football, gym, games, poetry) after "When I'm not designing,".
 - **Work:** only Genzo for now (no link yet).
@@ -32,7 +32,7 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
 
 ## Resume here (2026-11-02)
 
-Today: added the words loader (Skiper8 style) and the subtle rainbow cursor trail; both pushed. If either feels too much, the knobs are the word timings in `loader.js` and `ALPHA` / `STRIPE` / `LIFE` / `FOLLOW` in `trail.js`.
+Today: added the words loader (Skiper8 style) and the subtle rainbow cursor trail; both pushed. If either feels too much, the knobs are the word timings in `loader.js` and `MIST` / `SPARKS` / `LIFE` / `FOLLOW` in `trail.js`.
 
 ## Earlier (2026-10-28)
 
