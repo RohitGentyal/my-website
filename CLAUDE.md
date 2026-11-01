@@ -5,7 +5,7 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
 ## Workflow
 
 - Plain HTML/CSS/JS, no build step. Preview: `npx serve . -l 5174`, or the `my-website` entry in `../.claude/launch.json`.
-- `index.html` links `style.css?v=…` and `scene.js?v=…`. **Bump that `?v=` whenever either file changes.** Otherwise returning visitors get a stale cached script, and the hero has rendered blank before.
+- `index.html` links `style.css?v=…`, `scene.js?v=…`, `loader.js?v=…` and `trail.js?v=…`. **Bump a file's `?v=` whenever it changes.** Otherwise returning visitors get a stale cached script, and the hero has rendered blank before.
 - Check at desktop and 375px widths, then commit and push in the same turn. The live site updates about a minute after a push; refresh once if it looks stale.
 - `gh` CLI isn't signed in; `git push` works.
 
@@ -19,6 +19,8 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
   - **Shadows** (`drawShade`, on a CSS-blurred `#shade` layer): a soft pool of shade behind every tuft, grass clump and flower clump (`casters`), plus a tapered sliver behind each of their blades and stems, all falling away from the sun or moon. Dense slope blades cast none, because that looked scratchy. Long shadows are paler. Shadows are tinted by the light: teal-green at noon, violet as the sun gets low, deep blue under the moon. There is also always-on contact shade at the roots of each clump, faint dappled shade from every 9th slope blade, and rocks that cast moving shadows (clipped so the rocks themselves stay unshaded; the painted rock shadow is now only a tight contact patch). Draw everything as batched strokes or a single fill of ellipses: one fill of thousands of shapes cost about 30ms. Now about 2–4ms a frame. Shadows lengthen as the light drops, fade at dusk and return with the moon, and they follow the grass when it's brushed.
   - No hard rim line on the ridge: that read as the rejected seam.
 - **Hobby sounds:** clicking a hobby tile plays its sound (`data-sound` on the tile, files in `sounds/`): Football → "SIUUU", Gym → "Yeah buddy, lightweight baby", Gaming → "Bingo bango bongo". Each click restarts it and cuts off any other. Poetry has no sound yet.
+- **Loader** (`loader.js`, 2026-11-02, after Skiper UI skiper8 / dennissnellenberg.com): on every load a near-black curtain (#1c1b17) shows "· Hello" in cream Instrument Serif italic for 1s, then Bonjour, Ciao, Olà, やあ, Hallå, Guten tag, नमस्ते at 150ms each; then it lifts off the top in 0.9s with a curved lower edge that flattens as it rises. The head script adds `.loading` (so without JS there is no loader); reduced motion gets a quick fade instead. `[hidden] { display: none !important; }` guards it.
+- **Cursor trail** (`trail.js`, 2026-11-02): a faint rainbow line (about 0.3 opacity, 420ms long, hue drifting) behind the mouse on a fixed `pointer-events: none` canvas. Mouse only, off on touch and under reduced motion.
 - **Links:** nav and Email/LinkedIn draw a 1px line left to right on hover and retract on leave. A caption in the bottom right shows a quote plus the local time.
 - **Intro:** "I'm a UX designer at Subculture Media Tech, where I lead product design for the Native Universe app…" plus hobby icons (football, gym, games, poetry) after "When I'm not designing,".
 - **Work:** only Genzo for now (no link yet).
@@ -28,7 +30,11 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
 - **Contact:** Email (rohitgentyal0201@gmail.com) and LinkedIn only. No GitHub link.
 
-## Resume here (2026-10-28)
+## Resume here (2026-11-02)
+
+Today: added the words loader (Skiper8 style) and the subtle rainbow cursor trail; both pushed. If either feels too much, the knobs are the word timings in `loader.js` and `LIFE` / the 0.32 alpha in `trail.js`.
+
+## Earlier (2026-10-28)
 
 Today: a day/night mode (moon button in the top bar) with a sunset-to-moonrise transition, stars, a moonlit hill, fireflies, and grass shadows that move with the light; hobby tiles play sound effects on click (football, gym, gaming) and were redrawn bigger and clearer; the far, upper slope has bigger, slightly darker blades that also brush, right up to the ridge; every grass blade now reacts to the cursor; grass is taller and denser; flowers are more numerous and colourful; bees hop between flowers and flee the cursor. Everything is pushed. Not yet checked: real frame rate on a slower laptop or phone (the preview pane was throttled during testing). If brushing ever feels laggy, lower the slope blade density (`(W * H) / 60` in `drawSlope`) first.
 
