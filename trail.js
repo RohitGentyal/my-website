@@ -1,4 +1,4 @@
-// A rainbow ribbon trailing the cursor arrow. Mouse only, off under reduced motion.
+// A rainbow band streaming from the lower end of the cursor arrow. Mouse only, off under reduced motion.
 (function () {
   if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -10,9 +10,11 @@
   const ctx = cv.getContext("2d");
 
   const LIFE = 900; // ms a point lingers
-  const ALPHA = 0.55; // opacity right at the head
-  const WIDTH = 4.5; // px right at the head
-  const FOLLOW = 0.14; // share of the gap the head closes each frame: lower lags more
+  const ALPHA = 0.5; // opacity at the arrow
+  const STRIPE = 2.6; // px per colour band at the arrow
+  const FOLLOW = 0.14; // share of the gap the band closes each frame: lower lags more
+  const TAIL = { x: 9, y: 17 }; // the arrow's lower end, from its tip (the pointer position)
+  const COLOURS = [0, 30, 55, 130, 210, 275]; // red, orange, yellow, green, blue, violet
   const pts = [];
   const mouse = { x: 0, y: 0 };
   let head = null, dpr = 1, running = false, last = 0;
@@ -27,15 +29,15 @@
 
   addEventListener("pointermove", (e) => {
     if (e.pointerType !== "mouse") return;
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
+    mouse.x = e.clientX + TAIL.x;
+    mouse.y = e.clientY + TAIL.y;
     if (!head) head = { x: mouse.x, y: mouse.y };
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(draw); }
   }, { passive: true });
   document.addEventListener("pointerleave", () => { pts.length = 0; head = null; });
 
   function draw(now) {
-    // the head eases after the arrow (frame-rate independent), leaving a point each frame
+    // the band's start eases after the arrow (frame-rate independent), leaving a point each frame
     if (head) {
       const k = 1 - Math.pow(1 - FOLLOW, (now - last) / 16.7);
       head.x += (mouse.x - head.x) * k;
@@ -48,20 +50,34 @@
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    ctx.lineCap = "round";
+    ctx.lineCap = "butt";
     ctx.lineJoin = "round";
-    // smooth through midpoints; red at the head, running through the spectrum to violet at the tail
+
     const n = pts.length;
-    for (let i = 1; i < n - 1; i++) {
-      const a = pts[i - 1], b = pts[i], c = pts[i + 1];
-      const life = Math.max(0, Math.min(1, 1 - (now - b.t) / LIFE));
-      const along = (n - 1 - i) / Math.max(1, n - 2); // 0 at the head, 1 at the tail
-      ctx.strokeStyle = `hsla(${along * 280}, 90%, 60%, ${ALPHA * life})`;
-      ctx.lineWidth = 0.8 + (WIDTH - 0.8) * life;
-      ctx.beginPath();
-      ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
-      ctx.quadraticCurveTo(b.x, b.y, (b.x + c.x) / 2, (b.y + c.y) / 2);
-      ctx.stroke();
+    if (n > 2) {
+      // a unit normal at every point, so the colour bands run side by side
+      const nx = [], ny = [], life = [];
+      for (let i = 0; i < n; i++) {
+        const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+        nx[i] = -dy / d;
+        ny[i] = dx / d;
+        life[i] = Math.max(0, Math.min(1, 1 - (now - pts[i].t) / LIFE));
+      }
+      COLOURS.forEach((hue, s) => {
+        const off = (s - (COLOURS.length - 1) / 2); // bands from one side to the other
+        for (let i = 1; i < n - 1; i++) {
+          const w = STRIPE * (0.25 + 0.75 * life[i]); // the band narrows as it fades
+          const P = (j) => ({ x: pts[j].x + nx[j] * off * STRIPE * (0.25 + 0.75 * life[j]), y: pts[j].y + ny[j] * off * STRIPE * (0.25 + 0.75 * life[j]) });
+          const a = P(i - 1), b = P(i), c = P(i + 1);
+          ctx.strokeStyle = `hsla(${hue}, 85%, 60%, ${ALPHA * life[i]})`;
+          ctx.lineWidth = w + 0.4; // slight overlap so no gaps show between bands
+          ctx.beginPath();
+          ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+          ctx.quadraticCurveTo(b.x, b.y, (b.x + c.x) / 2, (b.y + c.y) / 2);
+          ctx.stroke();
+        }
+      });
     }
 
     const settled = !head || Math.hypot(mouse.x - head.x, mouse.y - head.y) < 0.5;
