@@ -5,7 +5,7 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
 ## Workflow
 
 - Plain HTML/CSS/JS, no build step. Preview: `npx serve . -l 5174`, or the `my-website` entry in `../.claude/launch.json`.
-- `index.html` links `style.css?v=…`, `scene.js?v=…`, `loader.js?v=…` and `trail.js?v=…`. **Bump a file's `?v=` whenever it changes.** Otherwise returning visitors get a stale cached script, and the hero has rendered blank before.
+- `index.html` links `style.css?v=…`, `scene.js?v=…` and `loader.js?v=…`. **Bump a file's `?v=` whenever it changes.** Otherwise returning visitors get a stale cached script, and the hero has rendered blank before.
 - Check at desktop and 375px widths, then commit and push in the same turn. The live site updates about a minute after a push; refresh once if it looks stale.
 - `gh` CLI isn't signed in; `git push` works.
 
@@ -20,7 +20,6 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
   - No hard rim line on the ridge: that read as the rejected seam.
 - **Hobby sounds:** clicking a hobby tile plays its sound (`data-sound` on the tile, files in `sounds/`): Football → "SIUUU", Gym → "Yeah buddy, lightweight baby", Gaming → "Bingo bango bongo". Each click restarts it and cuts off any other. Poetry has no sound yet.
 - **Loader** (`loader.js`, 2026-11-02, after Skiper UI skiper8 / dennissnellenberg.com): on every load a near-black curtain (#1c1b17) shows "· Hello" in cream Instrument Serif italic for 1s, then Bonjour, Ciao, Olà, やあ, Hallå, Guten tag, नमस्ते at 150ms each; then it lifts off the top in 0.9s with a curved lower edge that flattens as it rises. The head script adds `.loading` (so without JS there is no loader); reduced motion gets a quick fade instead. `[hidden] { display: none !important; }` guards it.
-- **Cursor trail** (`trail.js`, 2026-11-02): magic-dust style, from a reference I shared (glowing smoky streaks full of sparkles): a soft rainbow mist (pre-drawn radial glows stamped along the path, 0.16 opacity, `MIST` / `GLOW`) plus tiny twinkling sparkles, some with a four-point glint, that drift out and sink a little (`SPARKS`). The colour moves with distance travelled, so a sweep shows the whole rainbow. It streams from the lower end of the arrow (`TAIL`, offset 9,17 from the tip), not the tip, fades over 900ms (`LIFE`), and eases after the arrow (`FOLLOW` 0.14). Rejected along the way: a thin line from the tip, and a striped rainbow band. Fixed `pointer-events: none` canvas; mouse only, off on touch and under reduced motion.
 - **Links:** nav and Email/LinkedIn draw a 1px line left to right on hover and retract on leave. A caption in the bottom right shows a quote plus the local time.
 - **Intro:** "I'm a UX designer at Subculture Media Tech, where I lead product design for the Native Universe app…" plus hobby icons (football, gym, games, poetry) after "When I'm not designing,".
 - **Work:** only Genzo for now (no link yet).
@@ -32,7 +31,7 @@ My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHu
 
 ## Resume here (2026-11-02)
 
-Today: added the words loader (Skiper8 style) and the subtle rainbow cursor trail; both pushed. If either feels too much, the knobs are the word timings in `loader.js` and `MIST` / `SPARKS` / `LIFE` / `FOLLOW` in `trail.js`.
+Today: added the words loader (Skiper8 style), pushed; its timings are in `loader.js`. A cursor trail was tried and removed the same day (see Rejected).
 
 ## Earlier (2026-10-28)
 
@@ -61,3 +60,4 @@ Earlier (2026-10-27): scroll parallax, larger type, darker greys, link hover und
 - spiky noisy grass blades
 - the person lying on the grass with a music player (removed at my request)
 - an automatic day/night cycle on a hidden timer (a minute of day, a minute of night): tried 2026-10-29, I didn't like it
+- a cursor trail (2026-11-02): tried a thin rainbow line, a striped rainbow band, then a rainbow mist with sparkles from the arrow's lower end; I had it removed
