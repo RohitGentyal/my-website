@@ -1,6 +1,6 @@
 # my-website — start here
 
-My portfolio site. Live at **https://rohitgentyal.github.io/my-website/** (GitHub Pages from `main`, root). Repo `RohitGentyal/my-website` is public; only I can push. For who I am and how I like to work, see `../CLAUDE.md`. **Keep this file current** when anything is decided, finished or left pending, and push.
+My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `rohitgentyal` on account rohitgentyal0201, connected to the GitHub repo: every push to `main` deploys to production; set up 2026-11-02). The old GitHub Pages copy at https://rohitgentyal.github.io/my-website/ stays on until I turn Pages off. The Vercel CLI (`npx vercel`) is logged in on this PC; `.vercel/` and `.env*` are gitignored. Repo `RohitGentyal/my-website` is public; only I can push. For who I am and how I like to work, see `../CLAUDE.md`. **Keep this file current** when anything is decided, finished or left pending, and push.
 
 ## Workflow
 
