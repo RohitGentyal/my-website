@@ -813,7 +813,7 @@
       if (!c) return;
       c.y = b.top - c.box.y;
       // smaller reads as further away, so slower
-      c.speed = (narrow ? 5 : 8) * S * b.v;
+      c.speed = (narrow ? 7 : 11) * S * b.v;
       c.pos = W * (0.1 + 0.8 * ((i * 0.41 + 0.15 * Math.random()) % 1));
     });
   }
@@ -830,8 +830,8 @@
         c.x = c.pos - c.box.x;
       } else {
         // the tower sways and bobs, barely
-        c.x = -6 * S + 8 * S * Math.sin(now / 7000);
-        c.y = 3 * S * Math.sin(now / 5300);
+        c.x = -6 * S + 8 * S * Math.sin(now / 5600);
+        c.y = 3 * S * Math.sin(now / 4300);
       }
       c.el.style.transform = `translate3d(${c.x.toFixed(1)}px, ${c.y.toFixed(1)}px, 0)`;
     });
@@ -947,7 +947,7 @@ void main() {
   // the swell rolls right to left over a longer, slower one; each blade adds a faint flutter
   float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (520.0 * uS) + uTime / 6.0) + root.y * 0.012);
   float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1400.0 * uS) + uTime / 14.0));
-  float bend = -(0.08 + 0.42 * swell * (0.4 + 0.6 * roll)) + 0.06 * sin(uTime * 1.5 + ph * 6.2832);
+  float bend = -(0.09 + 0.52 * swell * (0.4 + 0.6 * roll)) + 0.07 * sin(uTime * 1.5 + ph * 6.2832);
   // the blade's own spring, when the cursor has brushed it
   bend += aBend;
   float t = aCorner.x;
