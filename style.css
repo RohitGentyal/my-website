@@ -180,25 +180,6 @@ a { color: inherit; text-decoration: none; }
 /* each cloud is a small day + night canvas pair that scene.js drifts by transform */
 .clouds { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .cloud { position: absolute; will-change: transform; }
-/* wind: soft bands of light roll right to left over the grass, clipped to the
-   hill by scene.js; transform-only, so the GPU does it all */
-.wind { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.wind i {
-  position: absolute; top: 0; bottom: 0; left: 100%;
-  width: 34vw;
-  background: linear-gradient(90deg, transparent, rgba(255, 252, 214, .07) 30%, rgba(255, 252, 214, .13) 50%, rgba(255, 252, 214, .07) 70%, transparent);
-  will-change: transform;
-  animation: gust 26s linear infinite;
-}
-.wind i:nth-child(2) { width: 22vw; animation-duration: 21s; animation-delay: -9s; opacity: .8; }
-.wind i:nth-child(3) { width: 46vw; animation-duration: 33s; animation-delay: -20s; opacity: .6; }
-@keyframes gust {
-  from { transform: translate3d(0, 0, 0) skewX(-14deg); }
-  to { transform: translate3d(-180vw, 0, 0) skewX(-14deg); }
-}
-[data-theme="night"] .wind { opacity: .45; }
-.hero.away .wind i { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) { .wind { display: none; } }
 /* night: scene.js fades these in on one eased timeline as the switch plays */
 #skyNight, .cloud .night, #glow, .scene .dusk { opacity: 0; }
 #glow { mix-blend-mode: screen; pointer-events: none; }

@@ -759,7 +759,7 @@
       h.dabs.forEach((p) => { g.fillStyle = p.c; g.beginPath(); g.ellipse(p.x + o.ox, p.y + o.oy, p.rx, p.ry, p.a, 0, Math.PI * 2); g.fill(); });
       g.fillStyle = h.heart;
       g.beginPath(); g.arc(h.x + o.ox, h.y + o.oy, h.size * 0.38, 0, Math.PI * 2); g.fill();
-    } else {
+    } else if (!glOn) {
       blade(g, o.x, o.y, o.len, o.ang, o.w, o.color, o.j, o.b0 + o.b);
     }
   }
@@ -818,7 +818,7 @@
     Object.assign(el.style, { left: `${box.x}px`, top: `${box.y}px`, width: `${box.w}px`, height: `${box.h}px` });
     // far-off clouds pass behind the tower
     if (small) cloudsEl.prepend(el); else cloudsEl.append(el);
-    const c = { el, day, night, spec, seedNo, box, small, x: 0, y: 0, ox: 0, oy: 0, vx: 0, vy: 0 };
+    const c = { el, day, night, spec, seedNo, box, small, x: 0, y: 0 };
     clouds.push(c);
     return c;
   }
@@ -848,26 +848,11 @@
     });
   }
 
-  // ---------------------------------------------------------------- wind
-  // Wind over a field reads as waves of light rolling through the grass. Soft
-  // pale bands glide right to left (CSS transform animation, run by the GPU,
-  // so no repainting), clipped to the hill's outline.
-  const wind = document.getElementById("wind");
-  function clipWind() {
-    if (!wind) return;
-    const pts = [];
-    for (let x = 0; x <= W + 24; x += 24) pts.push(`${Math.min(x, W).toFixed(0)}px ${(ridge(Math.min(x, W)) + 10 * S).toFixed(0)}px`);
-    wind.style.clipPath = `polygon(${pts.join(", ")}, ${W}px ${H}px, 0px ${H}px)`;
-  }
-
   let lastDrift = 0;
   function driftClouds(now) {
     const s = lastDrift ? Math.min(now - lastDrift, 100) / 1000 : 0;
     lastDrift = now;
     clouds.forEach((c) => {
-      // a nudge springs back, as the grass does
-      c.vx = (c.vx - c.ox * 0.012) * 0.93; c.vy = (c.vy - c.oy * 0.012) * 0.93;
-      c.ox = clamp(c.ox + c.vx, -18 * S, 18 * S); c.oy = clamp(c.oy + c.vy, -10 * S, 10 * S);
       if (c.small) {
         c.pos -= c.speed * s;
         // off the left edge, it comes round again from beyond the right
@@ -878,18 +863,7 @@
         c.x = -6 * S + 8 * S * Math.sin(now / 7000);
         c.y = 3 * S * Math.sin(now / 5300);
       }
-      c.el.style.transform = `translate3d(${(c.x + c.ox).toFixed(1)}px, ${(c.y + c.oy).toFixed(1)}px, 0)`;
-    });
-  }
-
-  function nudgeClouds(x, y, dx, dy) {
-    clouds.forEach((c) => {
-      const l = c.box.x + c.x + c.ox, t = c.box.y + c.y + c.oy;
-      const ix = c.box.w * 0.15, iy = c.box.h * 0.15;
-      if (x < l + ix || x > l + c.box.w - ix || y < t + iy || y > t + c.box.h - iy) return;
-      const k = c.small ? 1.6 : 1;
-      c.vx += (clamp(dx, -30, 30) * 0.04 + Math.sign(l + c.box.w / 2 - x) * 0.14) * k;
-      c.vy += (clamp(dy, -30, 30) * 0.025 + Math.sign(t + c.box.h / 2 - y) * 0.08) * k;
+      c.el.style.transform = `translate3d(${c.x.toFixed(1)}px, ${c.y.toFixed(1)}px, 0)`;
     });
   }
   function render() {
@@ -934,11 +908,12 @@
       if (ctx.isPointInPath(path, l.x * dpr, l.y * dpr) || ctx.isPointInPath(path, tx * dpr, ty * dpr)) return false;
       return !rocks.some((k) => Math.abs(l.x - k.x) < k.size * 1.1 && l.y > k.y - k.size && l.y < k.y + 4);
     });
+    buildSway(dpr);
     indexLive();
     active.clear();
     redraw(null);
     planBees();
-    clipWind();
+    drawSway(performance.now());
     applyNight();
     drawCelestial(glowT, performance.now());
   }
@@ -964,7 +939,150 @@
   function indexLive() {
     cols = Math.ceil(W / CELL) + 1; rows = Math.ceil(H / CELL) + 1;
     grid = Array.from({ length: cols * rows }, () => []);
-    live.forEach((o, i) => { o.i = i; cellsOf(o, (c) => grid[c].push(o)); });
+    // blades drawn by the graphics card stay out of the 2D repaint grid
+    live.forEach((o, i) => { o.i = i; if (glOn && !o.leaf && !o.stem) return; cellsOf(o, (c) => grid[c].push(o)); });
+  }
+
+  // ---------------------------------------------------------------- swaying grass
+  // The ~24,000 blades are drawn by the graphics card (WebGL2): uploaded once
+  // per render, then a small shader bends every one each frame, so the whole
+  // field sways with almost no work on the main thread (repainting them on a
+  // 2D canvas cost 45–60ms a frame). Like a breeze through barley: a slow swell
+  // rolls right to left, the way the clouds drift, the field leans one way and
+  // rocks, and blades on a crest catch a little more light. Near the cursor
+  // they part as before. Flowers and leaves stay on the 2D touch layer.
+  // Without WebGL2 the blades are painted there, still, as they always were.
+  const swayCanvas = document.getElementById("sway");
+  let gl = null, glOn = false, glProg = null, glVao = null, glInst = null, glCount = 0, glU = null;
+  const push = { x: -1e4, y: -1e4, a: 0, av: 0, d: 0, dv: 0 };
+
+  const SWAY_VS = `#version 300 es
+layout(location = 0) in vec2 aCorner;
+layout(location = 1) in vec4 aBlade;
+layout(location = 2) in vec3 aShape;
+layout(location = 3) in vec3 aColor;
+uniform vec2 uSize;
+uniform float uTime, uS, uPx;
+uniform vec4 uPush;
+out vec3 vColor;
+out float vEdge, vHalf;
+void main() {
+  vec2 root = aBlade.xy;
+  float len = aBlade.z, ang = aBlade.w, w = aShape.x, j = aShape.y, ph = aShape.z;
+  // the swell rolls right to left over a longer, slower one; each blade adds a faint flutter
+  float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (440.0 * uS) + uTime / 7.5) + root.y * 0.01);
+  float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1300.0 * uS) + uTime / 15.0));
+  float bend = -(0.03 + 0.1 * swell * (0.35 + 0.65 * roll)) + 0.018 * sin(uTime * 1.7 + ph * 6.2832);
+  // parting around the cursor: away from it, plus the way it moved
+  vec2 d = root + vec2(cos(ang), sin(ang)) * len * 0.6 - uPush.xy;
+  float r = 60.0 * uS;
+  bend += exp(-dot(d, d) / (r * r)) * (uPush.z * (d.x >= 0.0 ? 1.0 : -1.0) + uPush.w);
+  float t = aCorner.x;
+  vec2 p1 = root + vec2(cos(ang + bend * 0.4), sin(ang + bend * 0.4)) * len * 0.5 + vec2(j, 0.0);
+  vec2 p2 = root + vec2(cos(ang + bend), sin(ang + bend)) * len;
+  vec2 pos = mix(mix(root, p1, t), mix(p1, p2, t), t);
+  vec2 tg = mix(p1 - root, p2 - p1, t);
+  tg = length(tg) > 1e-4 ? normalize(tg) : vec2(0.0, -1.0);
+  float hw = w * 0.5;
+  // widened a pixel for a soft edge, and a round-cap's worth past the tip
+  pos += vec2(-tg.y, tg.x) * aCorner.y * (hw + uPx) + tg * (t > 0.99 ? hw : 0.0);
+  vEdge = aCorner.y * (hw + uPx);
+  vHalf = hw;
+  vColor = aColor * (1.0 + 0.07 * swell * roll);
+  gl_Position = vec4(pos.x / uSize.x * 2.0 - 1.0, 1.0 - pos.y / uSize.y * 2.0, 0.0, 1.0);
+}`;
+  const SWAY_FS = `#version 300 es
+precision highp float;
+in vec3 vColor;
+in float vEdge, vHalf;
+uniform float uPx;
+out vec4 o;
+void main() {
+  float a = clamp((vHalf - abs(vEdge)) / uPx + 0.5, 0.0, 1.0);
+  o = vec4(vColor * a, a);
+}`;
+
+  function initGL() {
+    if (gl !== null) return !!gl;
+    gl = false;
+    const g = swayCanvas && swayCanvas.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
+    if (!g) return false;
+    const shader = (type, src) => { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); return g.getShaderParameter(s, g.COMPILE_STATUS) ? s : null; };
+    const vs = shader(g.VERTEX_SHADER, SWAY_VS), fs = shader(g.FRAGMENT_SHADER, SWAY_FS);
+    if (!vs || !fs) return false;
+    const p = g.createProgram();
+    g.attachShader(p, vs); g.attachShader(p, fs); g.linkProgram(p);
+    if (!g.getProgramParameter(p, g.LINK_STATUS)) return false;
+    glProg = p;
+    glVao = g.createVertexArray();
+    g.bindVertexArray(glVao);
+    // one blade: a strip of 4 points along its curve, each with a left and right edge
+    g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
+    g.bufferData(g.ARRAY_BUFFER, new Float32Array([0, -1, 0, 1, 1 / 3, -1, 1 / 3, 1, 2 / 3, -1, 2 / 3, 1, 1, -1, 1, 1]), g.STATIC_DRAW);
+    g.enableVertexAttribArray(0);
+    g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0);
+    // per blade: x, y, length, angle | width, jitter, phase | r, g, b
+    glInst = g.createBuffer();
+    g.bindBuffer(g.ARRAY_BUFFER, glInst);
+    [[1, 4, 0], [2, 3, 16], [3, 3, 28]].forEach(([loc, n, off]) => {
+      g.enableVertexAttribArray(loc);
+      g.vertexAttribPointer(loc, n, g.FLOAT, false, 40, off);
+      g.vertexAttribDivisor(loc, 1);
+    });
+    g.enable(g.BLEND);
+    g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
+    glU = ["uSize", "uTime", "uS", "uPx", "uPush"].reduce((u, n) => ((u[n] = g.getUniformLocation(p, n)), u), {});
+    // if the graphics card drops the context, fall back to painting the blades in 2D
+    swayCanvas.addEventListener("webglcontextlost", () => { gl = false; glOn = false; swayCanvas.hidden = true; lastW = 0; render(); });
+    gl = g;
+    return true;
+  }
+
+  const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255);
+
+  function buildSway(dpr) {
+    glOn = false;
+    if (!initGL()) { if (swayCanvas) swayCanvas.hidden = true; return; }
+    const blades = live.filter((o) => !o.leaf && !o.stem && /^#[0-9a-f]{6}$/i.test(o.color));
+    if (blades.length !== live.filter((o) => !o.leaf && !o.stem).length) { swayCanvas.hidden = true; return; }
+    const data = new Float32Array(blades.length * 10);
+    blades.forEach((o, i) => {
+      const k = i * 10, [cr, cg, cb] = rgb(o.color);
+      data.set([o.x, o.y, o.len, o.ang, o.w, o.j, (o.x * 0.0137 + o.y * 0.031) % 1, cr, cg, cb], k);
+    });
+    swayCanvas.width = Math.round(W * dpr);
+    swayCanvas.height = Math.round(H * dpr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, glInst);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    glCount = blades.length;
+    gl.useProgram(glProg);
+    gl.uniform2f(glU.uSize, W, H);
+    gl.uniform1f(glU.uS, S);
+    gl.uniform1f(glU.uPx, 1 / dpr);
+    swayCanvas.hidden = false;
+    glOn = true;
+  }
+
+  function pushGrass(x, y, dx) {
+    push.x = x; push.y = y;
+    push.av += 0.08;
+    push.dv += clamp(dx, -30, 30) * 0.02;
+    wake();
+  }
+
+  function drawSway(now) {
+    if (!glOn) return;
+    // the cursor's push springs back the way a brushed blade does
+    push.av = (push.av - push.a * 0.08) * 0.84; push.a = clamp(push.a + push.av, -1.3, 1.3);
+    push.dv = (push.dv - push.d * 0.08) * 0.84; push.d = clamp(push.d + push.dv, -1.3, 1.3);
+    gl.viewport(0, 0, swayCanvas.width, swayCanvas.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(glProg);
+    gl.bindVertexArray(glVao);
+    gl.uniform1f(glU.uTime, still.matches ? 0 : (now / 1000) % 3600);
+    gl.uniform4f(glU.uPush, push.x, push.y, push.a, push.d);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 8, glCount);
   }
 
   // repaint one block of cells [x0..x1] × [y0..y1] (or everything when `box`
@@ -1011,6 +1129,7 @@
     const x0 = clamp(Math.floor((x - reach) / CELL), 0, cols - 1), x1 = clamp(Math.floor((x + reach) / CELL), 0, cols - 1);
     const y0 = clamp(Math.floor((y - reach) / CELL), 0, rows - 1), y1 = clamp(Math.floor((y + reach) / CELL), 0, rows - 1);
     for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) grid[cy * cols + cx].forEach((o) => seen.add(o));
+    if (glOn) pushGrass(x, y, dx);
     seen.forEach((o) => {
       if (o.leaf) return;
       const mx = o.stem ? o.hx : o.x + Math.cos(o.ang) * o.len * 0.6, my = o.stem ? o.hy : o.y + Math.sin(o.ang) * o.len * 0.6;
@@ -1048,7 +1167,7 @@
     if (dusk) dusk.style.opacity = d;
     // day → a warm dusk → cool moonlight, in one filter so it blends smoothly
     const f = p || d ? `brightness(${lerp(1, 0.48, p) - 0.08 * d}) sepia(${0.4 * d}) saturate(${lerp(1, 0.7, p) + 0.2 * d}) hue-rotate(${lerp(0, 16, p) - 12 * d}deg)` : "";
-    [canvas, touch].forEach((el) => { if (el) el.style.filter = f; });
+    [canvas, touch, swayCanvas].forEach((el) => { if (el) el.style.filter = f; });
     // the shade layer is also blurred so every shadow has a soft edge
     if (shade) shade.style.filter = `blur(${(1.4 * S).toFixed(2)}px) ${f}`;
     drawShade();
@@ -1207,13 +1326,14 @@
     moveBees(now);
     drawBees(now);
     driftClouds(now);
+    drawSway(now);
     if (glowT > 0 || nightT !== (isNight ? 1 : 0)) drawCelestial(glowT, now);
     wake();
   }
   function wake() {
     if (!beeRaf && bees.length && heroOnScreen && !still.matches) beeRaf = requestAnimationFrame(buzz);
   }
-  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; hero.classList.toggle("away", !heroOnScreen); lastBuzz = 0; wake(); }).observe(hero);
+  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; lastBuzz = 0; wake(); }).observe(hero);
   // jump straight to the current mode (reduced motion, or nothing animating)
   function settleNight() {
     nightT = glowT = isNight ? 1 : 0;
@@ -1249,7 +1369,7 @@
 
   // Scrolling slides the page under a still cursor and Chrome reports that as
   // pointer moves; ignore those so the grass and shadows don't repaint mid-scroll
-  let scrolledAt = 0, sky = null;
+  let scrolledAt = 0;
   window.addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
 
   if (touch) {
@@ -1261,11 +1381,9 @@
       hero.classList.toggle("touching", onGrass);
       scare(x, y);
       if (onGrass) brush(x, y, pointer ? x - pointer.x : 0);
-      else if (!e.target.closest(".intro, .live")) nudgeClouds(x, y, sky ? x - sky.x : 0, sky ? y - sky.y : 0);
       pointer = onGrass ? { x, y } : null;
-      sky = onGrass ? null : { x, y };
     });
-    hero.addEventListener("pointerleave", () => { hero.classList.remove("touching"); pointer = null; sky = null; });
+    hero.addEventListener("pointerleave", () => { hero.classList.remove("touching"); pointer = null; });
   }
 
   let t;
