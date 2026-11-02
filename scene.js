@@ -913,8 +913,7 @@
   function indexLive() {
     cols = Math.ceil(W / CELL) + 1; rows = Math.ceil(H / CELL) + 1;
     grid = Array.from({ length: cols * rows }, () => []);
-    // blades drawn by the graphics card stay out of the 2D repaint grid
-    live.forEach((o, i) => { o.i = i; if (glOn && !o.leaf && !o.stem) return; cellsOf(o, (c) => grid[c].push(o)); });
+    live.forEach((o, i) => { o.i = i; cellsOf(o, (c) => grid[c].push(o)); });
   }
 
   // ---------------------------------------------------------------- swaying grass
@@ -924,20 +923,22 @@
   // 2D canvas cost 45–60ms a frame). Like a breeze through barley: a slow swell
   // rolls right to left, the way the clouds drift, the field leans one way and
   // rocks, and blades on a crest catch a little more light. Near the cursor
-  // they part as before. Flowers and leaves stay on the 2D touch layer.
-  // Without WebGL2 the blades are painted there, still, as they always were.
+  // each blade still has its own spring (see brush/step); only the bends of
+  // the springing ones change, and they're sent up as one small array.
+  // Flowers and leaves stay on the 2D touch layer. Without WebGL2 the blades
+  // are painted there, still, as they always were.
   const swayCanvas = document.getElementById("sway");
-  let gl = null, glOn = false, glProg = null, glVao = null, glInst = null, glCount = 0, glU = null;
-  const push = { x: -1e4, y: -1e4, a: 0, av: 0, d: 0, dv: 0 };
+  let gl = null, glOn = false, glProg = null, glVao = null, glInst = null, glBend = null, glCount = 0, glU = null;
+  let bends = new Float32Array(0), bendsDirty = false;
 
   const SWAY_VS = `#version 300 es
 layout(location = 0) in vec2 aCorner;
 layout(location = 1) in vec4 aBlade;
 layout(location = 2) in vec3 aShape;
 layout(location = 3) in vec3 aColor;
+layout(location = 4) in float aBend;
 uniform vec2 uSize;
 uniform float uTime, uS, uPx;
-uniform vec4 uPush;
 out vec3 vColor;
 out float vEdge, vHalf;
 void main() {
@@ -947,10 +948,8 @@ void main() {
   float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (520.0 * uS) + uTime / 6.0) + root.y * 0.012);
   float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1400.0 * uS) + uTime / 14.0));
   float bend = -(0.08 + 0.42 * swell * (0.4 + 0.6 * roll)) + 0.06 * sin(uTime * 1.5 + ph * 6.2832);
-  // parting around the cursor: away from it, plus the way it moved
-  vec2 d = root + vec2(cos(ang), sin(ang)) * len * 0.6 - uPush.xy;
-  float r = 60.0 * uS;
-  bend += exp(-dot(d, d) / (r * r)) * (uPush.z * (d.x >= 0.0 ? 1.0 : -1.0) + uPush.w);
+  // the blade's own spring, when the cursor has brushed it
+  bend += aBend;
   float t = aCorner.x;
   vec2 p1 = root + vec2(cos(ang + bend * 0.4), sin(ang + bend * 0.4)) * len * 0.5 + vec2(j, 0.0);
   vec2 p2 = root + vec2(cos(ang + bend), sin(ang + bend)) * len;
@@ -1003,9 +1002,15 @@ void main() {
       g.vertexAttribPointer(loc, n, g.FLOAT, false, 40, off);
       g.vertexAttribDivisor(loc, 1);
     });
+    // per blade: the extra bend from its spring
+    glBend = g.createBuffer();
+    g.bindBuffer(g.ARRAY_BUFFER, glBend);
+    g.enableVertexAttribArray(4);
+    g.vertexAttribPointer(4, 1, g.FLOAT, false, 4, 0);
+    g.vertexAttribDivisor(4, 1);
     g.enable(g.BLEND);
     g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
-    glU = ["uSize", "uTime", "uS", "uPx", "uPush"].reduce((u, n) => ((u[n] = g.getUniformLocation(p, n)), u), {});
+    glU = ["uSize", "uTime", "uS", "uPx"].reduce((u, n) => ((u[n] = g.getUniformLocation(p, n)), u), {});
     // if the graphics card drops the context, fall back to painting the blades in 2D
     swayCanvas.addEventListener("webglcontextlost", () => { gl = false; glOn = false; swayCanvas.hidden = true; lastW = 0; render(); });
     gl = g;
@@ -1022,12 +1027,17 @@ void main() {
     const data = new Float32Array(blades.length * 10);
     blades.forEach((o, i) => {
       const k = i * 10, [cr, cg, cb] = rgb(o.color);
+      o.gi = i;
       data.set([o.x, o.y, o.len, o.ang, o.w, o.j, (o.x * 0.0137 + o.y * 0.031) % 1, cr, cg, cb], k);
     });
     swayCanvas.width = Math.round(W * dpr);
     swayCanvas.height = Math.round(H * dpr);
     gl.bindBuffer(gl.ARRAY_BUFFER, glInst);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    bends = new Float32Array(blades.length);
+    gl.bindBuffer(gl.ARRAY_BUFFER, glBend);
+    gl.bufferData(gl.ARRAY_BUFFER, bends, gl.DYNAMIC_DRAW);
+    bendsDirty = false;
     glCount = blades.length;
     gl.useProgram(glProg);
     gl.uniform2f(glU.uSize, W, H);
@@ -1037,25 +1047,19 @@ void main() {
     glOn = true;
   }
 
-  function pushGrass(x, y, dx) {
-    push.x = x; push.y = y;
-    push.av += 0.08;
-    push.dv += clamp(dx, -30, 30) * 0.02;
-    wake();
-  }
-
   function drawSway(now) {
     if (!glOn) return;
-    // the cursor's push springs back the way a brushed blade does
-    push.av = (push.av - push.a * 0.08) * 0.84; push.a = clamp(push.a + push.av, -1.3, 1.3);
-    push.dv = (push.dv - push.d * 0.08) * 0.84; push.d = clamp(push.d + push.dv, -1.3, 1.3);
+    if (bendsDirty) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, glBend);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, bends);
+      bendsDirty = false;
+    }
     gl.viewport(0, 0, swayCanvas.width, swayCanvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(glProg);
     gl.bindVertexArray(glVao);
     gl.uniform1f(glU.uTime, still.matches ? 0 : (now / 1000) % 3600);
-    gl.uniform4f(glU.uPush, push.x, push.y, push.a, push.d);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 8, glCount);
   }
 
@@ -1068,7 +1072,7 @@ void main() {
     g.save();
     if (box) {
       const seen = new Set();
-      for (let cy = box.y0; cy <= box.y1; cy++) for (let cx = box.x0; cx <= box.x1; cx++) grid[cy * cols + cx].forEach((o) => seen.add(o));
+      for (let cy = box.y0; cy <= box.y1; cy++) for (let cx = box.x0; cx <= box.x1; cx++) grid[cy * cols + cx].forEach((o) => { if (!(glOn && o.gi !== undefined)) seen.add(o); });
       const x = box.x0 * CELL, y = box.y0 * CELL, w = (box.x1 - box.x0 + 1) * CELL, h = (box.y1 - box.y0 + 1) * CELL;
       g.clearRect(x, y, w, h);
       g.beginPath(); g.rect(x, y, w, h); g.clip();
@@ -1081,20 +1085,31 @@ void main() {
     g.restore();
   }
 
+  let shadedAt = 0;
   function step() {
     raf = 0;
     const box = { x0: cols, y0: rows, x1: -1, y1: -1 };
+    let moved = false;
     active.forEach((l) => {
       l.v = (l.v - l.b * 0.08) * 0.84;
       l.b = clamp(l.b + l.v, -1.3, 1.3);
       if (Math.abs(l.b) < 0.002 && Math.abs(l.v) < 0.002) { l.b = l.v = 0; active.delete(l); }
+      moved = true;
+      // a GPU blade just hands its bend to the shader; only flowers repaint in 2D
+      if (glOn && l.gi !== undefined) { bends[l.gi] = l.b0 + l.b; bendsDirty = true; return; }
       cellsOf(l, (c) => {
         const cx = c % cols, cy = (c - cx) / cols;
         box.x0 = Math.min(box.x0, cx); box.x1 = Math.max(box.x1, cx);
         box.y0 = Math.min(box.y0, cy); box.y1 = Math.max(box.y1, cy);
       });
     });
-    if (box.x1 >= 0) { redraw(box); drawShade(); }
+    if (box.x1 >= 0) redraw(box);
+    // shadows are soft and blurred, so while the grass is moving they keep up at
+    // ~12fps (repainting the whole layer every frame made brushing stutter),
+    // and land exactly once it settles
+    if (moved && (!active.size || performance.now() - shadedAt > 80)) { drawShade(); shadedAt = performance.now(); }
+    // with reduced motion the frame loop is off, so draw the brushed blades here
+    if (bendsDirty && still.matches) drawSway(performance.now());
     if (active.size) raf = requestAnimationFrame(step);
   }
 
@@ -1103,7 +1118,6 @@ void main() {
     const x0 = clamp(Math.floor((x - reach) / CELL), 0, cols - 1), x1 = clamp(Math.floor((x + reach) / CELL), 0, cols - 1);
     const y0 = clamp(Math.floor((y - reach) / CELL), 0, rows - 1), y1 = clamp(Math.floor((y + reach) / CELL), 0, rows - 1);
     for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) grid[cy * cols + cx].forEach((o) => seen.add(o));
-    if (glOn) pushGrass(x, y, dx);
     seen.forEach((o) => {
       if (o.leaf) return;
       const mx = o.stem ? o.hx : o.x + Math.cos(o.ang) * o.len * 0.6, my = o.stem ? o.hy : o.y + Math.sin(o.ang) * o.len * 0.6;
