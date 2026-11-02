@@ -9,6 +9,7 @@
   const skyCanvas = document.getElementById("sky");
   const clock = document.getElementById("clock");
   const fade = document.querySelector(".scene .fade");
+  const caption = document.querySelector(".live");
   if (!canvas || !skyCanvas) return;
   const hillCtx = canvas.getContext("2d");
   const skyCtx = skyCanvas.getContext("2d");
@@ -18,8 +19,7 @@
   const nightCtx = skyNight && skyNight.getContext("2d");
   const celest = document.getElementById("celestial");
   const celestCtx = celest && celest.getContext("2d");
-  const cloudNight = document.getElementById("cloudNight");
-  const cloudNightCtx = cloudNight && cloudNight.getContext("2d");
+  const cloudsEl = document.getElementById("clouds");
   const dusk = document.querySelector(".scene .dusk");
   const shade = document.getElementById("shade");
   const shadeCtx = shade && shade.getContext("2d");
@@ -50,7 +50,8 @@
   };
   const depth = (y, x) => clamp((y - ridge(x)) / (H - ridge(x)), 0, 1);
 
-  const SKY = "#287fa8", SKY_LOW = "#2f8ab3";
+  const DAY_SKY = { top: "#1d6e98", mid: "#2a83ad", low: "#4d9dbf", haze: "236, 239, 212", hazeA: 0.26, wisp: "255, 252, 238", wispA: 0.16 };
+  const NIGHT_SKY = { top: "#0a1430", mid: "#132a55", low: "#26477a", haze: "110, 140, 200", hazeA: 0.2, wisp: "150, 170, 220", wispA: 0.09 };
   const DAY_CLOUD = { lit: "#f6f4dc", top: "#fbfaea", shade: "#e3e8d6", deep: "#cbdbd4", cast: "180, 208, 206" };
   const NIGHT_CLOUD = { lit: "#a9b6d3", top: "#c4cee4", shade: "#7d8cb0", deep: "#5f6f97", cast: "40, 58, 104" };
   const GRASS = "#a3cd4c";
@@ -72,12 +73,52 @@
   }
 
   // ---------------------------------------------------------------- sky + cloud
-  function drawSky(top = SKY, low = SKY_LOW) {
-    const g = ctx.createLinearGradient(0, 0, 0, H * 0.7);
-    g.addColorStop(0, top);
-    g.addColorStop(1, low);
+  // deeper overhead, hazier and lighter towards the horizon, with a few high
+  // wind-combed wisps; painted once, so it costs nothing per frame
+  function drawSky(p) {
+    const g = ctx.createLinearGradient(0, 0, 0, H * 0.75);
+    g.addColorStop(0, p.top);
+    g.addColorStop(0.55, p.mid);
+    g.addColorStop(1, p.low);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
+    // light thickening just above the hill
+    const hi = Math.min(ridge(0), ridge(W * 0.5), ridge(W));
+    const haze = ctx.createLinearGradient(0, hi - H * 0.3, 0, hi + 20 * S);
+    haze.addColorStop(0, `rgba(${p.haze}, 0)`);
+    haze.addColorStop(1, `rgba(${p.haze}, ${p.hazeA})`);
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, hi - H * 0.3, W, H);
+    // painted on a layer and softened in one go, so they read as haze, not
+    // streaks; its own sequence, so the hill's stays untouched
+    let s = 9973;
+    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    const layer = document.createElement("canvas");
+    layer.width = ctx.canvas.width; layer.height = ctx.canvas.height;
+    const lc = layer.getContext("2d");
+    lc.setTransform(ctx.getTransform());
+    for (let i = 0; i < (narrow ? 3 : 5); i++) {
+      const x = rnd() * W, y = H * (0.05 + 0.28 * rnd()), len = W * (narrow ? 0.34 : 0.16) * (1 + rnd()), tilt = -0.04 - 0.05 * rnd();
+      for (let k = 0; k <= 30; k++) {
+        const t = k / 30, along = (t - 0.5) * len, thick = Math.sin(Math.PI * t);
+        lc.fillStyle = `rgba(${p.wisp}, ${(p.wispA * thick * (0.5 + 0.5 * rnd())).toFixed(3)})`;
+        lc.beginPath();
+        lc.ellipse(x + along, y + along * tilt + (rnd() - 0.5) * 10 * S * thick, len * 0.06, (3 + 6 * thick * rnd()) * S, tilt, 0, Math.PI * 2);
+        lc.fill();
+      }
+    }
+    // none behind the intro text (the blur feathers the cut)
+    if (intro) {
+      const t = intro.getBoundingClientRect(), top = hero.getBoundingClientRect().top;
+      lc.globalCompositeOperation = "destination-out";
+      lc.fillStyle = "#000";
+      lc.fillRect(0, t.top - top - 16, t.right + 16, t.height + 32);
+    }
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.filter = `blur(${(4 * S).toFixed(1)}px)`;
+    ctx.drawImage(layer, 0, 0);
+    ctx.restore();
   }
 
   // ---------------------------------------------------------------- night sky
@@ -320,16 +361,22 @@
     g.restore();
   }
 
-  function drawCloud(pal) {
-    // keep the cloud clear of the intro text
+  // the big tower, kept clear of the intro text
+  function towerSpec() {
     const heroTop = hero.getBoundingClientRect().top;
     const textBottom = intro ? intro.getBoundingClientRect().bottom - heroTop : 0;
     const cx = W * (narrow ? 0.64 : 0.68);
     const top = narrow ? textBottom + 22 * S : H * 0.1;
     const base = ridge(cx) + 30 * S;
     const ch = base - top;
-    const cw = Math.min(W * (narrow ? 0.56 : 0.28), ch * 1.1);
-    if (ch < 40) return;
+    return { cx, base, ch, cw: Math.min(W * (narrow ? 0.56 : 0.28), ch * 1.1) };
+  }
+
+  // Paints a cloud onto its own small canvas `el`, cropped to the cloud, and
+  // returns where that crop sits in the scene. Small canvases moved with
+  // transforms let the clouds drift without repainting anything.
+  function drawCloud(pal, el, { cx, base, ch, cw }) {
+    if (ch < 12) { el.width = el.height = 0; return null; }
 
     const lobes = [];
     const levels = 7;
@@ -349,10 +396,14 @@
     for (let j = 0; j < 4; j++) lobes.push({ x: px + (j - 1.5) * cw * 0.07, y: base - ch * r(0.08, 0.2), r: cw * r(0.06, 0.09), t: 0.1 });
 
     // painted on its own layer so the whole cloud can be softened at once
+    const pad = 6 * S + 2;
+    const x0 = Math.min(...lobes.map((l) => l.x - l.r)) - pad, x1 = Math.max(...lobes.map((l) => l.x + l.r)) + pad;
+    const y0 = Math.min(...lobes.map((l) => l.y - l.r)) - pad, y1 = Math.max(...lobes.map((l) => l.y + l.r)) + pad;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const layer = document.createElement("canvas");
-    layer.width = canvas.width; layer.height = canvas.height;
+    layer.width = Math.ceil((x1 - x0) * dpr); layer.height = Math.ceil((y1 - y0) * dpr);
     const lc = layer.getContext("2d");
-    lc.setTransform(ctx.getTransform());
+    lc.setTransform(dpr, 0, 0, dpr, -x0 * dpr, -y0 * dpr);
     const disc = (g, x, y, rad, color) => { g.fillStyle = color; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill(); };
 
     // brushy silhouette: overlapping dabs hugging the outer edge
@@ -391,11 +442,11 @@
     });
     lc.restore();
 
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.filter = "blur(0.8px)";
-    ctx.drawImage(layer, 0, 0);
-    ctx.restore();
+    el.width = layer.width; el.height = layer.height;
+    const g = el.getContext("2d");
+    g.filter = "blur(0.8px)";
+    g.drawImage(layer, 0, 0);
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
   }
 
   // ---------------------------------------------------------------- slope
@@ -724,28 +775,122 @@
     c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  // The night sky, night cloud and moonlight are three more full-screen layers.
-  // They're only allocated while night is showing or on its way: holding all
-  // nine at once froze low-memory machines on refresh.
+  // The night sky and moonlight are two more full-screen layers. They're only
+  // allocated while night is showing or on its way: holding every layer at
+  // once froze low-memory machines on refresh.
   let nightPainted = false;
   function paintNight() {
-    if (nightPainted || !nightCtx || !cloudNightCtx || !W) return;
+    if (nightPainted || !nightCtx || !W) return;
     nightPainted = true;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    [skyNight, cloudNight, glowCanvas].forEach((c) => size(c, dpr));
+    [skyNight, glowCanvas].forEach((c) => size(c, dpr));
     const keepCtx = ctx, keepSeed = seed;
     ctx = nightCtx;
-    drawSky("#0b1633", "#23426f");
-    // same seed as the day cloud, so the night cloud has the same shape
-    ctx = cloudNightCtx;
-    seed = 20261027;
-    drawCloud(NIGHT_CLOUD);
+    drawSky(NIGHT_SKY);
+    // each cloud's own seed, so its night copy has the same shape
+    clouds.forEach((c) => { seed = c.seedNo; drawCloud(NIGHT_CLOUD, c.night, c.spec); });
     if (glowCtx) drawGlow(moon);
     ctx = keepCtx; seed = keepSeed;
   }
   function freeNight() {
     nightPainted = false;
-    [skyNight, cloudNight, glowCanvas].forEach((c) => { if (c) { c.width = 0; c.height = 0; } });
+    [skyNight, glowCanvas, ...clouds.map((c) => c.night)].forEach((c) => { if (c) { c.width = 0; c.height = 0; } });
+  }
+
+  // ---------------------------------------------------------------- clouds
+  // The tower floats where it was painted. A few small, far-off clouds drift
+  // in from the right on the breeze, in open sky clear of the intro text.
+  // Each cloud is a small day + night canvas pair moved only by
+  // transform, so drifting costs no repainting.
+  let clouds = [];
+  function makeCloud(spec, seedNo, small) {
+    const el = document.createElement("div");
+    el.className = "cloud";
+    const day = document.createElement("canvas"), night = document.createElement("canvas");
+    night.className = "night";
+    el.append(day, night);
+    const keep = seed;
+    seed = seedNo;
+    const box = drawCloud(DAY_CLOUD, day, spec);
+    // the tower carries on the hill's sequence; small clouds hand it back
+    if (small) seed = keep;
+    if (!box) return null;
+    Object.assign(el.style, { left: `${box.x}px`, top: `${box.y}px`, width: `${box.w}px`, height: `${box.h}px` });
+    // far-off clouds pass behind the tower
+    if (small) cloudsEl.prepend(el); else cloudsEl.append(el);
+    const c = { el, day, night, spec, seedNo, box, small, x: 0, y: 0, ox: 0, oy: 0, vx: 0, vy: 0 };
+    clouds.push(c);
+    return c;
+  }
+
+  function planSmallClouds() {
+    const heroTop = hero.getBoundingClientRect().top;
+    const t = intro ? intro.getBoundingClientRect() : null;
+    const text = t ? { r: t.right + 12 * S, top: t.top - heroTop - 8 * S, bottom: t.bottom - heroTop + 8 * S } : { r: 0, top: H * 0.2, bottom: H * 0.45 };
+    // Open sky only: under the top bar and above the name, and low over the
+    // horizon below the intro, where they slip behind the hill like far-off
+    // clouds. On phones the intro fills the top, so only the low band.
+    const bar = 70, low = text.bottom + 6 * S, horizon = ridge(W * 0.15) - 8 * S;
+    const bands = narrow
+      ? [{ top: low, room: horizon - low, k: 0.9, v: 1 }]
+      : [{ top: bar, room: text.top - bar, k: 1, v: 1.1 }, { top: bar + 6 * S, room: text.top - bar - 6 * S, k: 0.7, v: 0.75 }, { top: low, room: horizon - low, k: 1.1, v: 0.9 }];
+    const pad = 6 * S + 2;
+    bands.forEach((b, i) => {
+      // a cloud's crop is about 0.8 × its width tall, plus padding
+      const cw = Math.min(W * (narrow ? 0.2 : 0.075) * b.k, (b.room - pad * 2) / 0.8);
+      if (cw < 30 * S) return;
+      const c = makeCloud({ cx: 0, base: 0, ch: cw * 0.5, cw }, 7100 + i * 131, true);
+      if (!c) return;
+      c.y = b.top - c.box.y;
+      // smaller reads as further away, so slower
+      c.speed = (narrow ? 5 : 8) * S * b.v;
+      c.pos = W * (0.1 + 0.8 * ((i * 0.41 + 0.15 * Math.random()) % 1));
+    });
+  }
+
+  // ---------------------------------------------------------------- wind
+  // Wind over a field reads as waves of light rolling through the grass. Soft
+  // pale bands glide right to left (CSS transform animation, run by the GPU,
+  // so no repainting), clipped to the hill's outline.
+  const wind = document.getElementById("wind");
+  function clipWind() {
+    if (!wind) return;
+    const pts = [];
+    for (let x = 0; x <= W + 24; x += 24) pts.push(`${Math.min(x, W).toFixed(0)}px ${(ridge(Math.min(x, W)) + 10 * S).toFixed(0)}px`);
+    wind.style.clipPath = `polygon(${pts.join(", ")}, ${W}px ${H}px, 0px ${H}px)`;
+  }
+
+  let lastDrift = 0;
+  function driftClouds(now) {
+    const s = lastDrift ? Math.min(now - lastDrift, 100) / 1000 : 0;
+    lastDrift = now;
+    clouds.forEach((c) => {
+      // a nudge springs back, as the grass does
+      c.vx = (c.vx - c.ox * 0.012) * 0.93; c.vy = (c.vy - c.oy * 0.012) * 0.93;
+      c.ox = clamp(c.ox + c.vx, -18 * S, 18 * S); c.oy = clamp(c.oy + c.vy, -10 * S, 10 * S);
+      if (c.small) {
+        c.pos -= c.speed * s;
+        // off the left edge, it comes round again from beyond the right
+        if (c.pos + c.box.w < 0) c.pos = W + c.box.w * (0.2 + Math.random());
+        c.x = c.pos - c.box.x;
+      } else {
+        // the tower sways and bobs, barely
+        c.x = -6 * S + 8 * S * Math.sin(now / 7000);
+        c.y = 3 * S * Math.sin(now / 5300);
+      }
+      c.el.style.transform = `translate3d(${(c.x + c.ox).toFixed(1)}px, ${(c.y + c.oy).toFixed(1)}px, 0)`;
+    });
+  }
+
+  function nudgeClouds(x, y, dx, dy) {
+    clouds.forEach((c) => {
+      const l = c.box.x + c.x + c.ox, t = c.box.y + c.y + c.oy;
+      const ix = c.box.w * 0.15, iy = c.box.h * 0.15;
+      if (x < l + ix || x > l + c.box.w - ix || y < t + iy || y > t + c.box.h - iy) return;
+      const k = c.small ? 1.6 : 1;
+      c.vx += (clamp(dx, -30, 30) * 0.04 + Math.sign(l + c.box.w / 2 - x) * 0.14) * k;
+      c.vy += (clamp(dy, -30, 30) * 0.025 + Math.sign(t + c.box.h / 2 - y) * 0.08) * k;
+    });
   }
   function render() {
     if (!fontsIn) return;
@@ -761,14 +906,16 @@
     seed = 20261027;
 
     ctx = skyCtx;
-    drawSky();
-    drawCloud(DAY_CLOUD);
+    drawSky(DAY_SKY);
+    clouds = [];
+    if (cloudsEl) { cloudsEl.textContent = ""; makeCloud(towerSpec(), 20261027, false); }
     // stars take the next numbers in the sequence, then it's handed back so the
     // hill paints as it always has
     const resume = seed;
     moon = moonAt();
     planStars();
     seed = resume;
+    if (cloudsEl) planSmallClouds();
     nightPainted = false;
     if (isNight) paintNight(); else freeNight();
     ctx = hillCtx;
@@ -791,6 +938,7 @@
     active.clear();
     redraw(null);
     planBees();
+    clipWind();
     applyNight();
     drawCelestial(glowT, performance.now());
   }
@@ -894,7 +1042,8 @@
   function applyNight() {
     const p = glowT, d = Math.sin(Math.PI * p);
     if (skyNight) skyNight.style.opacity = p;
-    if (cloudNight) cloudNight.style.opacity = p;
+    // the night copy fades in over the day one, which steps out once covered
+    clouds.forEach((c) => { c.night.style.opacity = p; c.day.style.opacity = p >= 1 ? 0 : 1; });
     if (glowCanvas) glowCanvas.style.opacity = clamp((p - 0.45) / 0.55, 0, 1);
     if (dusk) dusk.style.opacity = d;
     // day → a warm dusk → cool moonlight, in one filter so it blends smoothly
@@ -1057,13 +1206,14 @@
     beeRaf = 0;
     moveBees(now);
     drawBees(now);
+    driftClouds(now);
     if (glowT > 0 || nightT !== (isNight ? 1 : 0)) drawCelestial(glowT, now);
     wake();
   }
   function wake() {
     if (!beeRaf && bees.length && heroOnScreen && !still.matches) beeRaf = requestAnimationFrame(buzz);
   }
-  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; lastBuzz = 0; wake(); }).observe(hero);
+  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; hero.classList.toggle("away", !heroOnScreen); lastBuzz = 0; wake(); }).observe(hero);
   // jump straight to the current mode (reduced motion, or nothing animating)
   function settleNight() {
     nightT = glowT = isNight ? 1 : 0;
@@ -1099,7 +1249,7 @@
 
   // Scrolling slides the page under a still cursor and Chrome reports that as
   // pointer moves; ignore those so the grass and shadows don't repaint mid-scroll
-  let scrolledAt = 0;
+  let scrolledAt = 0, sky = null;
   window.addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
 
   if (touch) {
@@ -1111,9 +1261,11 @@
       hero.classList.toggle("touching", onGrass);
       scare(x, y);
       if (onGrass) brush(x, y, pointer ? x - pointer.x : 0);
+      else if (!e.target.closest(".intro, .live")) nudgeClouds(x, y, sky ? x - sky.x : 0, sky ? y - sky.y : 0);
       pointer = onGrass ? { x, y } : null;
+      sky = onGrass ? null : { x, y };
     });
-    hero.addEventListener("pointerleave", () => { hero.classList.remove("touching"); pointer = null; });
+    hero.addEventListener("pointerleave", () => { hero.classList.remove("touching"); pointer = null; sky = null; });
   }
 
   let t;
@@ -1137,13 +1289,16 @@
     ticking = false;
     const y = still.matches ? 0 : clamp(window.scrollY, 0, hero.offsetHeight);
     skyCanvas.style.transform = `translate3d(0, ${y * 0.45}px, 0)`;
-    [skyNight, celest, cloudNight, dusk].forEach((el) => { if (el) el.style.transform = skyCanvas.style.transform; });
+    [skyNight, celest, cloudsEl, dusk].forEach((el) => { if (el) el.style.transform = skyCanvas.style.transform; });
     if (intro) {
       intro.style.transform = `translate3d(0, ${y * 0.25}px, 0)`;
       intro.style.opacity = clamp(1 - y / (hero.offsetHeight * 0.6), 0, 1);
     }
     // the foot of the hill melts into the page as it scrolls away
-    if (fade) fade.style.opacity = clamp(y / (hero.offsetHeight * 0.45), 0, 1);
+    const over = clamp(y / (hero.offsetHeight * 0.45), 0, 1);
+    if (fade) fade.style.opacity = over;
+    // the corner caption turns from cream to the page ink as it lands on the page
+    if (caption) caption.style.setProperty("--over-page", over.toFixed(3));
   }
   window.addEventListener("scroll", () => {
     if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
