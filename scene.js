@@ -946,7 +946,7 @@ void main() {
   // the swell rolls right to left over a longer, slower one; each blade adds a faint flutter
   float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (520.0 * uS) + uTime / 6.0) + root.y * 0.012);
   float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1400.0 * uS) + uTime / 14.0));
-  float bend = -(0.06 + 0.3 * swell * (0.4 + 0.6 * roll)) + 0.045 * sin(uTime * 1.5 + ph * 6.2832);
+  float bend = -(0.08 + 0.42 * swell * (0.4 + 0.6 * roll)) + 0.06 * sin(uTime * 1.5 + ph * 6.2832);
   // parting around the cursor: away from it, plus the way it moved
   vec2 d = root + vec2(cos(ang), sin(ang)) * len * 0.6 - uPush.xy;
   float r = 60.0 * uS;
