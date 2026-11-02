@@ -1042,9 +1042,14 @@
     g.restore();
   }
 
+  // clear only around where each bee was (a firefly's halo reaches ~29·S):
+  // wiping the whole full-screen layer every frame made scrolling lag
+  let beeMarks = [];
   function drawBees(now) {
     if (!beeCtx) return;
-    beeCtx.clearRect(0, 0, W, H);
+    beeMarks.forEach(([x, y, s]) => beeCtx.clearRect(x - s, y - s, s * 2, s * 2));
+    const s = 34 * S + 2;
+    beeMarks = bees.map((b) => [b.x, b.y, s]);
     bees.forEach((b) => drawBee(beeCtx, b, now));
   }
 
@@ -1092,8 +1097,14 @@
     });
   }
 
+  // Scrolling slides the page under a still cursor and Chrome reports that as
+  // pointer moves; ignore those so the grass and shadows don't repaint mid-scroll
+  let scrolledAt = 0;
+  window.addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
+
   if (touch) {
     hero.addEventListener("pointermove", (e) => {
+      if (performance.now() - scrolledAt < 150) return;
       const rect = touch.getBoundingClientRect();
       const x = e.clientX - rect.left, y = e.clientY - rect.top;
       const onGrass = !e.target.closest(".intro, .live") && y > ridge(x);
