@@ -716,6 +716,37 @@
   // ---------------------------------------------------------------- render
   let lastW = 0, lastH = 0;
   let fontsIn = !document.fonts;
+
+  function size(c, dpr) {
+    if (!c) return;
+    c.width = Math.round(W * dpr);
+    c.height = Math.round(H * dpr);
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // The night sky, night cloud and moonlight are three more full-screen layers.
+  // They're only allocated while night is showing or on its way: holding all
+  // nine at once froze low-memory machines on refresh.
+  let nightPainted = false;
+  function paintNight() {
+    if (nightPainted || !nightCtx || !cloudNightCtx || !W) return;
+    nightPainted = true;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    [skyNight, cloudNight, glowCanvas].forEach((c) => size(c, dpr));
+    const keepCtx = ctx, keepSeed = seed;
+    ctx = nightCtx;
+    drawSky("#0b1633", "#23426f");
+    // same seed as the day cloud, so the night cloud has the same shape
+    ctx = cloudNightCtx;
+    seed = 20261027;
+    drawCloud(NIGHT_CLOUD);
+    if (glowCtx) drawGlow(moon);
+    ctx = keepCtx; seed = keepSeed;
+  }
+  function freeNight() {
+    nightPainted = false;
+    [skyNight, cloudNight, glowCanvas].forEach((c) => { if (c) { c.width = 0; c.height = 0; } });
+  }
   function render() {
     if (!fontsIn) return;
     const rect = canvas.getBoundingClientRect();
@@ -726,31 +757,20 @@
     W = rect.width; H = rect.height;
     narrow = W < 760;
     S = clamp(Math.min(H / 800, W / 1200), 0.6, 1.2);
-    [canvas, skyCanvas, skyNight, celest, cloudNight, shade, touch, glowCanvas, beeCanvas].forEach((c) => {
-      if (!c) return;
-      c.width = Math.round(W * dpr);
-      c.height = Math.round(H * dpr);
-      c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
-    });
+    [canvas, skyCanvas, celest, shade, touch, beeCanvas].forEach((c) => size(c, dpr));
     seed = 20261027;
 
     ctx = skyCtx;
     drawSky();
     drawCloud(DAY_CLOUD);
-    // the night sky reuses the same seed so its cloud has the same shape, then
-    // hands the sequence back so the hill paints as it always has
+    // stars take the next numbers in the sequence, then it's handed back so the
+    // hill paints as it always has
     const resume = seed;
-    if (nightCtx && cloudNightCtx) {
-      ctx = nightCtx;
-      moon = moonAt();
-      drawSky("#0b1633", "#23426f");
-      planStars();
-      ctx = cloudNightCtx;
-      seed = 20261027;
-      drawCloud(NIGHT_CLOUD);
-      if (glowCtx) drawGlow(moon);
-    }
+    moon = moonAt();
+    planStars();
     seed = resume;
+    nightPainted = false;
+    if (isNight) paintNight(); else freeNight();
     ctx = hillCtx;
     live = []; rocks = []; casters = [];
     drawSlope();
@@ -891,6 +911,7 @@
     nightT = clamp(nightT + (isNight ? 1 : -1) * dt / SWITCH, 0, 1);
     glowT = ease(nightT);
     applyNight();
+    if (nightT === 0) freeNight();
   }
 
   const headAt = (h) => ({ x: h.x + h.stem.ox, y: h.y + h.stem.oy - h.size * 1.4 - 5 * S });
@@ -1041,6 +1062,7 @@
   // jump straight to the current mode (reduced motion, or nothing animating)
   function settleNight() {
     nightT = glowT = isNight ? 1 : 0;
+    if (isNight) paintNight(); else freeNight();
     applyNight();
     drawCelestial(glowT, performance.now());
     drawBees(performance.now());
@@ -1063,6 +1085,7 @@
       if (isNight) root.dataset.theme = "night"; else delete root.dataset.theme;
       try { localStorage.setItem("theme", isNight ? "night" : "day"); } catch (e) {}
       showMode();
+      if (isNight) paintNight();
       lastBuzz = 0;
       if (still.matches || !heroOnScreen || !bees.length) settleNight();
       else wake();
