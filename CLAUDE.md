@@ -6,6 +6,7 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 
 - Plain HTML/CSS/JS, no build step. Preview: `npx serve . -l 5174`, or the `my-website` entry in `../.claude/launch.json`.
 - `index.html` links `style.css?v=…`, `scene.js?v=…` and `loader.js?v=…`. **Bump a file's `?v=` whenever it changes.** Otherwise returning visitors get a stale cached script, and the hero has rendered blank before.
+- **Load speed (2026-11-02):** a full scene paint costs ~150–250ms, so it must happen only once on load. The page scrollbar is hidden (I didn't want the grey bar and white strip, and it appearing after the loader narrowed the page and forced a second paint mid-curtain, which froze the page on refresh). `render()` waits for the fonts (1.5s fallback) instead of painting before and again after them. Don't add anything that changes the page width or the hero's size after load.
 - Check at desktop and 375px widths, then commit and push in the same turn. The live site updates about a minute after a push; refresh once if it looks stale.
 - `gh` CLI isn't signed in; `git push` works.
 

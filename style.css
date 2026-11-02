@@ -23,6 +23,10 @@
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
+/* no scrollbar: it showed as a grey bar and white strip, and appearing after
+   the loader it narrowed the page and forced a full repaint of the hill */
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
 
 body {
   margin: 0;
@@ -294,30 +298,6 @@ h2.sub { margin: 40px 0 0; }
   .w-year { grid-column: 2; grid-row: 1; }
   .foot { flex-direction: column; gap: 4px; }
 }
-
-/* words preloader (loader.js); hidden unless JS added .loading */
-[hidden] { display: none !important; }
-.loader { display: none; }
-.loading .loader, .loader.out {
-  display: grid; place-items: center;
-  position: fixed; inset: 0; z-index: 100;
-  background: #1c1b17; color: #fffbea;
-  will-change: transform;
-}
-.loading body { overflow: hidden; }
-.loader-word {
-  margin: 0; display: flex; align-items: center; gap: .3em;
-  font: italic 400 clamp(44px, 7vw, 76px)/1 var(--serif);
-  opacity: 0; transform: translateY(14px);
-  transition: opacity .9s ease .15s, transform .9s cubic-bezier(.25, 1, .5, 1) .15s;
-}
-.loader-word::before { content: ""; width: .16em; height: .16em; border-radius: 50%; background: currentColor; }
-.loader.on .loader-word { opacity: .9; transform: none; }
-.loader.out .loader-word { opacity: 0; transform: translateY(-40px); transition: opacity .3s ease, transform .9s cubic-bezier(.65, 0, .35, 1); }
-.loader-curve { position: absolute; left: 0; top: 100%; width: 100%; height: 320px; overflow: visible; }
-.loader-curve path { fill: #1c1b17; }
-.loader.out-fade { opacity: 0; transition: opacity .4s ease; }
-
 
 /* words preloader (loader.js); shown only once JS has added .loading */
 [hidden] { display: none !important; }

@@ -715,7 +715,9 @@
 
   // ---------------------------------------------------------------- render
   let lastW = 0, lastH = 0;
+  let fontsIn = !document.fonts;
   function render() {
+    if (!fontsIn) return;
     const rect = canvas.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return; // hidden or not laid out yet
     if (Math.abs(rect.width - lastW) < 1 && Math.abs(rect.height - lastH) < 1) return;
@@ -1083,8 +1085,14 @@
   let t;
   // watch the canvas itself: late font loads shift the layout without a window resize
   new ResizeObserver(() => { cancelAnimationFrame(t); t = requestAnimationFrame(render); }).observe(canvas);
-  // the cloud dodges the intro text, so repaint once the fonts have settled its height
-  if (document.fonts) document.fonts.ready.then(() => { lastW = 0; render(); });
+  // the cloud dodges the intro text, so paint once, after the fonts have settled
+  // its height (painting before and again after froze the page on load);
+  // slow fonts get a fallback paint and a repaint when they do arrive
+  function paintNow() { if (fontsIn) return; fontsIn = true; render(); }
+  if (document.fonts) {
+    document.fonts.ready.then(() => { if (fontsIn) { lastW = 0; render(); } else paintNow(); });
+    setTimeout(paintNow, 1500);
+  }
   render();
 
   // ---------------------------------------------------------------- parallax
