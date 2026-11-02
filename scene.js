@@ -50,8 +50,8 @@
   };
   const depth = (y, x) => clamp((y - ridge(x)) / (H - ridge(x)), 0, 1);
 
-  const DAY_SKY = { top: "#1d6e98", mid: "#2a83ad", low: "#4d9dbf", haze: "236, 239, 212", hazeA: 0.26, wisp: "255, 252, 238", wispA: 0.16 };
-  const NIGHT_SKY = { top: "#0a1430", mid: "#132a55", low: "#26477a", haze: "110, 140, 200", hazeA: 0.2, wisp: "150, 170, 220", wispA: 0.09 };
+  const DAY_SKY = { top: "#1d6e98", mid: "#2a83ad", low: "#4d9dbf", haze: "236, 239, 212", hazeA: 0.26 };
+  const NIGHT_SKY = { top: "#0a1430", mid: "#132a55", low: "#26477a", haze: "110, 140, 200", hazeA: 0.2 };
   const DAY_CLOUD = { lit: "#f6f4dc", top: "#fbfaea", shade: "#e3e8d6", deep: "#cbdbd4", cast: "180, 208, 206" };
   const NIGHT_CLOUD = { lit: "#a9b6d3", top: "#c4cee4", shade: "#7d8cb0", deep: "#5f6f97", cast: "40, 58, 104" };
   const GRASS = "#a3cd4c";
@@ -73,8 +73,8 @@
   }
 
   // ---------------------------------------------------------------- sky + cloud
-  // deeper overhead, hazier and lighter towards the horizon, with a few high
-  // wind-combed wisps; painted once, so it costs nothing per frame
+  // deeper overhead, hazier and lighter towards the horizon; painted once, so
+  // it costs nothing per frame
   function drawSky(p) {
     const g = ctx.createLinearGradient(0, 0, 0, H * 0.75);
     g.addColorStop(0, p.top);
@@ -89,36 +89,6 @@
     haze.addColorStop(1, `rgba(${p.haze}, ${p.hazeA})`);
     ctx.fillStyle = haze;
     ctx.fillRect(0, hi - H * 0.3, W, H);
-    // painted on a layer and softened in one go, so they read as haze, not
-    // streaks; its own sequence, so the hill's stays untouched
-    let s = 9973;
-    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const layer = document.createElement("canvas");
-    layer.width = ctx.canvas.width; layer.height = ctx.canvas.height;
-    const lc = layer.getContext("2d");
-    lc.setTransform(ctx.getTransform());
-    for (let i = 0; i < (narrow ? 3 : 5); i++) {
-      const x = rnd() * W, y = H * (0.05 + 0.28 * rnd()), len = W * (narrow ? 0.34 : 0.16) * (1 + rnd()), tilt = -0.04 - 0.05 * rnd();
-      for (let k = 0; k <= 30; k++) {
-        const t = k / 30, along = (t - 0.5) * len, thick = Math.sin(Math.PI * t);
-        lc.fillStyle = `rgba(${p.wisp}, ${(p.wispA * thick * (0.5 + 0.5 * rnd())).toFixed(3)})`;
-        lc.beginPath();
-        lc.ellipse(x + along, y + along * tilt + (rnd() - 0.5) * 10 * S * thick, len * 0.06, (3 + 6 * thick * rnd()) * S, tilt, 0, Math.PI * 2);
-        lc.fill();
-      }
-    }
-    // none behind the intro text (the blur feathers the cut)
-    if (intro) {
-      const t = intro.getBoundingClientRect(), top = hero.getBoundingClientRect().top;
-      lc.globalCompositeOperation = "destination-out";
-      lc.fillStyle = "#000";
-      lc.fillRect(0, t.top - top - 16, t.right + 16, t.height + 32);
-    }
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.filter = `blur(${(4 * S).toFixed(1)}px)`;
-    ctx.drawImage(layer, 0, 0);
-    ctx.restore();
   }
 
   // ---------------------------------------------------------------- night sky
@@ -914,6 +884,10 @@
     redraw(null);
     planBees();
     drawSway(performance.now());
+    // start the animation loop now the bees exist: the scene paints after the
+    // fonts load, which can be after the on-screen check that would have started it
+    lastBuzz = 0;
+    wake();
     applyNight();
     drawCelestial(glowT, performance.now());
   }
@@ -970,9 +944,9 @@ void main() {
   vec2 root = aBlade.xy;
   float len = aBlade.z, ang = aBlade.w, w = aShape.x, j = aShape.y, ph = aShape.z;
   // the swell rolls right to left over a longer, slower one; each blade adds a faint flutter
-  float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (440.0 * uS) + uTime / 7.5) + root.y * 0.01);
-  float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1300.0 * uS) + uTime / 15.0));
-  float bend = -(0.03 + 0.1 * swell * (0.35 + 0.65 * roll)) + 0.018 * sin(uTime * 1.7 + ph * 6.2832);
+  float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (520.0 * uS) + uTime / 6.0) + root.y * 0.012);
+  float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1400.0 * uS) + uTime / 14.0));
+  float bend = -(0.06 + 0.3 * swell * (0.4 + 0.6 * roll)) + 0.045 * sin(uTime * 1.5 + ph * 6.2832);
   // parting around the cursor: away from it, plus the way it moved
   vec2 d = root + vec2(cos(ang), sin(ang)) * len * 0.6 - uPush.xy;
   float r = 60.0 * uS;
@@ -988,7 +962,7 @@ void main() {
   pos += vec2(-tg.y, tg.x) * aCorner.y * (hw + uPx) + tg * (t > 0.99 ? hw : 0.0);
   vEdge = aCorner.y * (hw + uPx);
   vHalf = hw;
-  vColor = aColor * (1.0 + 0.07 * swell * roll);
+  vColor = aColor * (1.0 + 0.09 * swell * roll);
   gl_Position = vec4(pos.x / uSize.x * 2.0 - 1.0, 1.0 - pos.y / uSize.y * 2.0, 0.0, 1.0);
 }`;
   const SWAY_FS = `#version 300 es
