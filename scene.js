@@ -419,6 +419,71 @@
     return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
   }
 
+  // A small, far-off cumulus (the drifting clouds): one tall dome in the middle, smaller uneven domes
+  // falling away to each side, a softly rounded flat base, light on top easing into gentle shade
+  // underneath. The tower's painter squashed to this size read as a row of equal beads with a hard band
+  // along the bottom, so the small clouds have their own.
+  function drawPuff(pal, el, { cw }) {
+    if (cw < 12) { el.width = el.height = 0; return null; }
+    const u = cw;
+    const shape = [[0, -0.2, 0.27], [-0.25, -0.09, 0.19], [0.24, -0.11, 0.21], [-0.43, -0.02, 0.12], [0.44, -0.03, 0.13], [0.08, -0.36, 0.16], [-0.12, -0.29, 0.14]];
+    const lobes = shape.map(([x, y, rr]) => ({ x: (x + r(-0.02, 0.02)) * u, y: (y + r(-0.02, 0.02)) * u, r: rr * u * r(0.9, 1.1) }));
+    const baseY = 0.03 * u;
+    const pad = 6 * S + 2;
+    const x0 = Math.min(...lobes.map((l) => l.x - l.r)) - pad, x1 = Math.max(...lobes.map((l) => l.x + l.r)) + pad;
+    const y0 = Math.min(...lobes.map((l) => l.y - l.r)) - pad, y1 = baseY + pad;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const layer = document.createElement("canvas");
+    layer.width = Math.ceil((x1 - x0) * dpr); layer.height = Math.ceil((y1 - y0) * dpr);
+    const lc = layer.getContext("2d");
+    lc.setTransform(dpr, 0, 0, dpr, -x0 * dpr, -y0 * dpr);
+    // the body: every dome, plus a long low ellipse that rounds off the flat base
+    const body = new Path2D();
+    lobes.forEach((l) => { body.moveTo(l.x + l.r, l.y); body.arc(l.x, l.y, l.r, 0, Math.PI * 2); });
+    body.moveTo(0.5 * u, -0.01 * u);
+    body.ellipse(0, -0.01 * u, 0.5 * u, 0.06 * u, 0, 0, Math.PI * 2);
+    lc.save();
+    lc.beginPath(); lc.rect(x0, y0, x1 - x0, baseY - y0); lc.clip();
+    lc.clip(body);
+    // light on top, easing into a gentle shade underneath
+    const top = Math.min(...lobes.map((l) => l.y - l.r));
+    const g = lc.createLinearGradient(0, top, 0, baseY);
+    g.addColorStop(0, pal.top); g.addColorStop(0.5, pal.lit); g.addColorStop(0.82, pal.shade); g.addColorStop(1, pal.deep);
+    lc.fillStyle = g;
+    lc.fillRect(x0, y0, x1 - x0, y1 - y0);
+    // the same brushy edge as the tower: small dabs along the tops of the domes, so both look painted by one hand
+    lobes.filter((l) => l.y < -0.05 * u).forEach((l) => {
+      for (let k = 0; k < l.r * 0.35; k++) {
+        const ang = r(Math.PI * 1.05, Math.PI * 1.95), d = l.r * r(0.9, 1.0);
+        lc.fillStyle = r(0, 1) < 0.5 ? pal.top : pal.lit;
+        lc.beginPath();
+        lc.ellipse(l.x + Math.cos(ang) * d, l.y + Math.sin(ang) * d, r(1.5, 3) * S, r(1, 2) * S, ang, 0, Math.PI * 2);
+        lc.fill();
+      }
+    });
+    // each upper dome catches a little more light on its upper left
+    lc.fillStyle = pal.top;
+    lobes.filter((l) => l.y < -0.08 * u).forEach((l) => {
+      lc.globalAlpha = 0.55;
+      lc.beginPath(); lc.arc(l.x - l.r * 0.12, l.y - l.r * 0.16, l.r * 0.72, 0, Math.PI * 2); lc.fill();
+    });
+    lc.globalAlpha = 1;
+    lc.restore();
+    // the base melts away rather than ending in a line
+    lc.globalCompositeOperation = "destination-out";
+    const f = lc.createLinearGradient(0, baseY - 0.05 * u, 0, baseY);
+    f.addColorStop(0, "rgba(0,0,0,0)"); f.addColorStop(1, "rgba(0,0,0,0.85)");
+    lc.fillStyle = f;
+    lc.fillRect(x0, baseY - 0.05 * u, x1 - x0, 0.05 * u + 1);
+    lc.globalCompositeOperation = "source-over";
+
+    el.width = layer.width; el.height = layer.height;
+    const out = el.getContext("2d");
+    out.filter = "blur(0.9px)";
+    out.drawImage(layer, 0, 0);
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+
   // ---------------------------------------------------------------- slope
   function hillPath() {
     const p = new Path2D();
@@ -758,7 +823,7 @@
     ctx = nightCtx;
     drawSky(NIGHT_SKY);
     // each cloud's own seed, so its night copy has the same shape
-    clouds.forEach((c) => { seed = c.seedNo; drawCloud(NIGHT_CLOUD, c.night, c.spec); });
+    clouds.forEach((c) => { seed = c.seedNo; (c.small ? drawPuff : drawCloud)(NIGHT_CLOUD, c.night, c.spec); });
     if (glowCtx) drawGlow(moon);
     ctx = keepCtx; seed = keepSeed;
   }
@@ -781,7 +846,7 @@
     el.append(day, night);
     const keep = seed;
     seed = seedNo;
-    const box = drawCloud(DAY_CLOUD, day, spec);
+    const box = (small ? drawPuff : drawCloud)(DAY_CLOUD, day, spec);
     // the tower carries on the hill's sequence; small clouds hand it back
     if (small) seed = keep;
     if (!box) return null;
@@ -1418,9 +1483,16 @@ void main() {
   // Clicking a hobby tile plays its sound from the start, cutting off any other.
   let playing = null;
   document.querySelectorAll(".tile[data-sound]").forEach((tile) => {
-    const sound = new Audio(tile.dataset.sound);
-    sound.preload = "auto";
+    // nothing downloads until a cursor or finger reaches the tile (305 KB of sound most visitors never
+    // play); it loads then, in the moment before the click
+    const sound = new Audio();
+    sound.preload = "none";
+    const ready = () => { if (!sound.src) { sound.src = tile.dataset.sound; sound.load(); } };
+    tile.addEventListener("pointerenter", ready);
+    tile.addEventListener("focus", ready);
+    tile.addEventListener("touchstart", ready, { passive: true });
     tile.addEventListener("click", () => {
+      ready();
       if (playing && playing !== sound) playing.pause();
       sound.currentTime = 0;
       sound.play().catch(() => {});

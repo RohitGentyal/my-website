@@ -15,7 +15,10 @@
     el.hidden = true;
   }
 
-  if (still) {
+  // the full greeting plays once per visit; a refresh, or coming back from Genzo, gets a quick fade
+  let seen = false;
+  try { seen = sessionStorage.getItem("greeted") === "1"; sessionStorage.setItem("greeted", "1"); } catch (e) {}
+  if (still || seen) {
     el.classList.add("out-fade");
     setTimeout(done, 400);
     return;
