@@ -29,7 +29,7 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 - **Loader** (`loader.js`, 2026-11-02, after Skiper UI skiper8 / dennissnellenberg.com): on every load a near-black curtain (#1c1b17) shows "· Hello" in cream Instrument Serif italic for 1s, then Bonjour, Ciao, Olà, やあ, Hallå, Guten tag, नमस्ते at 150ms each; then it lifts off the top in 0.9s with a curved lower edge that flattens as it rises. The head script adds `.loading` (so without JS there is no loader); reduced motion gets a quick fade instead. `[hidden] { display: none !important; }` guards it.
 - **Links:** nav and Email/LinkedIn draw a 1px line left to right on hover and retract on leave. A caption in the bottom right shows a quote plus the local time.
 - **Intro:** "I'm a UX designer at Subculture Media Tech, where I lead product design for the Native Universe app…" plus hobby icons (football, gym, games, poetry) after "When I'm not designing,".
-- **Work:** only Genzo for now (no link yet).
+- **Work:** only Genzo. The row links to https://genzo-ochre.vercel.app (new tab); switch it to https://genzo.rohitgentyal.com once that subdomain is live (planned for Saturday 2026-11-14, domain rohitgentyal.com on Hostinger, DNS to Vercel). **Visit hover (2026-11-09, my ask):** hovering the row, a small ink pill grows in at the cursor and follows it with a soft lag (`work.js`, `.visit` in style.css): Genzo's echo-switch logo (knob flipping, echoes in safelight red) + "Visit Genzo ↗"; the title nudges right. Touch screens show a quiet "Visit Genzo ↗" line in the row instead. Reduced motion: no follow lag, no flip.
 - **Experience:** from LinkedIn.
   - Subculture Media Tech, UX Designer: intern Dec 2025 to Jun 2026, full-time from Jun 2026.
   - Digital Nexus AI, UI/UX Design Intern: May to Dec 2025.
@@ -48,7 +48,7 @@ Earlier (2026-10-27): scroll parallax, larger type, darker greys, link hover und
 
 ## Pending (waiting on me)
 
-1. Genzo's live link: it isn't deployed yet.
+1. Genzo's live link: done (genzo-ochre.vercel.app); move it to genzo.rohitgentyal.com when the domain is set up.
 2. My playlist link. Set `PLAYLIST_URL` in `scene.js` and add a small music link in the text marked `data-playlist`.
 3. Direction for the grass texture.
 

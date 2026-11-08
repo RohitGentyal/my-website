@@ -244,6 +244,57 @@ h2 {
 .w-year { font-variant-numeric: tabular-nums; }
 .soon { color: var(--ink-faint); font-size: 17px; margin-top: 16px; }
 
+/* A project row is a link. Hovering it, a small ink pill grows in at the cursor and follows it with a
+   soft lag (work.js): "Visit Genzo", with Genzo's own echo-switch logo flipping inside. The title nudges
+   right. On touch screens (no hover) a quiet "Visit Genzo" line shows in the row instead */
+.w-item { position: relative; }
+.w-link { color: inherit; text-decoration: none; cursor: pointer; }
+.w-link .w-title { display: inline-block; transition: translate .45s cubic-bezier(.22, 1, .36, 1); }
+.w-link:hover .w-title, .w-link:focus-visible .w-title { translate: 8px 0; }
+.w-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+.w-visit { display: none; grid-column: 1 / -1; margin: -8px 0 0; color: var(--ink); font-size: 15px; font-weight: 500; }
+.visit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 15px 9px 11px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 14px/1 var(--sans);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  scale: .4;
+  transform-origin: 0 0;
+  transition: scale .5s cubic-bezier(.34, 1.56, .64, 1), opacity .2s ease;
+  will-change: translate, scale;
+}
+.w-item.is-hover .visit { opacity: 1; scale: 1; }
+.visit-arrow { font-size: 13px; }
+.visit-mark { width: 30px; height: 16px; overflow: visible; }
+.visit-mark rect { fill: none; stroke: currentColor; stroke-width: 40; }
+.visit-mark .k { fill: currentColor; }
+.visit-mark .e1, .visit-mark .e2 { fill: #e5532d; }
+[data-theme="night"] .visit-mark .e1, [data-theme="night"] .visit-mark .e2 { fill: #ff6a3d; }
+.visit-mark circle { transform-box: view-box; }
+.w-item.is-hover .visit-mark .k { animation: visit-flip 1.8s cubic-bezier(.22, 1, .36, 1) .25s infinite; }
+.w-item.is-hover .visit-mark .e1 { animation: visit-flip 1.8s cubic-bezier(.22, 1, .36, 1) .32s infinite; }
+.w-item.is-hover .visit-mark .e2 { animation: visit-flip 1.8s cubic-bezier(.22, 1, .36, 1) .39s infinite; }
+@keyframes visit-flip { 0%, 8% { transform: none; } 34%, 52% { transform: translateX(-144px); } 80%, 100% { transform: none; } }
+@media (hover: none) {
+  .visit { display: none; }
+  .w-visit { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .visit { transition: opacity .2s ease; scale: 1; }
+  .w-item.is-hover .visit-mark circle { animation: none; }
+}
+
 #about p { color: var(--ink-soft); margin: 0 0 14px; }
 #about p:first-of-type { color: var(--ink); }
 h2.sub { margin: 40px 0 0; }

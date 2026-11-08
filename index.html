@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); try { if (localStorage.getItem("theme") === "night") document.documentElement.dataset.theme = "night"; } catch (e) {}</script>
-  <link rel="stylesheet" href="style.css?v=sway1">
+  <link rel="stylesheet" href="style.css?v=visit1">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -75,13 +75,15 @@
     <section class="col" id="work">
       <h2>Work</h2>
       <ol class="work">
-        <li>
-          <div class="w-row">
+        <li class="w-item">
+          <a class="w-row w-link" href="https://genzo-ochre.vercel.app" target="_blank" rel="noopener">
             <span class="w-title">Genzo</span>
             <span class="w-meta">Component library</span>
             <span class="w-year">2026</span>
             <p class="w-desc">Ready-made components for product teams: designers grab the Figma file, Android developers copy the Jetpack Compose code.</p>
-          </div>
+            <span class="w-visit">Visit Genzo <span aria-hidden="true">↗</span></span>
+          </a>
+          <span class="visit" aria-hidden="true"><svg class="visit-mark" viewBox="44 146 424 220" aria-hidden="true"><rect x="64" y="166" width="384" height="180" rx="90"/><circle class="e2" cx="214" cy="256" r="56" opacity="0.32"/><circle class="e1" cx="286" cy="256" r="56" opacity="0.7"/><circle class="k" cx="358" cy="256" r="56"/></svg>Visit Genzo<span class="visit-arrow">↗</span></span>
         </li>
       </ol>
     </section>
@@ -118,5 +120,6 @@
 
   <script src="loader.js?v=1"></script>
   <script src="scene.js?v=sway8"></script>
+  <script src="work.js?v=1"></script>
 </body>
 </html>
