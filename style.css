@@ -244,9 +244,11 @@ h2 {
 .w-year { font-variant-numeric: tabular-nums; }
 .soon { color: var(--ink-faint); font-size: 17px; margin-top: 16px; }
 
-/* A project row is a link. Hovering it, a small ink pill grows in at the cursor and follows it with a
-   soft lag (work.js): "Visit Genzo", with Genzo's own echo-switch logo flipping inside. The title nudges
-   right. On touch screens (no hover) a quiet "Visit Genzo" line shows in the row instead */
+/* A project row is a link. Hovering it, a small window of the project grows out of the cursor, like a
+   taskbar preview: a title bar with Genzo's echo-switch logo (knob flipping), a real screenshot of the
+   site that develops from blurred and grey into colour (Genzo means developing a photograph), and a
+   "Visit Genzo" tag hanging below. It follows the cursor with a soft lag and tilts the way you move, then
+   settles (work.js). The title nudges right. Touch screens show a quiet "Visit Genzo" line instead */
 .w-item { position: relative; }
 .w-link { color: inherit; text-decoration: none; cursor: pointer; }
 .w-link .w-title { display: inline-block; transition: translate .45s cubic-bezier(.22, 1, .36, 1); }
@@ -258,29 +260,46 @@ h2 {
   left: 0;
   top: 0;
   z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 15px 9px 11px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  font: 500 14px/1 var(--sans);
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   pointer-events: none;
   opacity: 0;
-  scale: .4;
+  scale: .25;
   transform-origin: 0 0;
-  transition: scale .5s cubic-bezier(.34, 1.56, .64, 1), opacity .2s ease;
-  will-change: translate, scale;
+  transition: scale .55s cubic-bezier(.34, 1.4, .64, 1), opacity .2s ease;
+  will-change: translate, scale, rotate;
 }
 .w-item.is-hover .visit { opacity: 1; scale: 1; }
-.visit-arrow { font-size: 13px; }
-.visit-mark { width: 30px; height: 16px; overflow: visible; }
+.visit-card {
+  display: block;
+  width: 272px;
+  padding: 0 5px 5px;
+  border-radius: 14px;
+  background: var(--ink);
+  box-shadow: 0 18px 40px -16px rgba(20, 18, 12, .45), 0 2px 6px rgba(20, 18, 12, .12);
+}
+.visit-bar { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 6px; color: var(--paper); font: 500 11.5px/1 var(--sans); }
+.visit-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; opacity: .85; }
+.visit-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 9px;
+  background: #f7f5f0;
+  filter: blur(8px) grayscale(1) contrast(.7);
+  transition: filter .9s cubic-bezier(.45, 0, .2, 1) .15s;
+}
+.w-item.is-hover .visit-shot { filter: none; }
+.visit-tag { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 500 13px/1 var(--sans); white-space: nowrap; }
+.visit-arrow { font-size: 12px; }
+.visit-mark { width: 26px; height: 14px; flex: none; overflow: visible; }
 .visit-mark rect { fill: none; stroke: currentColor; stroke-width: 40; }
 .visit-mark .k { fill: currentColor; }
 .visit-mark .e1, .visit-mark .e2 { fill: #e5532d; }
 [data-theme="night"] .visit-mark .e1, [data-theme="night"] .visit-mark .e2 { fill: #ff6a3d; }
+[data-theme="night"] .visit-card { box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .7); }
 .visit-mark circle { transform-box: view-box; }
 .w-item.is-hover .visit-mark .k { animation: visit-flip 1.8s cubic-bezier(.22, 1, .36, 1) .25s infinite; }
 .w-item.is-hover .visit-mark .e1 { animation: visit-flip 1.8s cubic-bezier(.22, 1, .36, 1) .32s infinite; }
@@ -292,6 +311,7 @@ h2 {
 }
 @media (prefers-reduced-motion: reduce) {
   .visit { transition: opacity .2s ease; scale: 1; }
+  .visit-shot { transition: none; }
   .w-item.is-hover .visit-mark circle { animation: none; }
 }
 
