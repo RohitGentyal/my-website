@@ -423,3 +423,25 @@ h2.sub { margin: 40px 0 0; }
 .loader-curve path { fill: #1c1b17; }
 .loader.out-fade { opacity: 0; transition: opacity .4s ease; }
 
+
+/* "deleted" is the digital one: no smudge, the word sits in a soft text-selection highlight, the way you
+   drag over a word just before pressing Delete, with a thin caret blinking at its end */
+.foot s.del { filter: none; opacity: 1; color: var(--ink-faint); padding: 0 4px 0 2px; margin: 0 -1px 0 -2px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.foot s.del::after {
+  content: "";
+  inset: auto;
+  left: auto;
+  right: 1px;
+  top: 50%;
+  width: 1px;
+  height: 1.05em;
+  translate: 0 -50%;
+  rotate: none;
+  border-radius: 0;
+  background: var(--ink-soft);
+  filter: none;
+  animation: caret 1.1s steps(1, end) infinite;
+}
+[data-theme="night"] .foot s.del::after { background: var(--ink-soft); }
+@keyframes caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .foot s.del::after { animation: none; } }

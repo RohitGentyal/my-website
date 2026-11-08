@@ -1403,8 +1403,10 @@ void main() {
     // the foot of the hill melts into the page as it scrolls away
     const over = clamp(y / (hero.offsetHeight * 0.45), 0, 1);
     if (fade) fade.style.opacity = over;
-    // the corner caption turns from cream to the page ink as it lands on the page
-    if (caption) caption.style.setProperty("--over-page", over.toFixed(3));
+    // the corner caption stays cream with its shadow while there is grass behind it, and only turns to
+    // the page ink as the page shows through (about half way), and quickly: blending all the way down
+    // left it a muddy grey on green, unreadable, a third of the way
+    if (caption) caption.style.setProperty("--over-page", clamp((over - 0.4) / 0.15, 0, 1).toFixed(3));
   }
   window.addEventListener("scroll", () => {
     if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
