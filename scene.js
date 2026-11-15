@@ -23,6 +23,7 @@
   const dusk = document.querySelector(".scene .dusk");
   const shade = document.getElementById("shade");
   const shadeCtx = shade && shade.getContext("2d");
+  const landEl = document.getElementById("land");
   const glowCanvas = document.getElementById("glow");
   const glowCtx = glowCanvas && glowCanvas.getContext("2d");
   // sky and cloud paint on their own layer so they can drift behind the hill
@@ -216,77 +217,46 @@
     return { x: src.x, y: src.y, reach, strength: (s >= m ? 0.3 * s : 0.42 * m) / (0.7 + 0.3 * reach) };
   }
 
-  // where a point `h` tall at (x, y) throws its shadow tip, on the slope
+  // where a point `h` tall at (x, y) throws its shadow tip, on the slope. It runs
+  // ~9,000 times a frame while the light moves, so it fills one shared object
+  // (read it straight away) rather than making garbage for the collector.
+  const tip = { dx: 0, dy: 0 };
   function cast(L, x, y, h) {
     const vx = x - L.x, vy = y - L.y;
     const d = Math.hypot(vx, vy) || 1, k = h * L.reach;
-    return { dx: (vx / d) * k, dy: (vy / d) * k * 0.35 };
+    tip.dx = (vx / d) * k; tip.dy = (vy / d) * k * 0.35;
+    return tip;
   }
 
-  function drawShade() {
-    if (!shadeCtx || !moon) return;
-    const g = shadeCtx, L = lightAt(glowT);
-    g.clearRect(0, 0, W, H);
+  // Every shadow shape, handed to `line(set, x0, y0, x1, y1, width)` (a round-capped line) or
+  // `oval(set, cx, cy, rx, ry, angle)`. Sets: 0 dapple, 1 pools, 2 rock shadows, 3 sliver, 4 sliver
+  // root, 5 contact. Each set is one batch (one stroke or fill), so its shapes merge rather than
+  // darken where they overlap. Contact shade always shows; the rest only while there is light.
+  const SH_DAPPLE = 0, SH_POOL = 1, SH_ROCK = 2, SH_FULL = 3, SH_ROOT = 4, SH_CONTACT = 5;
+  function shadeShapes(L, line, oval) {
     // contact shade hugging the roots of each clump, whatever the light
-    const contact = new Path2D();
-    casters.forEach((c) => {
-      contact.moveTo(c.x + c.w * 0.55, c.y);
-      contact.ellipse(c.x, c.y, c.w * 0.55, c.w * 0.14 + 1.5 * S, 0, 0, Math.PI * 2);
-    });
-    g.fillStyle = "rgba(24, 48, 40, .14)";
-    g.fill(contact);
+    casters.forEach((c) => oval(SH_CONTACT, c.x, c.y, c.w * 0.55, c.w * 0.14 + 1.5 * S, 0));
     if (L.strength < 0.01) return;
-    // shadows take the colour of the light's opposite: teal-green at noon,
-    // violet as the sun gets low, deep blue under the moon
-    const low = sunUp(glowT) >= moonUp(glowT) ? sunAt(glowT).e : 0, night = moonUp(glowT) > sunUp(glowT);
-    const tint = night ? [14, 24, 64] : [Math.round(lerp(22, 74, low)), Math.round(lerp(52, 40, low)), Math.round(lerp(42, 96, low))].join(", ");
-    const ink = (a) => `rgba(${tint}, ${a})`;
     // faint dappled shade across the meadow from a sample of the slope blades
-    const dapple = new Path2D();
     for (let i = 0; i < live.length; i += 9) {
       const o = live[i];
       if (!o.slope) continue;
       const { dx, dy } = cast(L, o.x, o.y, o.len * 0.6);
-      dapple.moveTo(o.x, o.y); dapple.lineTo(o.x + dx, o.y + dy);
+      line(SH_DAPPLE, o.x, o.y, o.x + dx, o.y + dy, 3.4 * S);
     }
-    g.lineCap = "round";
-    g.strokeStyle = ink(L.strength * 0.4);
-    g.lineWidth = 3.4 * S;
-    g.stroke(dapple);
-    // each rock throws a long shadow; the rocks themselves stay unshaded
-    if (rocks.length) {
-      g.save();
-      const outside = new Path2D();
-      outside.rect(0, 0, W, H);
-      rocks.forEach((k) => outside.addPath(k.body));
-      g.clip(outside, "evenodd");
-      const stones = new Path2D();
-      rocks.forEach((k) => {
-        const { dx, dy } = cast(L, k.x, k.y, k.size * 0.9), len = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
-        const rx = len * 0.55 + k.size * 0.75, cx = k.x + dx * 0.5, cy = k.y + 1 + dy * 0.5;
-        stones.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx);
-        stones.ellipse(cx, cy, rx, k.size * 0.3, a, 0, Math.PI * 2);
-      });
-      g.fillStyle = ink(Math.min(L.strength * 1.25, 0.6));
-      g.fill(stones);
-      g.restore();
-    }
+    // each rock throws a long shadow (the rocks themselves stay unshaded)
+    rocks.forEach((k) => {
+      const { dx, dy } = cast(L, k.x, k.y, k.size * 0.9), len = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+      oval(SH_ROCK, k.x + dx * 0.5, k.y + 1 + dy * 0.5, len * 0.55 + k.size * 0.75, k.size * 0.3, a);
+    });
     // soft pools behind each clump of growth
-    const pools = new Path2D();
     casters.forEach((c) => {
       const { dx, dy } = cast(L, c.x, c.y, c.h), len = Math.hypot(dx, dy);
-      const rx = len * 0.5 + c.w * 0.35, ry = c.w * 0.45 + 2 * S, a = Math.atan2(dy, dx);
-      const cx = c.x + dx * 0.5, cy = c.y + dy * 0.5;
-      pools.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx);
-      pools.ellipse(cx, cy, rx, ry, a, 0, Math.PI * 2);
+      oval(SH_POOL, c.x + dx * 0.5, c.y + dy * 0.5, len * 0.5 + c.w * 0.35, c.w * 0.45 + 2 * S, Math.atan2(dy, dx));
     });
-    g.fillStyle = ink(L.strength * 0.75);
-    g.fill(pools);
-    // a tapered sliver behind each standing blade and stem: a thin stroke the
-    // whole length over a wider one near the root (strokes batch far faster
-    // than thousands of filled shapes). The dense slope blades are left out;
-    // their shadows only muddied the grass.
-    const full = new Path2D(), root = new Path2D();
+    // a tapered sliver behind each standing blade and stem: a thin line the
+    // whole length over a wider one near the root. The dense slope blades are
+    // left out; their shadows only muddied the grass.
     live.forEach((o) => {
       if (o.leaf || o.slope) return;
       let tx, ty;
@@ -295,13 +265,55 @@
       const h = o.y - ty;
       if (h <= 0) return;
       const { dx, dy } = cast(L, o.x, o.y, h), ex = (tx - o.x) * 0.35 + dx;
-      full.moveTo(o.x, o.y); full.lineTo(o.x + ex, o.y + dy);
-      root.moveTo(o.x, o.y); root.lineTo(o.x + ex * 0.4, o.y + dy * 0.4);
+      line(SH_FULL, o.x, o.y, o.x + ex, o.y + dy, 1.2 * S);
+      line(SH_ROOT, o.x, o.y, o.x + ex * 0.4, o.y + dy * 0.4, 2.6 * S);
     });
+  }
+
+  // shadows take the colour of the light's opposite: teal-green at noon,
+  // violet as the sun gets low, deep blue under the moon
+  function shadeTint() {
+    const low = sunUp(glowT) >= moonUp(glowT) ? sunAt(glowT).e : 0, night = moonUp(glowT) > sunUp(glowT);
+    return night ? [14, 24, 64] : [Math.round(lerp(22, 74, low)), Math.round(lerp(52, 40, low)), Math.round(lerp(42, 96, low))];
+  }
+  // how strong each set is (contact has its own fixed colour and strength)
+  const shadeAlphas = (s) => [s * 0.4, s * 0.75, Math.min(s * 1.25, 0.6), s * 0.8, s * 0.8];
+
+  // The shadows are redrawn every frame the light moves (the whole 2.8s switch) and while the
+  // grass is brushed. On the graphics card (shadeGL, with the swaying grass) that is nearly free;
+  // the 2D canvas below is only the fallback without WebGL2: stroking these ~6,000 lines cost the
+  // GPU 50–60ms a frame and dropped the day/night switch to ~10–25fps.
+  function drawShade() {
+    if (!moon) return;
+    if (shOn) { shadeGL(lightAt(glowT)); return; }
+    if (!shadeCtx) return;
+    const g = shadeCtx, L = lightAt(glowT);
+    g.clearRect(0, 0, W, H);
+    const lines = [], ovals = [];
+    const at = (list, i) => list[i] || (list[i] = new Path2D());
+    let widths = [];
+    shadeShapes(L,
+      (set, x0, y0, x1, y1, w) => { const p = at(lines, set); p.moveTo(x0, y0); p.lineTo(x1, y1); widths[set] = w; },
+      (set, cx, cy, rx, ry, a) => { const p = at(ovals, set); p.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx); p.ellipse(cx, cy, rx, ry, a, 0, Math.PI * 2); });
+    if (ovals[SH_CONTACT]) { g.fillStyle = "rgba(24, 48, 40, .14)"; g.fill(ovals[SH_CONTACT]); }
+    if (L.strength < 0.01) return;
+    const tint = shadeTint().join(", "), al = shadeAlphas(L.strength), ink = (a) => `rgba(${tint}, ${a})`;
     g.lineCap = "round";
-    g.strokeStyle = ink(L.strength * 0.8);
-    g.lineWidth = 1.2 * S; g.stroke(full);
-    g.lineWidth = 2.6 * S; g.stroke(root);
+    if (lines[SH_DAPPLE]) { g.strokeStyle = ink(al[SH_DAPPLE]); g.lineWidth = widths[SH_DAPPLE]; g.stroke(lines[SH_DAPPLE]); }
+    if (ovals[SH_ROCK]) {
+      g.save();
+      const outside = new Path2D();
+      outside.rect(0, 0, W, H);
+      rocks.forEach((k) => outside.addPath(k.body));
+      g.clip(outside, "evenodd");
+      g.fillStyle = ink(al[SH_ROCK]);
+      g.fill(ovals[SH_ROCK]);
+      g.restore();
+    }
+    if (ovals[SH_POOL]) { g.fillStyle = ink(al[SH_POOL]); g.fill(ovals[SH_POOL]); }
+    g.strokeStyle = ink(al[SH_FULL]);
+    if (lines[SH_FULL]) { g.lineWidth = widths[SH_FULL]; g.stroke(lines[SH_FULL]); }
+    if (lines[SH_ROOT]) { g.lineWidth = widths[SH_ROOT]; g.stroke(lines[SH_ROOT]); }
   }
 
   // the moon's light pooling on the slope and catching the ridge, screened on top
@@ -318,17 +330,31 @@
     g.fillStyle = pool;
     g.fillRect(0, 0, W, H);
     g.restore();
-    // a soft, blurred sheen on the crest, strongest under the moon
-    g.save();
-    g.filter = `blur(${4 * S}px)`;
-    g.lineCap = "round";
+    // a soft, blurred sheen on the crest, strongest under the moon. Its strokes
+    // are laid on a scratch strip along the ridge and the strip is blurred once:
+    // blurring each of the ~300 strokes on its own kept the GPU busy for about
+    // a second, a freeze on the first frame of every switch to night.
+    let lo = Infinity, hi = -Infinity;
+    for (let x = 0; x <= W + 6; x += 6) { const y = ridge(x); lo = Math.min(lo, y); hi = Math.max(hi, y); }
+    const pad = 7 * S, y0 = Math.floor(lo + 6 * S - pad), y1 = Math.ceil(hi + 6 * S + pad);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const strip = document.createElement("canvas");
+    // (wider than the screen, so the round caps past each edge still blur back in)
+    strip.width = Math.round((W + pad * 2) * dpr); strip.height = Math.ceil((y1 - y0) * dpr);
+    const s = strip.getContext("2d");
+    s.setTransform(dpr, 0, 0, dpr, pad * dpr, -y0 * dpr);
+    s.lineCap = "round";
+    s.lineWidth = 7 * S;
     for (let x = 0; x < W; x += 6) {
       const near = 1 - clamp(Math.abs(x - m.x) / (W * 0.7), 0, 1);
-      g.strokeStyle = `rgba(150, 178, 240, ${0.04 + 0.16 * near})`;
-      g.lineWidth = 7 * S;
-      g.beginPath(); g.moveTo(x, ridge(x) + 6 * S); g.lineTo(x + 6, ridge(x + 6) + 6 * S); g.stroke();
+      s.strokeStyle = `rgba(150, 178, 240, ${0.04 + 0.16 * near})`;
+      s.beginPath(); s.moveTo(x, ridge(x) + 6 * S); s.lineTo(x + 6, ridge(x + 6) + 6 * S); s.stroke();
     }
+    g.save();
+    g.filter = `blur(${4 * S}px)`;
+    g.drawImage(strip, -pad, y0, strip.width / dpr, strip.height / dpr);
     g.restore();
+    strip.width = strip.height = 0;
   }
 
   // the big tower, kept clear of the intro text
@@ -813,22 +839,37 @@
   // The night sky and moonlight are two more full-screen layers. They're only
   // allocated while night is showing or on its way: holding every layer at
   // once froze low-memory machines on refresh.
-  let nightPainted = false;
-  function paintNight() {
+  // Painted in steps (the sky, each cloud, the moonlight): all at once when the page opens at
+  // night, or one step a frame (`spread`) as the switch begins. The night layers are still nearly
+  // invisible for the switch's first ~300ms; all at once, the GPU needed ~150ms, a visible hitch
+  // on the first frame. Hovering the moon button starts them early (primeNight).
+  let nightPainted = false, nightSteps = [];
+  function paintNight(spread) {
     if (nightPainted || !nightCtx || !W) return;
     nightPainted = true;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    [skyNight, glowCanvas].forEach((c) => size(c, dpr));
-    const keepCtx = ctx, keepSeed = seed;
-    ctx = nightCtx;
-    drawSky(NIGHT_SKY);
+    nightSteps = [() => {
+      [skyNight, glowCanvas].forEach((c) => size(c, dpr));
+      const keepCtx = ctx;
+      ctx = nightCtx;
+      drawSky(NIGHT_SKY);
+      ctx = keepCtx;
+    }];
     // each cloud's own seed, so its night copy has the same shape
-    clouds.forEach((c) => { seed = c.seedNo; (c.small ? drawPuff : drawCloud)(NIGHT_CLOUD, c.night, c.spec); });
-    if (glowCtx) drawGlow(moon);
-    ctx = keepCtx; seed = keepSeed;
+    clouds.forEach((c) => nightSteps.push(() => {
+      const keepSeed = seed;
+      seed = c.seedNo;
+      (c.small ? drawPuff : drawCloud)(NIGHT_CLOUD, c.night, c.spec);
+      seed = keepSeed;
+    }));
+    if (glowCtx) nightSteps.push(() => drawGlow(moon));
+    if (spread) nightSteps.shift()();
+    else finishNight();
   }
+  const finishNight = () => { while (nightSteps.length) nightSteps.shift()(); };
   function freeNight() {
     nightPainted = false;
+    nightSteps = [];
     [skyNight, glowCanvas, ...clouds.map((c) => c.night)].forEach((c) => { if (c) { c.width = 0; c.height = 0; } });
   }
 
@@ -1085,8 +1126,10 @@ void main() {
   const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255);
 
   function buildSway(dpr) {
-    glOn = false;
-    if (!initGL()) { if (swayCanvas) swayCanvas.hidden = true; return; }
+    glOn = false; shOn = false;
+    // the shadows sit on the 2D #shade layer unless the graphics card takes them (sizeShade)
+    if (shade) shade.hidden = false;
+    if (!initGL()) { sh = null; if (swayCanvas) swayCanvas.hidden = true; return; }
     const blades = live.filter((o) => !o.leaf && !o.stem && /^#[0-9a-f]{6}$/i.test(o.color));
     if (blades.length !== live.filter((o) => !o.leaf && !o.stem).length) { swayCanvas.hidden = true; return; }
     const data = new Float32Array(blades.length * 10);
@@ -1110,8 +1153,252 @@ void main() {
     gl.uniform1f(glU.uPx, 1 / dpr);
     swayCanvas.hidden = false;
     glOn = true;
+    // the 2D shadow layer is then not needed at all, so it gives its memory back
+    if (sizeShade(dpr) && shade) { shade.hidden = true; shade.width = shade.height = 0; }
   }
 
+  // ---------------------------------------------------------------- shadows on the GPU
+  // The shadows (see shadeShapes) drawn with the swaying grass, under its blades, instead of on the
+  // blurred 2D #shade layer, and looking the same:
+  // 1. every shape is drawn with its exact anti-aliased coverage into its set's colour channel of
+  //    two textures, keeping the larger value where shapes overlap, so a set merges like one fill;
+  // 2. the sets are laid over each other in the 2D layer's order and colours (the rock shadows cut
+  //    out of the rocks, from a mask of their bodies), and blurred with the same Gaussian as the
+  //    layer's CSS blur(1.4·S px), across then down;
+  // 3. each frame that result is drawn first, then the blades on top.
+  // Only step 3 runs every frame; 1–2 run when the light or the brushed grass moves.
+  const SH_SHAPE_VS = `#version 300 es
+layout(location = 0) in vec2 aCorner;
+layout(location = 1) in vec4 aA;
+layout(location = 2) in vec3 aB;
+uniform vec2 uSize;
+uniform float uDpr;
+out vec2 vLocal;
+flat out vec3 vP;
+flat out float vKind, vSet;
+void main() {
+  vKind = aB.y; vSet = aB.z;
+  vec2 pos;
+  if (aB.y < 0.5) {
+    // a round-capped line: a box around it, in the line's own frame
+    vec2 p0 = aA.xy * uDpr, p1 = aA.zw * uDpr, d = p1 - p0;
+    float len = length(d), hw = aB.x * 0.5 * uDpr;
+    vec2 u = len > 1e-4 ? d / len : vec2(1.0, 0.0), n = vec2(-u.y, u.x);
+    float along = mix(-(hw + 1.0), len + hw + 1.0, aCorner.x * 0.5 + 0.5), across = aCorner.y * (hw + 1.0);
+    pos = p0 + u * along + n * across;
+    vLocal = vec2(along, across);
+    vP = vec3(len, hw, 0.0);
+  } else {
+    // a turned ellipse: a box around it, in the ellipse's own frame
+    vec2 c = aA.xy * uDpr, r = aA.zw * uDpr, q = aCorner * (r + 1.0);
+    float cs = cos(aB.x), sn = sin(aB.x);
+    pos = c + vec2(q.x * cs - q.y * sn, q.x * sn + q.y * cs);
+    vLocal = q;
+    vP = vec3(r, 0.0);
+  }
+  gl_Position = vec4(pos.x / uSize.x * 2.0 - 1.0, 1.0 - pos.y / uSize.y * 2.0, 0.0, 1.0);
+}`;
+  const SH_SHAPE_FS = `#version 300 es
+precision highp float;
+in vec2 vLocal;
+flat in vec3 vP;
+flat in float vKind, vSet;
+layout(location = 0) out vec4 o0;
+layout(location = 1) out vec4 o1;
+void main() {
+  float k;
+  if (vKind < 0.5) {
+    // share of this pixel inside a round-capped line of half width vP.y
+    float dist = length(vec2(vLocal.x - clamp(vLocal.x, 0.0, vP.x), vLocal.y)), hw = vP.y;
+    k = clamp(min(dist + 0.5, hw) - max(dist - 0.5, -hw), 0.0, 1.0);
+  } else {
+    // share of this pixel inside the ellipse, from its distance to the edge
+    vec2 p = vLocal, r = vP.xy;
+    float f = dot(p / r, p / r) - 1.0;
+    vec2 gr = 2.0 * p / (r * r);
+    k = clamp(0.5 - f / max(length(gr), 1e-6), 0.0, 1.0);
+  }
+  int s = int(vSet + 0.5);
+  o0 = vec4(s == 0 ? k : 0.0, s == 1 ? k : 0.0, s == 2 ? k : 0.0, s == 3 ? k : 0.0);
+  o1 = vec4(s == 4 ? k : 0.0, s == 5 ? k : 0.0, 0.0, 0.0);
+}`;
+  const SH_FULL_VS = `#version 300 es
+void main() {
+  vec2 p = vec2(gl_VertexID == 1 ? 3.0 : -1.0, gl_VertexID == 2 ? 3.0 : -1.0);
+  gl_Position = vec4(p, 0.0, 1.0);
+}`;
+  // uMode 0: lay the sets over each other and blur across; 1: blur down; 2: copy onto the canvas
+  const SH_PASS_FS = `#version 300 es
+precision highp float;
+uniform sampler2D uT0, uT1, uMask;
+uniform int uMode, uRad;
+uniform vec2 uDir;
+uniform float uSigma;
+uniform vec3 uTint;
+uniform float uA[5];
+out vec4 o;
+vec4 shadeAt(ivec2 p) {
+  vec4 a = texelFetch(uT0, p, 0);
+  vec2 b = texelFetch(uT1, p, 0).rg;
+  float m = texelFetch(uMask, p, 0).a;
+  float ink = 1.0 - (1.0 - uA[0] * a.r) * (1.0 - uA[2] * a.b * (1.0 - m)) * (1.0 - uA[1] * a.g) * (1.0 - uA[3] * a.a) * (1.0 - uA[4] * b.r);
+  float c = 0.14 * b.g;
+  return vec4(uTint * ink + vec3(24.0, 48.0, 40.0) / 255.0 * c * (1.0 - ink), ink + c * (1.0 - ink));
+}
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy), size = textureSize(uT0, 0);
+  if (uMode == 2) { o = texelFetch(uT0, p, 0); return; }
+  vec4 sum = vec4(0.0);
+  float wsum = 0.0;
+  for (int i = -24; i <= 24; i++) {
+    if (i < -uRad || i > uRad) continue;
+    float w = exp(-float(i * i) / (2.0 * uSigma * uSigma));
+    wsum += w;
+    ivec2 q = p + ivec2(uDir) * i;
+    if (q.x < 0 || q.y < 0 || q.x >= size.x || q.y >= size.y) continue;
+    sum += w * (uMode == 0 ? shadeAt(q) : texelFetch(uT0, q, 0));
+  }
+  o = sum / wsum;
+}`;
+
+  let sh = null, shOn = false, shData = new Float32Array(0), shCount = 0, shDirty = false, shL = null;
+  function initShade() {
+    if (sh !== null) return !!sh;
+    sh = false;
+    const g = gl;
+    if (!g) return false;
+    const shader = (type, src) => { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); return g.getShaderParameter(s, g.COMPILE_STATUS) ? s : null; };
+    const program = (vsSrc, fsSrc) => {
+      const vs = shader(g.VERTEX_SHADER, vsSrc), fs = shader(g.FRAGMENT_SHADER, fsSrc);
+      if (!vs || !fs) return null;
+      const p = g.createProgram();
+      g.attachShader(p, vs); g.attachShader(p, fs); g.linkProgram(p);
+      return g.getProgramParameter(p, g.LINK_STATUS) ? p : null;
+    };
+    const shapes = program(SH_SHAPE_VS, SH_SHAPE_FS), pass = program(SH_FULL_VS, SH_PASS_FS);
+    if (!shapes || !pass) return false;
+    const vao = g.createVertexArray();
+    g.bindVertexArray(vao);
+    g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
+    g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
+    g.enableVertexAttribArray(0);
+    g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0);
+    const inst = g.createBuffer();
+    g.bindBuffer(g.ARRAY_BUFFER, inst);
+    g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 4, g.FLOAT, false, 28, 0); g.vertexAttribDivisor(1, 1);
+    g.enableVertexAttribArray(2); g.vertexAttribPointer(2, 3, g.FLOAT, false, 28, 16); g.vertexAttribDivisor(2, 1);
+    const empty = g.createVertexArray();
+    g.bindVertexArray(null);
+    const U = (p, names) => names.reduce((u, n) => ((u[n] = g.getUniformLocation(p, n)), u), {});
+    sh = { shapes, pass, vao, inst, empty, uS: U(shapes, ["uSize", "uDpr"]), uP: U(pass, ["uT0", "uT1", "uMask", "uMode", "uRad", "uDir", "uSigma", "uTint", "uA"]), tex: [], fbo: [] };
+    return true;
+  }
+
+  // textures the size of the canvas: two for the sets, one between the blurs, the rock mask
+  function sizeShade(dpr) {
+    shOn = false;
+    if (!glOn || !initShade()) return false;
+    const g = gl, w = swayCanvas.width, h = swayCanvas.height;
+    sh.tex.forEach((t) => g.deleteTexture(t));
+    sh.fbo.forEach((f) => g.deleteFramebuffer(f));
+    const tex = (fmt, ifmt, data) => {
+      const t = g.createTexture();
+      g.bindTexture(g.TEXTURE_2D, t);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+      if (data) { g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL, true); g.texImage2D(g.TEXTURE_2D, 0, ifmt, fmt, g.UNSIGNED_BYTE, data); g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL, false); }
+      else g.texImage2D(g.TEXTURE_2D, 0, ifmt, w, h, 0, fmt, g.UNSIGNED_BYTE, null);
+      return t;
+    };
+    // the rocks' bodies (in the mask's alpha), painted with the same paths as on the hill, so their edges match
+    const mc = document.createElement("canvas");
+    mc.width = w; mc.height = h;
+    const m = mc.getContext("2d");
+    m.setTransform(dpr, 0, 0, dpr, 0, 0);
+    m.fillStyle = "#fff";
+    rocks.forEach((k) => m.fill(k.body));
+    const t0 = tex(g.RGBA, g.RGBA8), t1 = tex(g.RGBA, g.RGBA8), tb = tex(g.RGBA, g.RGBA8), tm = tex(g.RGBA, g.RGBA8, mc);
+    mc.width = mc.height = 0;
+    const fbo = (...ts) => {
+      const f = g.createFramebuffer();
+      g.bindFramebuffer(g.FRAMEBUFFER, f);
+      ts.forEach((t, i) => g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0 + i, g.TEXTURE_2D, t, 0));
+      const ok = g.checkFramebufferStatus(g.FRAMEBUFFER) === g.FRAMEBUFFER_COMPLETE;
+      return ok ? f : null;
+    };
+    // sets → t0 + t1; across-blur → tb; down-blur → t0, which then holds the finished shadows
+    const sets = fbo(t0, t1), blur = fbo(tb), done = fbo(t0);
+    g.bindFramebuffer(g.FRAMEBUFFER, null);
+    sh.tex = [t0, t1, tb, tm];
+    sh.fbo = [sets, blur, done].filter(Boolean);
+    if (!sets || !blur || !done) return false;
+    Object.assign(sh, { t0, t1, tb, tm, sets, blur, done, dpr });
+    shOn = true;
+    return true;
+  }
+
+  // gather this light's shapes (cheap) and mark the textures out of date; they're redrawn just
+  // before the next frame of grass, or now if no frames are running
+  function shadeGL(L) {
+    let n = 0;
+    const need = (live.length / 9 + casters.length * 2 + rocks.length + live.length * 2) * 7;
+    if (shData.length < need) shData = new Float32Array(Math.ceil(need));
+    const d = shData;
+    shadeShapes(L,
+      (set, x0, y0, x1, y1, w) => { const k = n++ * 7; d[k] = x0; d[k + 1] = y0; d[k + 2] = x1; d[k + 3] = y1; d[k + 4] = w; d[k + 5] = 0; d[k + 6] = set; },
+      (set, cx, cy, rx, ry, a) => { const k = n++ * 7; d[k] = cx; d[k + 1] = cy; d[k + 2] = rx; d[k + 3] = ry; d[k + 4] = a; d[k + 5] = 1; d[k + 6] = set; });
+    shCount = n; shL = L; shDirty = true;
+    if (!framing && !beeRaf) drawSway(performance.now());
+  }
+
+  function bakeShade() {
+    shDirty = false;
+    const g = gl, w = swayCanvas.width, h = swayCanvas.height, L = shL;
+    g.viewport(0, 0, w, h);
+    // 1. each set's coverage
+    g.bindFramebuffer(g.FRAMEBUFFER, sh.sets);
+    g.drawBuffers([g.COLOR_ATTACHMENT0, g.COLOR_ATTACHMENT1]);
+    g.clearColor(0, 0, 0, 0);
+    g.clear(g.COLOR_BUFFER_BIT);
+    g.useProgram(sh.shapes);
+    g.uniform2f(sh.uS.uSize, W, H);
+    g.uniform1f(sh.uS.uDpr, sh.dpr);
+    g.bindVertexArray(sh.vao);
+    g.bindBuffer(g.ARRAY_BUFFER, sh.inst);
+    g.bufferData(g.ARRAY_BUFFER, shData.subarray(0, shCount * 7), g.STREAM_DRAW);
+    g.blendEquation(g.MAX);
+    g.blendFunc(g.ONE, g.ONE);
+    g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, shCount);
+    g.blendEquation(g.FUNC_ADD);
+    g.disable(g.BLEND);
+    // 2. lay them over each other and blur, across then down
+    g.useProgram(sh.pass);
+    g.bindVertexArray(sh.empty);
+    const tint = shadeTint().map((c) => c / 255), strong = L.strength >= 0.01;
+    g.uniform3f(sh.uP.uTint, tint[0], tint[1], tint[2]);
+    g.uniform1fv(sh.uP.uA, strong ? shadeAlphas(L.strength) : [0, 0, 0, 0, 0]);
+    const sigma = 1.4 * S * sh.dpr;
+    g.uniform1f(sh.uP.uSigma, sigma);
+    g.uniform1i(sh.uP.uRad, Math.min(24, Math.ceil(sigma * 3)));
+    [[sh.t0, 0], [sh.t1, 1], [sh.tm, 2]].forEach(([t, i]) => { g.activeTexture(g.TEXTURE0 + i); g.bindTexture(g.TEXTURE_2D, t); });
+    g.uniform1i(sh.uP.uT0, 0); g.uniform1i(sh.uP.uT1, 1); g.uniform1i(sh.uP.uMask, 2);
+    g.bindFramebuffer(g.FRAMEBUFFER, sh.blur);
+    g.uniform1i(sh.uP.uMode, 0);
+    g.uniform2f(sh.uP.uDir, 1, 0);
+    g.drawArrays(g.TRIANGLES, 0, 3);
+    g.bindFramebuffer(g.FRAMEBUFFER, sh.done);
+    g.activeTexture(g.TEXTURE0); g.bindTexture(g.TEXTURE_2D, sh.tb);
+    g.uniform1i(sh.uP.uMode, 1);
+    g.uniform2f(sh.uP.uDir, 0, 1);
+    g.drawArrays(g.TRIANGLES, 0, 3);
+    g.bindFramebuffer(g.FRAMEBUFFER, null);
+    g.enable(g.BLEND);
+    g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
+  }
+
+  let framing = false;
   function drawSway(now) {
     if (!glOn) return;
     if (bendsDirty) {
@@ -1119,9 +1406,19 @@ void main() {
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, bends);
       bendsDirty = false;
     }
+    if (shOn && shDirty) bakeShade();
     gl.viewport(0, 0, swayCanvas.width, swayCanvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    if (shOn) {
+      // the shadows first, under the blades
+      gl.useProgram(sh.pass);
+      gl.bindVertexArray(sh.empty);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sh.t0);
+      gl.uniform1i(sh.uP.uT0, 0);
+      gl.uniform1i(sh.uP.uMode, 2);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
     gl.useProgram(glProg);
     gl.bindVertexArray(glVao);
     gl.uniform1f(glU.uTime, still.matches ? 0 : (now / 1000) % 3600);
@@ -1169,10 +1466,10 @@ void main() {
       });
     });
     if (box.x1 >= 0) redraw(box);
-    // shadows are soft and blurred, so while the grass is moving they keep up at
-    // ~12fps (repainting the whole layer every frame made brushing stutter),
-    // and land exactly once it settles
-    if (moved && (!active.size || performance.now() - shadedAt > 80)) { drawShade(); shadedAt = performance.now(); }
+    // on the graphics card the shadows follow the grass every frame; on the 2D
+    // fallback they keep up at ~12fps (repainting the whole layer every frame
+    // made brushing stutter) and land exactly once it settles
+    if (moved && (shOn || !active.size || performance.now() - shadedAt > 80)) { drawShade(); shadedAt = performance.now(); }
     // with reduced motion the frame loop is off, so draw the brushed blades here
     if (bendsDirty && still.matches) drawSway(performance.now());
     if (active.size) raf = requestAnimationFrame(step);
@@ -1218,11 +1515,15 @@ void main() {
     clouds.forEach((c) => { c.night.style.opacity = p; c.day.style.opacity = p >= 1 ? 0 : 1; });
     if (glowCanvas) glowCanvas.style.opacity = clamp((p - 0.45) / 0.55, 0, 1);
     if (dusk) dusk.style.opacity = d;
-    // day → a warm dusk → cool moonlight, in one filter so it blends smoothly
+    // day → a warm dusk → cool moonlight, in one filter so it blends smoothly. It
+    // tints the hill, shadows, grass and flowers together (.land): one filter over
+    // the stack looks the same as one on each layer (it's a colour matrix), and
+    // the compositor redoes one full-screen pass a frame instead of four.
     const f = p || d ? `brightness(${lerp(1, 0.48, p) - 0.08 * d}) sepia(${0.4 * d}) saturate(${lerp(1, 0.7, p) + 0.2 * d}) hue-rotate(${lerp(0, 16, p) - 12 * d}deg)` : "";
-    [canvas, touch, swayCanvas].forEach((el) => { if (el) el.style.filter = f; });
-    // the shade layer is also blurred so every shadow has a soft edge
-    if (shade) shade.style.filter = `blur(${(1.4 * S).toFixed(2)}px) ${f}`;
+    if (landEl) landEl.style.filter = f;
+    else [canvas, shade, touch, swayCanvas].forEach((el) => { if (el) el.style.filter = f; });
+    // the 2D shade layer (no WebGL2) is also blurred so every shadow has a soft edge
+    if (shade && !shOn) shade.style.filter = `blur(${(1.4 * S).toFixed(2)}px)${landEl ? "" : " " + f}`;
     drawShade();
   }
 
@@ -1376,11 +1677,14 @@ void main() {
 
   function buzz(now) {
     beeRaf = 0;
+    framing = true;
+    if (nightSteps.length) nightSteps.shift()();
     moveBees(now);
     drawBees(now);
     driftClouds(now);
     drawSway(now);
     if (glowT > 0 || nightT !== (isNight ? 1 : 0)) drawCelestial(glowT, now);
+    framing = false;
     wake();
   }
   function wake() {
@@ -1390,7 +1694,7 @@ void main() {
   // jump straight to the current mode (reduced motion, or nothing animating)
   function settleNight() {
     nightT = glowT = isNight ? 1 : 0;
-    if (isNight) paintNight(); else freeNight();
+    if (isNight) { paintNight(); finishNight(); } else freeNight();
     applyNight();
     drawCelestial(glowT, performance.now());
     drawBees(performance.now());
@@ -1413,11 +1717,27 @@ void main() {
       if (isNight) root.dataset.theme = "night"; else delete root.dataset.theme;
       try { localStorage.setItem("theme", isNight ? "night" : "day"); } catch (e) {}
       showMode();
-      if (isNight) paintNight();
+      clearTimeout(unprime);
       lastBuzz = 0;
       if (still.matches || !heroOnScreen || !bees.length) settleNight();
-      else wake();
+      else { if (isNight) paintNight(true); wake(); }
     });
+    // A cursor on the moon button is about to switch to night: paint the night
+    // layers over the next few frames, so the switch starts with nothing left to
+    // paint. If it leaves without switching they're freed again (low-memory PCs).
+    let unprime = 0;
+    const primeNight = () => {
+      clearTimeout(unprime);
+      if (!isNight && heroOnScreen && !still.matches && bees.length) { paintNight(true); wake(); }
+    };
+    modeBtn.addEventListener("pointerenter", primeNight);
+    modeBtn.addEventListener("focus", primeNight);
+    const unprimeNight = () => {
+      clearTimeout(unprime);
+      unprime = setTimeout(() => { if (!isNight && nightT === 0) freeNight(); }, 1500);
+    };
+    modeBtn.addEventListener("pointerleave", unprimeNight);
+    modeBtn.addEventListener("blur", unprimeNight);
   }
 
   // Scrolling slides the page under a still cursor and Chrome reports that as

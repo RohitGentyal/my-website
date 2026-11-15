@@ -231,6 +231,9 @@ a { color: inherit; text-decoration: none; }
 /* night: scene.js fades these in on one eased timeline as the switch plays */
 #skyNight, .cloud .night, #glow, .scene .dusk { opacity: 0; }
 #glow { mix-blend-mode: screen; pointer-events: none; }
+/* the hill, its shadows, the swaying grass and the flowers: scene.js tints them
+   for dusk and night with one filter here, rather than one on each layer */
+.land { position: absolute; inset: 0; }
 .scene .dusk {
   position: absolute;
   inset: 0;
