@@ -426,7 +426,7 @@ h2.sub { margin: 40px 0 0; }
 
 /* The cursor's speech bubble (quips.js): one little comic bubble that trails the cursor over anything
    clickable, its tail pointing up at the arrow's tip, with a soft lag and no tilt. Crisp ink outline and a
-   hard offset shadow, like a sticker; the words are an aside in the italic serif, picked for the moment,
+   hard offset shadow, like a sticker; the words in Inter 500 at 14px (the serif was too thin to read), picked for the moment,
    and a new line rolls up into place. It grows out of its tail. While a hobby sound plays it shows a
    little equalizer */
 .quip {
@@ -444,12 +444,13 @@ h2.sub { margin: 40px 0 0; }
   position: relative;
   display: grid;
   place-items: center;
-  padding: 7px 12px 8px;
+  padding: 8px 12px;
   border: 1.25px solid var(--bub-ink);
   border-radius: 11px;
   background: var(--bub);
   color: var(--bub-ink);
-  font: italic 400 17px/1 var(--serif);
+  font: 500 14px/1 var(--sans);
+  letter-spacing: -0.005em;
   white-space: nowrap;
   box-shadow: 2.5px 2.5px 0 var(--bub-ink);
   transform-origin: 14px -8px;
