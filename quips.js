@@ -24,7 +24,7 @@
       night: ["night owl? same", "I'll reply after sleeping"],
     },
     linkedin: ["connect, don't lurk", "endorse me for vibes", "less posting, more design", "we'd make a strong tie"],
-    genzoLink: ["the thing I'm building", "it all moves, go on"],
+    x: ["mostly design, some memes", "follow for pixels", "I post when it moves"],
     about: ["it's just below", "spoiler: football"],
     copy: { fresh: ["one click, it's yours", "no typing, promise"], done: ["copied. paste away", "it's in your clipboard"] },
     hob: {
@@ -121,11 +121,11 @@
     new MutationObserver(() => refresh(card)).observe(card.querySelector(".board"), { subtree: true, attributeFilter: ["class"] });
   }
 
-  // ---- Email and LinkedIn at the end of About
+  // ---- Email, LinkedIn and X at the end of About
   document.querySelectorAll(".links a").forEach((a) => {
     const mail = a.href.startsWith("mailto:");
     wire(a, () => {
-      if (!mail) return LINES.linkedin;
+      if (!mail) return a.hostname === "x.com" ? LINES.x : LINES.linkedin;
       const h = new Date().getHours(), e = LINES.email;
       return h >= 5 && h < 11 ? e.morning : h < 17 ? e.day : h < 22 ? e.evening : e.night;
     });
@@ -137,7 +137,7 @@
     const kind = el.dataset.quip;
     let copied = false;
     const get = () => kind === "copy" ? LINES.copy[copied ? "done" : "fresh"]
-      : kind === "genzo" ? LINES.genzoLink : LINES[kind];
+      : LINES[kind];
     wire(el, get);
     if (kind !== "copy") return;
     el.addEventListener("click", () => {
