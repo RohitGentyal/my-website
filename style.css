@@ -261,6 +261,32 @@ h2 {
 .svc { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; margin: 18px 0 0; padding: 0; color: var(--ink); font-weight: 500; }
 #about .svc-ways { margin: 20px 0 14px; color: var(--ink-faint); font-size: 14px; }
 @media (max-width: 560px) { .svc { grid-template-columns: 1fr; } }
+/* Stack: a row of small tiles, each tool's logo in muted ink. Hover (or keyboard focus) lifts the tile
+   and the logo takes its brand colour; the cursor's bubble names the tool with an aside (quips.js).
+   Logos from Simple Icons (CC0) */
+.stack { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 14px; padding: 0; }
+.stack li {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--tile);
+  color: var(--ink-faint);
+  cursor: default;
+  outline: none;
+  transition: translate .35s cubic-bezier(.34, 1.56, .64, 1), color .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+[data-theme="night"] .stack li { background: #171c27; }
+.stack svg { width: 20px; height: 20px; fill: currentColor; }
+.stack li:hover, .stack li:focus-visible {
+  translate: 0 -3px;
+  color: var(--brand);
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--rule));
+  box-shadow: 0 8px 16px -10px color-mix(in srgb, var(--brand) 60%, transparent);
+}
+@media (prefers-reduced-motion: reduce) { .stack li { transition: color .25s ease, border-color .25s ease; } .stack li:hover, .stack li:focus-visible { translate: none; } }
 h2.sub { margin: 40px 0 0; }
 .exp { margin: 0 0 32px; padding: 0; }
 .exp div { padding: 14px 0; border-bottom: 1px solid var(--rule); }
@@ -521,5 +547,7 @@ h2.sub { margin: 40px 0 0; }
   section.col h2.sub { margin-top: 58px; }
   .exp div:first-child { margin-top: 56px; }
   .svc { margin-top: 56px; }
+  .stack { margin-top: 56px; }
+  section.col h2.sub:has(+ .stack) { margin-top: 52px; }
   section.col h2.sub:has(+ .svc) { margin-top: 43px; }
 }

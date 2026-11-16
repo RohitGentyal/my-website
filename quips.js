@@ -26,6 +26,13 @@
     linkedin: ["connect, don't lurk", "endorse me for vibes", "less posting, more design", "we'd make a strong tie"],
     x: ["mostly design, some memes", "follow for pixels", "I post when it moves"],
     about: ["it's just below", "spoiler: football"],
+    stack: {
+      figma: ["Figma, where it all starts", "Figma, my second home"],
+      claude: ["Claude, my thinking partner", "Claude, for the 2 a.m. ideas"],
+      html5: ["HTML, CSS & JS: this site, by hand", "HTML, CSS & JS, no framework"],
+      react: ["React, when it needs to be real", "React, components all the way"],
+      framer: ["Framer, sites that ship fast", "Framer, for motion that publishes"],
+    },
     copy: { fresh: ["one click, it's yours", "no typing, promise"], done: ["copied. paste away", "it's in your clipboard"] },
     hob: {
       football: { fresh: ["kick it", "goal?", "on the pitch"], heard: ["again? fine", "encore"] },
@@ -160,6 +167,9 @@
       else fallback();
     });
   });
+
+  // ---- Stack tiles: the tool's name, with an aside
+  document.querySelectorAll(".stack li[data-tool]").forEach((li) => wire(li, () => LINES.stack[li.dataset.tool]));
 
   // ---- hobby words: fresh lines until you've played it, then they know; an equalizer while it plays
   document.querySelectorAll(".hob[data-sound]").forEach((w) => {
