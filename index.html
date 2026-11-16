@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); try { if (localStorage.getItem("theme") === "night") document.documentElement.dataset.theme = "night"; } catch (e) {}</script>
-  <link rel="stylesheet" href="style.css?v=perf2">
+  <link rel="stylesheet" href="style.css?v=work3">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -76,24 +76,19 @@
 
     <section class="col" id="work">
       <h2>Work</h2>
-      <ol class="work">
-        <li class="w-item">
-          <a class="w-row w-link" href="https://genzoui.vercel.app" target="_blank" rel="noopener">
-            <span class="w-title">Genzo</span>
-            <span class="w-meta">Component library</span>
-            <span class="w-year">2026</span>
-            <p class="w-desc">Ready-made components for product teams: designers grab the Figma file, Android developers copy the Jetpack Compose code.</p>
-            <span class="w-visit">Visit Genzo <span aria-hidden="true">↗</span></span>
-          </a>
-          <span class="visit" aria-hidden="true">
-            <span class="visit-card">
-              <span class="visit-bar"><svg class="visit-mark" viewBox="44 146 424 220" aria-hidden="true"><rect x="64" y="166" width="384" height="180" rx="90"/><circle class="e2" cx="214" cy="256" r="56" opacity="0.32"/><circle class="e1" cx="286" cy="256" r="56" opacity="0.7"/><circle class="k" cx="358" cy="256" r="56"/></svg><span class="visit-title">Genzo · every element moves</span></span>
-              <img class="visit-shot" src="assets/genzo-preview.png" width="320" height="200" alt="" decoding="async" loading="lazy" />
-            </span>
-            <span class="visit-tag">Visit Genzo <span class="visit-arrow">↗</span></span>
-          </span>
-        </li>
-      </ol>
+      <div class="cards">
+        <a class="pcard" href="https://genzoui.vercel.app" target="_blank" rel="noopener" aria-label="Genzo, component library (opens in a new tab)">
+          <figure class="board" data-cycle>
+            <img class="on" src="assets/genzo-home.png" width="1280" height="800" alt="Genzo's home page" decoding="async" loading="lazy" draggable="false">
+            <img src="assets/genzo-components.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img src="assets/genzo-icons.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img src="assets/genzo-calendar.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+          </figure>
+          <span class="cap"><span class="name">Genzo <span class="arrow" aria-hidden="true">↗</span></span><span class="kind">Component library</span></span>
+          <span class="line">Ready-made components for product teams: designers grab the Figma file, Android developers copy the Jetpack Compose code.</span>
+        </a>
+      </div>
     </section>
 
     <section class="col" id="about">
@@ -105,7 +100,7 @@
       <dl class="exp">
         <div>
           <dt>Subculture Media Tech</dt>
-          <dd><span>User Experience Designer</span><span class="when">Jun 2026 → Present</span></dd>
+          <dd><span>User Experience Designer</span><span class="when"><span class="now" aria-label="current role"></span>Jun 2026 → Present</span></dd>
           <dd><span>User Experience Design Intern</span><span class="when">Dec 2025 → Jun 2026</span></dd>
         </div>
         <div>
@@ -128,6 +123,6 @@
 
   <script src="loader.js?v=2"></script>
   <script src="scene.js?v=perf2"></script>
-  <script src="work.js?v=2"></script>
+  <script src="work.js?v=3"></script>
 </body>
 </html>
