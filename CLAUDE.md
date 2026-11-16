@@ -47,7 +47,7 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
   - Subculture Media Tech, UX Designer: intern Dec 2025 to Jun 2026, full-time from Jun 2026.
   - Digital Nexus AI, UI/UX Design Intern: May to Dec 2025.
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
-- **Contact:** Email (rohitgentyal0201@gmail.com), LinkedIn and Twitter (https://x.com/roh1168, added 2026-11-17, labelled Twitter). No GitHub link.
+- **Contact:** the Email / LinkedIn / Twitter row at the end of About was removed 2026-11-17 (my ask); contact lives in the hero intro (Twitter, LinkedIn, copy my email) and the nav's Email. No GitHub link.
 
 ## Resume here (2026-11-02)
 
