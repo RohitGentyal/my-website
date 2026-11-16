@@ -103,7 +103,7 @@ a { color: inherit; text-decoration: none; }
   z-index: 1;
   margin: 0 0 0 clamp(20px, 8vw, 140px);
   width: auto;
-  max-width: 540px;
+  max-width: 470px;
   padding: 0;
   will-change: transform, opacity;
 }
@@ -114,6 +114,24 @@ a { color: inherit; text-decoration: none; }
   color: var(--on-sky);
 }
 .intro p { color: var(--on-sky-soft); margin: 0 0 14px; }
+/* the lead line reads first: brighter, a touch heavier */
+.intro p.lead { color: var(--on-sky); font-weight: 500; }
+/* inline links in the intro: always quietly underlined, the line goes solid on hover */
+.ul {
+  position: relative;
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--on-sky);
+  cursor: pointer;
+  text-decoration: underline 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(255, 251, 234, .4);
+  transition: text-decoration-color .25s ease;
+}
+.ul:hover, .ul:focus-visible { text-decoration-color: var(--on-sky); outline: none; }
 /* Scene */
 .scene {
   position: absolute;

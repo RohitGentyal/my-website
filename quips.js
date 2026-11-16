@@ -1,7 +1,7 @@
 // Click-me tags, below the hero. Every clickable there wears a small tilted ink tag on hover (style.css,
 // .hob-tag), and its line is chosen for the moment, not fixed:
 // - the Genzo card speaks about whichever screenshot is up, and changes with it while you hover;
-// - Email reads the visitor's own clock;
+// - Email reads the visitor's own clock; "copy my email" in the intro knows once it has copied;
 // - the hobby words change once you've heard them;
 // - a line never repeats the one shown just before it, so each hover says something new.
 (() => {
@@ -78,6 +78,48 @@
     const set = () => { say.textContent = pick(a, lines()); };
     a.addEventListener("pointerenter", set);
     a.addEventListener("focus", set);
+  });
+
+  // the intro's inline links. "copy my email" copies it (and says so); without clipboard access it
+  // falls back to opening the mail app
+  const INTRO = {
+    linkedin: () => LINES.linkedin,
+    genzo: () => ["the thing I'm building", "it all moves, go on"],
+    about: () => ["it's just below", "spoiler: football"],
+  };
+  document.querySelectorAll(".intro [data-quip]").forEach((el) => {
+    const say = tag(el);
+    const kind = el.dataset.quip;
+    let copied = false;
+    const lines = () => kind === "copy"
+      ? copied ? ["copied. paste away", "it's in your clipboard"] : ["one click, it's yours", "no typing, promise"]
+      : INTRO[kind]();
+    const set = () => { say.textContent = pick(el, lines()); };
+    el.addEventListener("pointerenter", set);
+    el.addEventListener("focus", set);
+    if (kind === "copy") {
+      el.addEventListener("click", () => {
+        const mail = el.dataset.email;
+        const done = () => { copied = true; set(); el.classList.add("is-copied"); };
+        // older browsers and locked-down frames: copy through a hidden field, and only if that fails too,
+        // open the mail app
+        const old = () => {
+          const f = document.createElement("textarea");
+          f.value = mail;
+          f.setAttribute("readonly", "");
+          f.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+          document.body.appendChild(f);
+          f.select();
+          let ok = false;
+          try { ok = document.execCommand("copy"); } catch (e) {}
+          f.remove();
+          el.focus({ preventScroll: true });
+          if (ok) done(); else location.href = "mailto:" + mail;
+        };
+        if (navigator.clipboard) navigator.clipboard.writeText(mail).then(done, old);
+        else old();
+      });
+    }
   });
 
   // hobby words: fresh lines until you've played it, then they know
