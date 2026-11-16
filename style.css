@@ -337,6 +337,7 @@ h2 {
 }
 @media (prefers-reduced-motion: reduce) { .board img { transition: none; } }
 
+
 #about p { color: var(--ink-soft); margin: 0 0 14px; }
 #about p:first-of-type { color: var(--ink); }
 h2.sub { margin: 40px 0 0; }
@@ -487,3 +488,26 @@ h2.sub { margin: 40px 0 0; }
 [data-theme="night"] .foot s.del::after { background: var(--ink-soft); }
 @keyframes caret { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .foot s.del::after { animation: none; } }
+
+/* Wide screens: section labels (Work, About, Experience) move into a left gutter, right-aligned, quiet,
+   level with the first line of what they name. The Work card stays in the text column so its label has
+   room. Narrower screens keep the labels above */
+@media (min-width: 1200px) {
+  section.col { position: relative; }
+  section.col h2 {
+    position: absolute;
+    right: calc(100% - 20px + 56px);
+    width: 180px;
+    margin: 0;
+    text-align: right;
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0;
+  }
+  /* Work: level with the top of the card */
+  #work h2 { line-height: 1.2; }
+  .cards { width: 100%; margin-left: 0; translate: none; }
+  /* Experience: level with the first company, below the about text */
+  section.col h2.sub { margin-top: 58px; }
+  .exp div:first-child { margin-top: 56px; }
+}
