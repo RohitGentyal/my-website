@@ -1800,22 +1800,26 @@ void main() {
   parallax();
 
   // ---------------------------------------------------------------- hobby sounds
-  // Clicking a hobby tile plays its sound from the start, cutting off any other.
+  // The hobby words in About (football pitch, barbell, game) play their sound on click, from the start,
+  // cutting off any other; the word keeps its line and its tag shows an equalizer until the sound ends.
   let playing = null;
-  document.querySelectorAll(".tile[data-sound]").forEach((tile) => {
-    // nothing downloads until a cursor or finger reaches the tile (305 KB of sound most visitors never
+  document.querySelectorAll(".hob[data-sound]").forEach((word) => {
+    // nothing downloads until a cursor or finger reaches the word (305 KB of sound most visitors never
     // play); it loads then, in the moment before the click
     const sound = new Audio();
     sound.preload = "none";
-    const ready = () => { if (!sound.src) { sound.src = tile.dataset.sound; sound.load(); } };
-    tile.addEventListener("pointerenter", ready);
-    tile.addEventListener("focus", ready);
-    tile.addEventListener("touchstart", ready, { passive: true });
-    tile.addEventListener("click", () => {
+    const ready = () => { if (!sound.src) { sound.src = word.dataset.sound; sound.load(); } };
+    const done = () => word.classList.remove("is-playing");
+    word.addEventListener("pointerenter", ready);
+    word.addEventListener("focus", ready);
+    word.addEventListener("touchstart", ready, { passive: true });
+    sound.addEventListener("ended", done);
+    sound.addEventListener("pause", done);
+    word.addEventListener("click", () => {
       ready();
       if (playing && playing !== sound) playing.pause();
       sound.currentTime = 0;
-      sound.play().catch(() => {});
+      sound.play().then(() => word.classList.add("is-playing")).catch(() => {});
       playing = sound;
     });
   });

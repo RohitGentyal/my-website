@@ -114,106 +114,6 @@ a { color: inherit; text-decoration: none; }
   color: var(--on-sky);
 }
 .intro p { color: var(--on-sky-soft); margin: 0 0 14px; }
-.hobbies { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-
-/* Hobbies: a strip of little polaroids pinned to a string with a gentle sag. Each hangs from a wooden peg
-   at its own slight angle, the middle two lower where the string dips; hover and it swings on its peg and
-   settles. A click still plays its sound */
-.tiles { position: relative; display: inline-flex; align-items: flex-start; gap: 12px; padding: 13px 8px 0; }
-.tiles::before {
-  content: "";
-  position: absolute;
-  left: -6px;
-  right: -6px;
-  top: 0;
-  height: 16px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 16' preserveAspectRatio='none'%3E%3Cpath d='M0 3 Q50 15 100 3' fill='none' stroke='%23fffbea' stroke-opacity='.75' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat;
-  background-size: 100% 100%;
-  pointer-events: none;
-}
-.tile {
-  --r: -4deg;
-  --dip: 0px;
-  position: relative;
-  width: 44px;
-  padding: 4px 4px 12px;
-  display: block;
-  margin-top: var(--dip);
-  background: #fbf8ef;
-  border: 0;
-  border-radius: 2px;
-  box-shadow: 0 1px 1px rgba(30, 40, 20, .18), 0 6px 12px -6px rgba(20, 30, 10, .45);
-  color: #26251f;
-  cursor: pointer;
-  rotate: var(--r);
-  transform-origin: 50% -6px;
-}
-.tile:nth-child(2) { --r: 3deg; --dip: 4px; }
-.tile:nth-child(3) { --r: -2deg; --dip: 4px; }
-.tile:nth-child(4) { --r: 5deg; }
-/* the wooden peg it hangs from */
-.tile::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -9px;
-  width: 6px;
-  height: 13px;
-  margin-left: -3px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #b98a5c, #d4a877 55%, #b98a5c);
-  box-shadow: 0 1px 1px rgba(40, 25, 10, .35);
-}
-/* the photo: a soft tint behind each icon */
-.tile svg {
-  display: block;
-  width: 36px;
-  height: 32px;
-  padding: 3px 5px;
-  box-sizing: border-box;
-  border-radius: 1px;
-  background: #dcebc0;
-  fill: none; stroke: currentColor; stroke-width: 1.4;
-  stroke-linecap: round; stroke-linejoin: round;
-  overflow: visible;
-}
-.tile:nth-child(2) svg { background: #f1dcc6; }
-.tile:nth-child(3) svg { background: #d8e4f4; }
-.tile:nth-child(4) svg { background: #efe6cf; }
-.tile svg .fill { fill: currentColor; stroke: none; }
-.tile svg .bar { stroke-width: 2.4; }
-.tile svg .btn-a { fill: #ef5b4c; stroke: none; }
-.tile svg .btn-b { fill: #5a9fe6; stroke: none; }
-.tile svg .cream { fill: #fffbea; }
-.tile svg .grass { fill: #a3cd4c; }
-.tile svg .sky { fill: #7fbcd6; }
-.tile svg .soft { stroke: #9a957f; }
-.tile:hover, .tile:focus-visible { outline: none; animation: swing 1.4s cubic-bezier(.36, .07, .19, .97); }
-.tile:active { animation: swing .9s cubic-bezier(.36, .07, .19, .97); }
-@keyframes swing {
-  0% { transform: none; } 18% { transform: rotate(9deg); } 38% { transform: rotate(-6deg); }
-  58% { transform: rotate(3.5deg); } 78% { transform: rotate(-1.5deg); } 100% { transform: none; }
-}
-.tile::after {
-  content: attr(data-label);
-  position: absolute;
-  bottom: calc(100% + 14px);
-  left: 50%;
-  transform: translate(-50%, 4px);
-  rotate: calc(var(--r) * -1);
-  font: 500 12px/1 var(--sans);
-  color: var(--paper);
-  background: var(--ink);
-  padding: 5px 7px;
-  border-radius: 5px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s, transform .2s;
-}
-.tile:hover::after, .tile:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
-@media (prefers-reduced-motion: reduce) { .tile:hover, .tile:focus-visible, .tile:active { animation: none; } }
-
 /* Scene */
 .scene {
   position: absolute;
@@ -267,7 +167,6 @@ a { color: inherit; text-decoration: none; }
 .live .clock { display: block; font-size: 13px; opacity: .8; margin-top: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tile { transition: none; }
   .mode, .mode svg, body, .hero { transition: none; }
 }
 
@@ -488,6 +387,69 @@ h2.sub { margin: 40px 0 0; }
 [data-theme="night"] .foot s.del::after { background: var(--ink-soft); }
 @keyframes caret { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .foot s.del::after { animation: none; } }
+
+/* Hobby words in About: buttons that read as words. Hover and the link line draws under the word, then
+   a little ink tag pops out of the line's far end, tilted, like a sticker slapped on ("kick it",
+   "lift it", "press start"). Click plays the sound and the tag turns into a tiny equalizer while it
+   plays. Touch screens get a dotted line so the words still look tappable */
+.hob {
+  position: relative;
+  display: inline;
+  padding: 0 0 2px;
+  margin: 0;
+  border: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
+  transition: background-size .35s ease;
+}
+.hob:hover, .hob:focus-visible, .hob.is-playing { background-size: 100% 1px; outline: none; }
+.hob-tag {
+  position: absolute;
+  right: -10px;
+  bottom: calc(100% - 2px);
+  display: grid;
+  place-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 11px/1 var(--sans);
+  white-space: nowrap;
+  box-shadow: 0 0 0 2px var(--paper), 0 4px 10px -4px rgba(0, 0, 0, .35);
+  pointer-events: none;
+  transform-origin: 0% 100%;
+  opacity: 0;
+  transform: translate(-6px, 6px) rotate(-14deg) scale(.4);
+  transition: opacity .15s ease, transform .2s ease;
+}
+/* the tag waits for the line to reach it, then slaps on with an overshoot and a wobble */
+.hob:hover .hob-tag, .hob:focus-visible .hob-tag, .hob.is-playing .hob-tag {
+  opacity: 1;
+  transform: rotate(-6deg);
+  transition: opacity .12s ease .26s, transform .5s cubic-bezier(.34, 1.8, .5, 1) .26s;
+}
+.hob:hover .hob-tag { animation: hob-wobble 2.6s ease-in-out .9s infinite; }
+@keyframes hob-wobble { 0%, 80%, 100% { rotate: 0deg; } 86% { rotate: 7deg; } 92% { rotate: -5deg; } 96% { rotate: 2deg; } }
+.hob-tag > * { grid-area: 1 / 1; transition: opacity .2s ease, scale .2s ease; }
+.hob-tag .eq { display: flex; align-items: flex-end; gap: 2px; height: 11px; opacity: 0; scale: .6; }
+.hob-tag .eq i { width: 2px; height: 100%; border-radius: 1px; background: currentColor; transform-origin: bottom; animation: hob-eq .7s ease-in-out infinite alternate; animation-play-state: paused; }
+.hob-tag .eq i:nth-child(2) { animation-delay: -.25s; animation-duration: .55s; }
+.hob-tag .eq i:nth-child(3) { animation-delay: -.5s; animation-duration: .8s; }
+.hob-tag .eq i:nth-child(4) { animation-delay: -.1s; animation-duration: .6s; }
+@keyframes hob-eq { from { scale: 1 .25; } to { scale: 1 1; } }
+.hob.is-playing .hob-tag { animation: none; }
+.hob.is-playing .say { opacity: 0; scale: .6; }
+.hob.is-playing .eq { opacity: 1; scale: 1; }
+.hob.is-playing .eq i { animation-play-state: running; }
+@media (hover: none) {
+  .hob { background: none; text-decoration: underline dotted 1px; text-underline-offset: 4px; text-decoration-color: var(--ink-faint); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hob-tag, .hob:hover .hob-tag, .hob:focus-visible .hob-tag, .hob.is-playing .hob-tag { transform: rotate(-6deg); transition: opacity .15s ease; animation: none; }
+  .hob-tag .eq i { animation: none; scale: 1 .6; }
+}
 
 /* Wide screens: section labels (Work, About, Experience) move into a left gutter, right-aligned, quiet,
    level with the first line of what they name. The Work card stays in the text column so its label has

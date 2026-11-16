@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); try { if (localStorage.getItem("theme") === "night") document.documentElement.dataset.theme = "night"; } catch (e) {}</script>
-  <link rel="stylesheet" href="style.css?v=gutter4">
+  <link rel="stylesheet" href="style.css?v=hob2">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -34,22 +34,6 @@
       <div class="col intro">
         <h1>Rohit</h1>
         <p>I'm a UX designer at Subculture Media Tech, where I lead product design for the Native Universe app. I like turning messy, half-formed ideas into calm, usable products.</p>
-        <p class="hobbies">When I'm not designing,
-          <span class="tiles">
-            <button class="tile" data-label="Football" aria-label="Football" data-sound="sounds/siuuu.mp3">
-              <svg viewBox="0 0 24 24"><defs><clipPath id="ball"><circle cx="12" cy="12" r="9.2"/></clipPath></defs><g transform="rotate(-12 12 12)"><circle class="cream" cx="12" cy="12" r="9.2"/><g class="fill" clip-path="url(#ball)"><path d="M12 7.8l4 2.9-1.5 4.7h-5l-1.5-4.7z"/><circle cx="12" cy="1.9" r="3"/><circle cx="21.6" cy="8.9" r="3"/><circle cx="17.9" cy="20.2" r="3"/><circle cx="6.1" cy="20.2" r="3"/><circle cx="2.4" cy="8.9" r="3"/></g><path d="M12 7.8V4.9M16 10.7l2.8-.9M14.5 15.4l1.7 2.3M9.5 15.4l-1.7 2.3M8 10.7l-2.8-.9"/><circle cx="12" cy="12" r="9.2"/></g></svg>
-            </button>
-            <button class="tile" data-label="Gym" aria-label="Gym" data-sound="sounds/yeah-buddy.mp3">
-              <svg viewBox="0 0 24 24"><g transform="rotate(-20 12 12)"><path class="bar" d="M7.6 12h8.8"/><rect class="grass" x="1.6" y="9" width="2.6" height="6" rx="1"/><rect class="fill" x="4.2" y="6.4" width="3.4" height="11.2" rx="1.2"/><rect class="fill" x="16.4" y="6.4" width="3.4" height="11.2" rx="1.2"/><rect class="grass" x="19.8" y="9" width="2.6" height="6" rx="1"/></g></svg>
-            </button>
-            <button class="tile" data-label="Gaming" aria-label="Gaming" data-sound="sounds/bingo-bango.mp3">
-              <svg viewBox="0 0 24 24"><path class="cream" d="M7.2 7h9.6c2.5 0 4.2 2.3 4.7 5.4l.6 4.1c.3 1.9-1.9 3-3.2 1.6L16.6 16H7.4l-2.3 2.1c-1.3 1.4-3.5.3-3.2-1.6l.6-4.1C3 9.3 4.7 7 7.2 7z"/><path d="M7 10.4v4M5 12.4h4"/><circle class="btn-a" cx="16.6" cy="10.8" r="1.25"/><circle class="btn-b" cx="18.6" cy="13" r="1.25"/><path class="soft" d="M10.8 4.2c0 1.4 2.4 1.4 2.4 2.8"/></svg>
-            </button>
-            <button class="tile" data-label="Poetry" aria-label="Poetry">
-              <svg viewBox="0 0 24 24"><path class="cream" d="M4.6 4h8.6l3.8 3.8V21H4.6z"/><path d="M13.2 4v3.8H17"/><path class="soft" d="M7.2 11.4h6.6M7.2 14.4h5.2M7.2 17.4h3.6"/><path class="sky" d="M22 2c-4.2.6-7.2 3.6-8 8 4.2-.6 7.2-3.6 8-8z"/><path d="M22 2l-9.6 11.2"/></svg>
-            </button>
-          </span>
-        </p>
       </div>
 
       <figure class="scene" id="scene" aria-label="A painted summer hillside under a teal sky with one towering cloud, and a sandy path winding up the grassy slope past a few rocks.">
@@ -94,7 +78,7 @@
     <section class="col" id="about">
       <h2>About</h2>
       <p>I've been designing products since 2025, first a B2B product and the company's website, now the Native Universe app, while building Genzo, a component library. Mostly that means talking to people, drawing boxes, deleting boxes, and shipping.</p>
-      <p>Outside work you'll find me on a football pitch, under a barbell, a few levels deep in a game, or writing short poems in my notes app.</p>
+      <p>Outside work you'll find me on a <button class="hob" type="button" data-sound="sounds/siuuu.mp3" aria-label="football pitch (plays a sound)">football pitch<span class="hob-tag" aria-hidden="true"><span class="say">kick it</span><span class="eq"><i></i><i></i><i></i><i></i></span></span></button>, under a <button class="hob" type="button" data-sound="sounds/yeah-buddy.mp3" aria-label="barbell (plays a sound)">barbell<span class="hob-tag" aria-hidden="true"><span class="say">lift it</span><span class="eq"><i></i><i></i><i></i><i></i></span></span></button>, a few levels deep in a <button class="hob" type="button" data-sound="sounds/bingo-bango.mp3" aria-label="game (plays a sound)">game<span class="hob-tag" aria-hidden="true"><span class="say">press start</span><span class="eq"><i></i><i></i><i></i><i></i></span></span></button>, or writing short poems in my notes app.</p>
 
       <h2 class="sub">Experience</h2>
       <dl class="exp">
@@ -122,7 +106,7 @@
   </footer>
 
   <script src="loader.js?v=2"></script>
-  <script src="scene.js?v=perf2"></script>
+  <script src="scene.js?v=hob1"></script>
   <script src="work.js?v=3"></script>
 </body>
 </html>
