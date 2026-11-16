@@ -257,6 +257,10 @@ h2 {
 
 #about p { color: var(--ink-soft); margin: 0 0 14px; }
 #about p:first-of-type { color: var(--ink); }
+/* Services: two quiet columns of what I do, then one muted line on how to work together */
+.svc { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; margin: 18px 0 0; padding: 0; color: var(--ink); font-weight: 500; }
+#about .svc-ways { margin: 20px 0 14px; color: var(--ink-faint); font-size: 14px; }
+@media (max-width: 560px) { .svc { grid-template-columns: 1fr; } }
 h2.sub { margin: 40px 0 0; }
 .exp { margin: 0 0 32px; padding: 0; }
 .exp div { padding: 14px 0; border-bottom: 1px solid var(--rule); }
@@ -516,4 +520,6 @@ h2.sub { margin: 40px 0 0; }
   /* Experience: level with the first company, below the about text */
   section.col h2.sub { margin-top: 58px; }
   .exp div:first-child { margin-top: 56px; }
+  .svc { margin-top: 56px; }
+  section.col h2.sub:has(+ .svc) { margin-top: 43px; }
 }
