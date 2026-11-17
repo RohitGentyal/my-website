@@ -182,7 +182,9 @@ html { scroll-behavior: smooth; }
 .poem { overflow: visible; }
 .poem-head { margin: 0 calc(50% - 50vw); padding: 0 4vw; }
 /* the lines: a column set left, like a page of a book, centred on the paper */
-.poem .lines { width: fit-content; max-width: 100%; margin: 44px auto 0; text-align: left; font: 400 23px/1.6 var(--serif); }
+/* the poem itself is set in EB Garamond: still a Roman book face, but sturdier strokes and a taller x-height
+   than Cormorant, so long reading over the faded art stays easy (Cormorant was too thin, 2026-11-17) */
+.poem .lines { width: fit-content; max-width: 100%; margin: 44px auto 0; text-align: left; font: 400 21px/1.75 "EB Garamond", Georgia, serif; color: #232c38; font-variant-ligatures: common-ligatures; }
 .poem .stanza { margin: 0; }
 /* a line too long for the screen wraps with a hanging indent, as printed poems do, so it still reads as one */
 .poem .stanza span { display: block; text-wrap: pretty; padding-left: 1.2em; text-indent: -1.2em; }
@@ -276,7 +278,7 @@ html { scroll-behavior: smooth; }
   .quote { margin-top: 20vh; max-width: 290px; padding: 0; font-size: 17px; }
   .sec-title { font-size: 10.2vw; white-space: nowrap; }
   .sub { font-size: 19px; padding: 0 20px; }
-  .poem .lines { font-size: 20px; margin-top: 36px; }
+  .poem .lines { font-size: 18.5px; line-height: 1.7; margin-top: 36px; }
   .poem h2 { font-size: 23vw; }
   .poem-head { min-height: 70vh; }
   .poem-head .rule { margin: 0 2vw; }
