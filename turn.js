@@ -1,9 +1,9 @@
-// Page turns between the portfolio and the poems. A link marked data-turn="ink" (or "paper") floods the
+// Page turns between the portfolio and the poems. A link marked data-turn="cobalt" (or "paper", "ink") floods the
 // page with that colour from the point you clicked, in a slow circle, then opens its page. The page it
 // opens starts in that same colour and develops out of it, so the two feel like one place.
 // Reduced motion: a quick fade instead of the spreading circle.
 (() => {
-  const COLORS = { ink: "#12110e", paper: "#f5f4f0" };
+  const COLORS = { ink: "#12110e", cobalt: "#2b3ec7", paper: "#f5f4f0" };
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   document.querySelectorAll("a[data-turn]").forEach((a) => {
@@ -19,7 +19,10 @@
       cover.style.background = COLORS[a.dataset.turn] || COLORS.ink;
       document.body.appendChild(cover);
       const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-      const go = () => { location.href = a.href; };
+      let gone = false;
+      const go = () => { if (!gone) { gone = true; location.href = a.href; } };
+      // if animations are paused (a background tab, a throttled frame), go anyway once the time is up
+      setTimeout(go, calm ? 320 : 1000);
       if (calm) {
         cover.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: "forwards" }).onfinish = go;
         return;

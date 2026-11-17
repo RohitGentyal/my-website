@@ -5,29 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Poems — Rohit</title>
   <meta name="description" content="Short poems by Rohit, written in a notes app, between screens.">
-  <meta name="theme-color" content="#12110e">
+  <meta name="theme-color" content="#2b3ec7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="poems.css?v=1">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="poems.css?v=5">
 </head>
 <body>
+  <div class="ink-in" aria-hidden="true"></div>
+
   <header class="p-top">
     <a class="back" href="index.html#end" data-turn="paper"><span aria-hidden="true">←</span> Back to the hill</a>
+    <span class="p-mark">Poems</span>
+    <span class="p-year" id="year-top"></span>
   </header>
 
-  <main class="page">
-    <section class="opening">
-      <h1>Between the boxes</h1>
-      <p class="sub">Short poems from my notes app, written between screens.</p>
-    </section>
+  <section class="plate">
+    <div class="art" id="art"></div>
+    <div class="title">
+      <p class="dateline" id="dateline"></p>
+      <h1>Between<br>the boxes</h1>
+      <span class="down" aria-hidden="true">↓</span>
+    </div>
+  </section>
 
+  <section class="band">
+    <p class="sub">Short poems from my notes app, written between screens, set here in ink.</p>
+    <div class="meander" aria-hidden="true"></div>
+  </section>
+
+  <main class="page">
     <div class="poems" id="poems" aria-live="polite"></div>
   </main>
 
-  <footer class="p-foot">© <span id="yr">2026</span> Rohit</footer>
+  <footer class="p-foot">
+    <div class="sprig" id="sprig-foot"></div>
+    <p>© <span id="yr"></span> Rohit · <a class="back" href="index.html#end" data-turn="paper">Back to the hill</a></p>
+  </footer>
 
-  <script src="poems.js?v=1"></script>
-  <script src="turn.js?v=1"></script>
+  <script src="poems-art.js?v=3"></script>
+  <script src="poems.js?v=5"></script>
+  <script src="turn.js?v=3"></script>
 </body>
 </html>
