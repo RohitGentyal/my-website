@@ -169,9 +169,18 @@ html { scroll-behavior: smooth; }
 .page { max-width: 640px; margin: 0 auto; padding: 0 20px; }
 .poem { padding: 72px 0 8px; text-align: center; }
 .poem .num { display: block; margin: 0 0 14px; font: 400 18px/1 "Antonio", sans-serif; letter-spacing: .3em; color: var(--sky); padding-left: .3em; }
-/* the title is set like the poster's: thin condensed capitals, with a short sky hairline under it */
-.poem h2 { margin: 0; font: 200 clamp(56px, 8vw, 104px)/.9 "Antonio", "Arial Narrow", sans-serif; letter-spacing: .02em; text-transform: uppercase; }
-.poem h2::after { content: ""; display: block; width: 48px; height: 1px; margin: 30px auto 0; background: var(--sky); opacity: .7; }
+/* each poem opens as its own section, a title plate set like the hero's poster: a laurel sprig in sky,
+   then the title in thin condensed capitals between two hairlines with ✦, nearly a screen tall so the
+   first room of the journey has the stage to itself before the words begin */
+.poem-head { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; }
+.poem-head .head-sprig { --cobalt: var(--sky); width: 112px; margin: 0 auto 30px; }
+.poem-head .head-sprig svg { display: block; width: 100%; height: auto; }
+.poem-head .rule { margin: 0 max(0px, calc(50% - 360px)); background: rgba(44, 54, 68, .3); box-shadow: none; }
+.poem-head .rule i { color: var(--sky); }
+.poem h2 { margin: 30px 0 34px; font: 200 clamp(84px, 13vw, 200px)/.86 "Antonio", "Arial Narrow", sans-serif; letter-spacing: .01em; text-transform: uppercase; }
+/* the head is wider than the reading column, like the poster above it */
+.poem { overflow: visible; }
+.poem-head { margin: 0 calc(50% - 50vw); padding: 0 4vw; }
 /* the lines: a column set left, like a page of a book, centred on the paper */
 .poem .lines { width: fit-content; max-width: 100%; margin: 44px auto 0; text-align: left; font: 400 23px/1.6 var(--serif); }
 .poem .stanza { margin: 0; }
@@ -268,7 +277,9 @@ html { scroll-behavior: smooth; }
   .sec-title { font-size: 10.2vw; white-space: nowrap; }
   .sub { font-size: 19px; padding: 0 20px; }
   .poem .lines { font-size: 20px; margin-top: 36px; }
-  .poem h2 { font-size: 17vw; }
+  .poem h2 { font-size: 23vw; }
+  .poem-head { min-height: 70vh; }
+  .poem-head .rule { margin: 0 2vw; }
   .empty p { font-size: 26px; }
 }
 @media (prefers-reduced-motion: reduce) {

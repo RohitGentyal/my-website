@@ -1,7 +1,7 @@
 // Rohit's poems. Add one by putting an object in POEMS, newest first:
 //   { title: "Optional title", date: "2026-11-17" (optional), art: [one image name or null per stanza], lines: ["first line", "second line", "", "a new stanza"] }
-// An empty string in lines leaves a stanza break. The title and date can be left out. Poems are numbered
-// in Roman numerals (the oldest is I) and dated the Roman way ("XVII November MMXXVI").
+// An empty string in lines leaves a stanza break. The title and date can be left out. Poems carry no
+// number; each opens as its own section. A date shows the Roman way ("XVII November MMXXVI").
 // While POEMS is empty the page says so, plainly: "Nothing here yet. Some things take longer to say."
 // The hero above them is three image layers in assets/poems; the laurel sprigs come from poems-art.js.
 const POEMS = [
@@ -193,16 +193,21 @@ const POEMS = [
     const put = (box, el, i) => { el.style.setProperty("--i", i); box.appendChild(el); return el; };
     const part = (tag, cls) => { const d = document.createElement(tag); d.className = "dry " + cls; return d; };
 
+    // each poem opens as its own section, set like the hero's poster: a laurel sprig, the title between
+    // two hairlines with ✦, and no number
     const head = part("header", "poem-head");
-    const num = document.createElement("span");
-    num.className = "num";
-    num.textContent = roman(POEMS.length - k);
-    put(head, num, 0);
+    const rule = () => { const r = document.createElement("div"); r.className = "rule"; r.setAttribute("aria-hidden", "true"); r.innerHTML = "<i>✦</i><i>✦</i>"; return r; };
+    const leaf = document.createElement("div");
+    leaf.className = "head-sprig";
+    leaf.innerHTML = sprig;
+    put(head, leaf, 0);
+    put(head, rule(), 1);
     if (poem.title) {
       const h = document.createElement("h2");
       h.textContent = poem.title;
-      put(head, h, 1);
+      put(head, h, 2);
     }
+    put(head, rule(), 3);
     a.appendChild(head);
 
     // stanzas, split at the empty lines
@@ -249,7 +254,9 @@ const POEMS = [
   POEMS.forEach((poem, k) => {
     if (!poem.art) return;
     const stanzas = list.querySelectorAll(".poem")[k].querySelectorAll(".stanza");
-    poem.art.forEach((name, n) => { if (name && stanzas[n]) rooms.push({ name, el: stanzas[n] }); });
+    // the first room already shows behind the poem's opening, so the walk starts at its title
+    const opening = list.querySelectorAll(".poem")[k].querySelector(".poem-head");
+    poem.art.forEach((name, n) => { if (name && stanzas[n]) rooms.push({ name, el: stanzas[n], from: n === 0 ? opening : stanzas[n] }); });
   });
   if (rooms.length) {
     const layer = document.createElement("div");
@@ -274,11 +281,12 @@ const POEMS = [
       const vh = innerHeight;
       let moving = false;
       rooms.forEach((r) => {
-        const b = r.el.getBoundingClientRect();
-        // in as the stanza's top climbs from 95% to 50% of the screen; out as its end leaves the top 40%
-        const o = Math.min(ease((vh * 0.95 - b.top) / (vh * 0.45)), ease((b.bottom - vh * 0.05) / (vh * 0.4)));
+        // its stretch of the page: from where it starts (a stanza, or the poem's opening) to its stanza's end
+        const top = r.from.getBoundingClientRect().top, bottom = r.el.getBoundingClientRect().bottom;
+        // in as that top climbs from 95% to 50% of the screen; out as its end leaves the top 40%
+        const o = Math.min(ease((vh * 0.95 - top) / (vh * 0.45)), ease((bottom - vh * 0.05) / (vh * 0.4)));
         // where it is on its way past: 0 entering below, 1 gone above
-        const p = Math.min(1, Math.max(0, (vh - b.top) / (vh + b.height)));
+        const p = Math.min(1, Math.max(0, (vh - top) / (vh + bottom - top)));
         const k = calm ? 1 : 0.08;
         r.o += (o - r.o) * k;
         r.p += (p - r.p) * k;
