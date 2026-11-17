@@ -217,6 +217,39 @@ html { scroll-behavior: smooth; }
 .dry > * { opacity: 0; filter: blur(4px); translate: 0 6px; transition: opacity .9s ease, filter .9s ease, translate .9s cubic-bezier(.22, 1, .36, 1); transition-delay: calc(var(--i, 0) * 110ms); }
 .dry.is-in > * { opacity: 1; filter: none; translate: none; }
 
+/* the journey behind a poem (poems.js): a fixed sheet of the same paper, under everything, where each
+   stanza's artwork is printed in faintly (multiply, so its lights stay paper and only its shadows show),
+   melting at every edge. A quiet wash of paper down the middle keeps the reading column clear. The page's
+   own parts sit above it. */
+.gate { z-index: 1; }
+.sec, .page, .p-foot { position: relative; z-index: 1; }
+.journey { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--paper); overflow: hidden; }
+.journey .room {
+  position: absolute;
+  inset: -8vh 0;
+  width: 100%;
+  height: calc(100% + 16vh);
+  object-fit: cover;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, transform;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 4%, #000 26%, #000 74%, transparent 96%);
+  mask-image: linear-gradient(to bottom, transparent 4%, #000 26%, #000 74%, transparent 96%);
+}
+.journey::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(246, 243, 236, 0) 8%, rgba(246, 243, 236, .58) 34%, rgba(246, 243, 236, .58) 66%, rgba(246, 243, 236, 0) 92%);
+}
+/* the images' full strength is set here, poems.js multiplies it by how far in each one is */
+.journey .room { --peak: .3; }
+.journey .room-icarus { --peak: .26; }
+@media (max-width: 760px) {
+  .journey::after { background: rgba(246, 243, 236, .42); }
+}
+
 /* page turns (turn.js) */
 .turn { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
 
