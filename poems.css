@@ -41,8 +41,8 @@ a { color: inherit; text-decoration: none; }
   padding: 18px 28px;
   font-size: 13px;
 }
-/* the seal: an engraved wreath and R in white, its ring of text turning slowly like a coin; a touch faster
-   on hover */
+/* the seal: an engraved wreath and R in white, its ring of text turning slowly like a coin; no hover effect (my ask)
+*/
 .p-mark {
   --cobalt: #fff;
   --paper: transparent;
@@ -55,9 +55,6 @@ a { color: inherit; text-decoration: none; }
 }
 .p-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .p-mark .ring { transform-box: view-box; transform-origin: 50px 50px; animation: seal-turn 36s linear infinite; }
-.p-mark:hover .ring { animation-duration: 9s; }
-.p-mark .wreath { transform-box: view-box; transform-origin: 50px 50px; transition: transform .8s cubic-bezier(.34, 1.56, .64, 1); }
-.p-mark:hover .wreath { transform: rotate(-8deg) scale(1.04); }
 @keyframes seal-turn { to { transform: rotate(360deg); } }
 .back {
   justify-self: start;
