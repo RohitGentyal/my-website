@@ -59,9 +59,19 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
 - **Contact:** the Email / LinkedIn / Twitter row at the end of About was removed 2026-11-17 (my ask); contact lives in the hero intro (Twitter, LinkedIn, copy my email) (the nav's Email was removed too, 2026-11-17). No GitHub link.
 
-## Resume here (2026-11-02)
+## Resume here (2026-11-17)
 
-Today: added the words loader (Skiper8 style), pushed; its timings are in `loader.js`. A cursor trail was tried and removed the same day (see Rejected).
+Today was the **poems side** (all pushed; details in the Poems notes under Current state):
+- **Main site:** the About hobby line ends at "game" (the "short poems" link is gone: the poems are a secret, found only by the small line under the footer). "Back to the hill" and the browser's Back button both land at the top of the hill (`turn.js`).
+- **poems.html, the land:** hero named **ELSEWHERE** with “Every mind has a country it never speaks of. You’ve just crossed into mine.” (never quote or hint at a poem there); titles in Cinzel; the seal turns slowly with no hover effect. Below: "Written in quiet hours" and a ruled **list** of poems (thumbnail, title, first line, reading time in Roman numerals; hover shows a "✦ READ ✦" tag, no image).
+- **poem.html#<slug>, a poem:** a title plate (no number), the poem in EB Garamond, stanzas drying in, and `art` images printed faintly behind it as a parallax walk. **Mansion** is the first poem (no date; art: doors, gallery, bare paper, Icarus, lamp; a lamp glow on its last line).
+- **To add a poem:** an entry in `POEMS` in poems.js (`slug`, `title`, `cover`, `lines`, optional `art`, `light`), images in `assets/poems/<slug>/` as WebP.
+- **Images:** no Figma for this site (out of AI credits). New renders would come from another generator (ChatGPT, Gemini / ImageFX, Ideogram, Leonardo, Midjourney); I bring the files, Claude keys out backgrounds, converts to WebP and wires them in. The hero images stay as they are for now (my call).
+- **My rules for the poems side:** nothing about me being a designer; every text poetic and raw, never rhyming; Roman look (Cinzel titles, sky #3f78c6 accent, warm paper #f6f3ec); every text easy to read.
+
+## Earlier (2026-11-02)
+
+Added the words loader (Skiper8 style), pushed; its timings are in `loader.js`. A cursor trail was tried and removed the same day (see Rejected).
 
 ## Earlier (2026-10-28)
 
