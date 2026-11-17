@@ -434,20 +434,21 @@ h2.sub { margin: 40px 0 0; }
 @media (prefers-reduced-motion: reduce) { .foot s.del::after { animation: none; } }
 .foot-row { display: flex; justify-content: space-between; gap: 16px; }
 
-/* The door to the poems: one line in the italic serif under the footer. Hover draws the line under it
-   and the arrow steps forward; click floods the page with ink from the cursor (turn.js) and opens
-   poems.html */
-.verse-p { margin: 48px 0 0; }
+/* The door to the poems: a small secret under the footer, quieter than the footer itself. Hover and it
+   comes up to ink, the line draws under it and a little arrow slips out; click floods the page with ink
+   from the cursor (turn.js) and opens poems.html */
+.verse-p { margin: 56px 0 0; }
 .verse {
-  font: italic 400 19px/1.3 var(--serif);
-  color: var(--ink-soft);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  opacity: .7;
   background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
   padding-bottom: 2px;
-  transition: background-size .35s ease, color .25s ease;
+  transition: background-size .35s ease, color .25s ease, opacity .25s ease;
 }
-.verse:hover, .verse:focus-visible { background-size: 100% 1px; color: var(--ink); outline: none; }
-.verse-arrow { display: inline-block; font-style: normal; font-size: 15px; transition: translate .35s cubic-bezier(.34, 1.56, .64, 1); }
-.verse:hover .verse-arrow, .verse:focus-visible .verse-arrow { translate: 4px 0; }
+.verse:hover, .verse:focus-visible { background-size: 100% 1px; color: var(--ink); opacity: 1; outline: none; }
+.verse-arrow { display: inline-block; margin-left: 5px; opacity: 0; translate: -4px 0; transition: opacity .25s ease, translate .35s cubic-bezier(.34, 1.56, .64, 1); }
+.verse:hover .verse-arrow, .verse:focus-visible .verse-arrow { opacity: 1; translate: 0 0; }
 
 /* page turns (turn.js): a circle of ink (or paper, coming back) spreads from the click */
 .turn { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
