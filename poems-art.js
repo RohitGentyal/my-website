@@ -1,5 +1,5 @@
-// Small engraved ornaments for the poems' writings, in cobalt ink, drawn in code: a laurel sprig set
-// between poems and in the footer. (The page's hero is painted by poems-hero.js.)
+// Small engraved ornaments for the poems page, drawn in code: a laurel sprig set between poems and in the
+// footer, and the page's coin-like seal. mark() is the small wreath-and-R used on the portfolio's footer.
 const ENGRAVE = (() => {
   let seed = 11;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
@@ -56,19 +56,41 @@ const ENGRAVE = (() => {
 
   // the page's seal: an engraved laurel wreath round an italic R, ringed by a line of text set in a circle
   // (style.css turns the ring slowly). Drawn in currentColor so it can sit on the sky in white
+  // a beaded rim, like the edge of a struck Roman coin
+  const beads = (r, n, size) => {
+    let s = "";
+    for (let k = 0; k < n; k++) {
+      const t = (k / n) * Math.PI * 2;
+      s += `<circle cx="${f(50 + Math.cos(t) * r)}" cy="${f(50 + Math.sin(t) * r)}" r="${size}" fill="currentColor"/>`;
+    }
+    return s;
+  };
+  // the page's seal, struck like a Roman coin: a beaded rim, a ring of text in carved capitals (style.css
+  // turns it slowly), a laurel wreath round an upright inscriptional R. Drawn in currentColor so it can
+  // sit on the sky in white
   function seal(ring) {
     out = [];
     seed = 5;
     wreath(50, 50, 17, 8.5, 2.6);
     const id = "sealring" + Math.floor(rnd() * 1e6);
     return `<svg viewBox="0 0 100 100" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">
-      <defs><path id="${id}" d="M50 50m-38 0a38 38 0 1 1 76 0a38 38 0 1 1 -76 0"/></defs>
-      <g class="ring"><text font-family="Inter, sans-serif" font-size="8.4" font-weight="500" letter-spacing="3.1" fill="currentColor"><textPath href="#${id}" textLength="236" lengthAdjust="spacing">${ring}</textPath></text></g>
-      <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" stroke-width=".6" opacity=".7"/>
+      <defs><path id="${id}" d="M50 50m-37 0a37 37 0 1 1 74 0a37 37 0 1 1 -74 0"/></defs>
+      <g class="rim">${beads(47, 60, 0.85)}</g>
+      <g class="ring"><text font-family="Cinzel, 'Trajan Pro', Georgia, serif" font-size="8.6" font-weight="600" letter-spacing="2" fill="currentColor"><textPath href="#${id}" textLength="230" lengthAdjust="spacing">${ring}</textPath></text></g>
+      <circle cx="50" cy="50" r="28.5" fill="none" stroke="currentColor" stroke-width=".7"/>
+      <circle cx="50" cy="50" r="26.8" fill="none" stroke="currentColor" stroke-width=".35" opacity=".7"/>
       <g class="wreath">${out.join("")}</g>
-      <text x="50" y="58" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="25" font-style="italic" font-weight="500" fill="currentColor">R</text>
+      <text x="50" y="58.5" text-anchor="middle" font-family="Cinzel, 'Trajan Pro', Georgia, serif" font-size="22" font-weight="600" fill="currentColor">R</text>
     </svg>`;
   }
 
-  return { sprig, seal };
+  // a small mark of the poems for the portfolio's footer: the same wreath and R, no ring, in currentColor
+  function mark() {
+    out = [];
+    seed = 5;
+    wreath(50, 50, 30, 15, 4.6);
+    return `<svg viewBox="0 0 100 100" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">${beads(47, 40, 1.3)}<g style="--cobalt: currentColor; --paper: transparent">${out.join("")}</g><text x="50" y="63" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-size="36" font-weight="600" fill="currentColor">R</text></svg>`;
+  }
+
+  return { sprig, seal, mark };
 })();

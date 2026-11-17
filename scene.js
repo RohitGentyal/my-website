@@ -1774,11 +1774,19 @@ void main() {
 
   // ---------------------------------------------------------------- parallax
   // On scroll the sky and cloud sink slower than the hill, and the intro
-  // lifts away gently, so the scene reads as layers with depth.
-  let ticking = false;
-  function parallax() {
+  // lifts away gently, so the scene reads as layers with depth. The layers ease after the scroll rather
+  // than snapping to it (like the poems page), so the hero glides.
+  let ticking = false, eased = clamp(window.scrollY, 0, hero.offsetHeight), lastT = 0;
+  function parallax(now) {
     ticking = false;
-    const y = still.matches ? 0 : clamp(window.scrollY, 0, hero.offsetHeight);
+    const target = still.matches ? 0 : clamp(window.scrollY, 0, hero.offsetHeight);
+    // time-based, so a slow frame does not leave the sky lagging behind
+    const dt = lastT && now ? Math.min(250, now - lastT) : 16.7;
+    lastT = now || 0;
+    eased += (target - eased) * (1 - Math.pow(0.86, dt / 16.7));
+    if (Math.abs(target - eased) < 0.3) { eased = target; lastT = 0; }
+    else { ticking = true; requestAnimationFrame(parallax); }
+    const y = eased;
     skyCanvas.style.transform = `translate3d(0, ${y * 0.45}px, 0)`;
     [skyNight, celest, cloudsEl, dusk].forEach((el) => { if (el) el.style.transform = skyCanvas.style.transform; });
     if (intro) {
@@ -1796,7 +1804,7 @@ void main() {
   window.addEventListener("scroll", () => {
     if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
   }, { passive: true });
-  still.addEventListener("change", parallax);
+  still.addEventListener("change", () => { if (!ticking) { ticking = true; requestAnimationFrame(parallax); } });
   parallax();
 
   // ---------------------------------------------------------------- hobby sounds

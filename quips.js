@@ -33,7 +33,8 @@
       react: ["React, when it needs to be real", "React, components all the way"],
       framer: ["Framer, sites that ship fast", "Framer, for motion that publishes"],
     },
-    verse: ["turn the page", "the softer side", "lights low, this way"],
+    verse: ["there’s an open sky past this", "the softer side", "lights low, this way"],
+    poemDoor: ["they live under an open sky", "come and read a few", "the quiet side of me"],
     copy: { fresh: ["one click, it's yours", "no typing, promise"], done: ["copied. paste away", "it's in your clipboard"] },
     hob: {
       football: { fresh: ["kick it", "goal?", "on the pitch"], heard: ["again? fine", "encore"] },
@@ -169,7 +170,9 @@
     });
   });
 
-  // ---- the door to the poems, under the footer
+  // ---- the doors to the poems: the secret line under the footer, and "short poems" in About
+  const poemDoor = document.querySelector(".poem-door");
+  if (poemDoor) wire(poemDoor, () => LINES.poemDoor);
   const verse = document.getElementById("verse");
   if (verse) wire(verse, () => LINES.verse);
 
