@@ -177,7 +177,7 @@ html { scroll-behavior: smooth; }
 .poem-head .head-sprig svg { display: block; width: 100%; height: auto; }
 .poem-head .rule { margin: 0 max(0px, calc(50% - 360px)); background: rgba(44, 54, 68, .3); box-shadow: none; }
 .poem-head .rule i { color: var(--sky); }
-.poem h2 { margin: 30px 0 34px; font: 200 clamp(84px, 13vw, 200px)/.86 "Antonio", "Arial Narrow", sans-serif; letter-spacing: .01em; text-transform: uppercase; }
+.poem h1 { margin: 30px 0 34px; font: 200 clamp(84px, 13vw, 200px)/.86 "Antonio", "Arial Narrow", sans-serif; letter-spacing: .01em; text-transform: uppercase; }
 /* the head is wider than the reading column, like the poster above it */
 .poem { overflow: visible; }
 .poem-head { margin: 0 calc(50% - 50vw); padding: 0 4vw; }
@@ -261,6 +261,91 @@ html { scroll-behavior: smooth; }
   .journey::after { background: rgba(246, 243, 236, .42); }
 }
 
+/* the shelf of poems (poems.html): cards built like the work cards on the hill, a little wider than the
+   reading column, two to a row (one alone spans both, 16:9). Each card is a frame: a pale mat round its
+   cover, the picture slightly aged; under it the title in the poster's thin capitals with ↗, how long it
+   takes to read in Roman numerals, and its first line in italic. Hover pushes the picture in slowly (as
+   the journey does), lifts it a touch, and a frosted "Read the poem" pill follows the cursor */
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 48px 22px;
+  width: min(992px, calc(100vw - 40px));
+  margin: 64px 0 0 50%;
+  translate: -50% 0;
+  text-align: left;
+}
+.pc { display: block; color: inherit; -webkit-tap-highlight-color: transparent; }
+.pc:only-child { grid-column: 1 / -1; }
+.frame {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  padding: clamp(10px, 1.4vw, 16px);
+  border-radius: 6px;
+  background: #ebe5d9;
+  box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .12), 0 1px 2px rgba(44, 54, 68, .05);
+  transition: translate .6s cubic-bezier(.23, 1, .32, 1), box-shadow .6s ease;
+}
+.pc:only-child .frame { aspect-ratio: 16 / 9; }
+.frame .win { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 2px; background: #d9d2c4; box-shadow: 0 0 0 1px rgba(44, 54, 68, .14); }
+.frame img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(.86) sepia(.08); transform: scale(1.02); transition: transform 1.6s cubic-bezier(.22, 1, .36, 1); user-select: none; }
+.pill {
+  position: absolute;
+  left: 50%; top: 50%;
+  z-index: 2;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .45);
+  background: rgba(24, 40, 66, .5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font: 500 13px/1 var(--sans);
+  letter-spacing: .02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.85);
+  transition: opacity .3s ease, transform .45s cubic-bezier(.34, 1.56, .64, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pc:hover .frame { translate: 0 -4px; box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .14), 0 18px 40px -22px rgba(28, 40, 60, .45); }
+  .pc:hover .frame img { transform: scale(1.07); }
+  .pc:hover .pill { opacity: 1; transform: translate(-50%, calc(-50% + 30px)) scale(1); }
+  .pc:hover { cursor: pointer; }
+}
+/* touch: the pill rests at the foot of the picture */
+@media (hover: none) {
+  .pill { top: auto; bottom: 22px; opacity: 1; transform: translate(-50%, 0); }
+}
+.pc:active .frame { translate: 0 -1px; }
+.pc .cap { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 18px; }
+.pc .name { font: 200 clamp(34px, 3.4vw, 46px)/1 "Antonio", "Arial Narrow", sans-serif; letter-spacing: .02em; text-transform: uppercase; color: var(--cobalt); }
+.pc .arrow { display: inline-block; margin-left: 8px; font: 400 16px/1 var(--sans); color: var(--cobalt-faint); vertical-align: .9em; transition: translate .3s cubic-bezier(.23, 1, .32, 1), color .3s; }
+.pc:hover .arrow, .pc:focus-visible .arrow { translate: 2px -2px; color: var(--sky); }
+.pc .kind { font: 400 12px/1 "Antonio", sans-serif; letter-spacing: .28em; text-transform: uppercase; color: var(--sky); white-space: nowrap; }
+.pc .first { display: block; margin-top: 8px; font: italic 500 20px/1.4 var(--serif); color: var(--cobalt-soft); }
+.pc:focus-visible { outline: none; }
+.pc:focus-visible .frame { box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .14), 0 0 0 2px var(--sky); }
+@media (max-width: 760px) {
+  .shelf { grid-template-columns: 1fr; width: 100%; margin: 44px 0 0; translate: none; }
+  .pc:only-child .frame { aspect-ratio: 4 / 3; }
+}
+
+/* the reading page (poem.html): the bar sits on paper, so its words and the seal are in ink */
+.p-top.on-paper { color: var(--cobalt); }
+.p-top.on-paper .back { color: var(--cobalt-soft); text-shadow: none; }
+.p-top.on-paper .back:hover, .p-top.on-paper .back:focus-visible { color: var(--cobalt); }
+.p-top.on-paper .p-mark { --cobalt: #2c3644; color: #2c3644; filter: none; opacity: .85; }
+[data-view="read"] .page { padding-top: 40px; }
+[data-view="read"] .poem { padding-top: 0; }
+
+/* opening a poem: the card's picture grows into the room behind its title (a cross-page view transition) */
+@view-transition { navigation: auto; }
+::view-transition-group(*) { animation-duration: .7s; animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
 /* page turns (turn.js) */
 .turn { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
 
@@ -279,7 +364,7 @@ html { scroll-behavior: smooth; }
   .sec-title { font-size: 10.2vw; white-space: nowrap; }
   .sub { font-size: 19px; padding: 0 20px; }
   .poem .lines { font-size: 18.5px; line-height: 1.7; margin-top: 36px; }
-  .poem h2 { font-size: 23vw; }
+  .poem h1 { font-size: 23vw; }
   .poem-head { min-height: 70vh; }
   .poem-head .rule { margin: 0 2vw; }
   .empty p { font-size: 26px; }
