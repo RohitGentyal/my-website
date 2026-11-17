@@ -33,6 +33,7 @@
       react: ["React, when it needs to be real", "React, components all the way"],
       framer: ["Framer, sites that ship fast", "Framer, for motion that publishes"],
     },
+    verse: ["turn the page", "the softer side", "lights low, this way"],
     copy: { fresh: ["one click, it's yours", "no typing, promise"], done: ["copied. paste away", "it's in your clipboard"] },
     hob: {
       football: { fresh: ["kick it", "goal?", "on the pitch"], heard: ["again? fine", "encore"] },
@@ -167,6 +168,10 @@
       else fallback();
     });
   });
+
+  // ---- the door to the poems, under the footer
+  const verse = document.getElementById("verse");
+  if (verse) wire(verse, () => LINES.verse);
 
   // ---- Stack tiles: the tool's name, with an aside
   document.querySelectorAll(".stack li[data-tool]").forEach((li) => wire(li, () => LINES.stack[li.dataset.tool]));
