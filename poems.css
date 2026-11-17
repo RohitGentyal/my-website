@@ -1,4 +1,4 @@
-/* The poems page. The hero is a sunlit classical gate, painted in code (poems-hero.js) in layers that move
+/* The poems page. The hero is a sunlit classical gate, three rendered image layers (assets/poems) that move
    in a smooth parallax, with poster type over it. Below it the writings are in ink: cobalt on paper,
    Cormorant Garamond, Roman numerals, laurel sprigs, each poem's lines drying in one by one. */
 :root {
@@ -53,13 +53,14 @@ a { color: inherit; text-decoration: none; }
 .p-top .back { color: rgba(255, 255, 255, .85); text-shadow: 0 1px 8px rgba(30, 60, 110, .35); }
 .p-top .back:hover, .p-top .back:focus-visible { color: #fff; }
 
-/* the gate: painted layers (poems-hero.js), poster type, butterflies */
-.gate { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: #b9d3ee; }
-.gate .gl { position: absolute; left: 0; display: block; will-change: transform; pointer-events: none; }
-.gate .g-dove { left: 24%; top: 9%; animation: dove-glide 16s ease-in-out infinite alternate; }
-@keyframes dove-glide { from { translate: 0 0; } to { translate: 6vw -2vh; } }
-.gate .g-near { z-index: 3; }
-.gate.is-away .g-dove, .gate.is-away .bfly, .gate.is-away .w-l, .gate.is-away .w-r { animation-play-state: paused; }
+/* the gate: three rendered layers (assets/poems: the sky and mountains, the marble columns, the flowers in
+   front), each moved in its own depth by poems.js. The sky layer is taller than the hero so it can drift */
+.gate { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: #9fc3ea; }
+.gate .gl { position: absolute; left: 0; width: 100%; object-fit: cover; object-position: 50% 100%; display: block; will-change: transform; pointer-events: none; user-select: none; }
+.gate .g-sky { top: -14%; height: 114%; object-position: 50% 70%; }
+.gate .g-front { bottom: 0; height: 100%; }
+/* the flowers sit low and out of focus, like a lens close to them */
+.gate .g-near { bottom: -22%; height: 100%; z-index: 3; filter: blur(3px); opacity: .96; }
 .gate .gl, .poster { animation: appear 1.6s cubic-bezier(.22, 1, .36, 1) .2s both; }
 @keyframes appear { from { opacity: 0; } }
 
@@ -87,20 +88,6 @@ a { color: inherit; text-decoration: none; }
 }
 .sides { display: flex; justify-content: space-between; margin: 1.2vh 15vw 0; font: 500 clamp(11px, .9vw, 14px)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
 .quote { margin: 30vh auto 0; max-width: 520px; font: italic 500 clamp(17px, 1.5vw, 22px)/1.35 var(--serif); }
-
-/* butterflies: wings beat, each wanders its own loop */
-.flutter { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.bfly { position: absolute; width: 34px; height: 26px; overflow: visible; filter: drop-shadow(0 2px 3px rgba(60, 30, 10, .25)); }
-.bfly .w-l, .bfly .w-r { transform-box: view-box; transform-origin: 20px 15px; animation: flap .32s ease-in-out infinite alternate; }
-.bfly .w-r { animation-name: flap-r; }
-@keyframes flap { to { transform: scaleX(.25); } }
-@keyframes flap-r { to { transform: scaleX(.25); } }
-.b1 { left: 7%; top: 66%; animation: wander1 13s ease-in-out infinite alternate; }
-.b2 { left: 84%; top: 70%; width: 28px; animation: wander2 11s ease-in-out infinite alternate; }
-.b3 { left: 54%; top: 84%; width: 40px; animation: wander3 15s ease-in-out infinite alternate; }
-@keyframes wander1 { 0% { translate: 0 0; rotate: -10deg; } 50% { translate: 6vw -8vh; rotate: 8deg; } 100% { translate: 12vw -2vh; rotate: -4deg; } }
-@keyframes wander2 { 0% { translate: 0 0; rotate: 12deg; } 50% { translate: -5vw -10vh; rotate: -6deg; } 100% { translate: -9vw -4vh; rotate: 10deg; } }
-@keyframes wander3 { 0% { translate: 0 0; rotate: -6deg; } 50% { translate: -7vw -6vh; rotate: 10deg; } 100% { translate: 4vw -12vh; rotate: 0deg; } }
 
 /* the writings begin in ink: a solid band with a meander printed in paper under it */
 .band { margin-top: -2px; background: var(--cobalt); color: var(--paper); padding: 36px 20px 0; text-align: center; }
@@ -150,8 +137,11 @@ a { color: inherit; text-decoration: none; }
   .p-top { padding: 16px 20px; }
   .p-year { display: none; }
   .p-top { grid-template-columns: 1fr auto; }
+  .gate .g-front, .gate .g-near { width: 190vw; left: -45vw; height: auto; aspect-ratio: 16 / 9; }
+  .gate .g-near { bottom: -8%; }
+  .gate .g-front { bottom: 0; }
   .poster { top: 22%; }
-  .poster h1 { font-size: 17vw; }
+  .poster h1 { font-size: 13vw; white-space: nowrap; }
   .sides { margin: 1.2vh 8vw 0; }
   .kicker { letter-spacing: .35em; }
   .quote { margin-top: 26vh; padding: 0 24px; }
@@ -162,7 +152,7 @@ a { color: inherit; text-decoration: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .veil { animation-duration: .2s; animation-delay: 0s; }
-  .gate .gl, .poster, .gate .g-dove, .bfly, .bfly .w-l, .bfly .w-r { animation: none; }
+  .gate .gl, .poster { animation: none; }
   .poem .num, .poem h2, .poem .lines span, .poem time { opacity: 1; filter: none; translate: none; transition: none; }
   .empty p + p::after { animation: none; }
 }

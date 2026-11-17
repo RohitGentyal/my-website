@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@200;400&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="poems.css?v=7">
+  <link rel="preload" as="image" href="assets/poems/scene.webp" fetchpriority="high">
+  <link rel="stylesheet" href="poems.css?v=10">
 </head>
 <body>
   <div class="veil" aria-hidden="true"></div>
@@ -20,7 +21,10 @@
     <span class="p-year" id="year-top"></span>
   </header>
 
-  <section class="gate" id="gate" aria-label="A sunlit classical gate: marble columns framing a blue sky, snowy mountains and a green valley, with doves and white flowers">
+  <section class="gate" id="gate" aria-label="A sunlit classical gate: marble columns framing a blue sky, snowy mountains and a green valley, with white flowers in front">
+    <img class="gl g-sky" src="assets/poems/scene.webp" width="1536" height="864" alt="" fetchpriority="high" decoding="async">
+    <img class="gl g-front" src="assets/poems/columns.webp" width="1536" height="864" alt="" decoding="async">
+    <img class="gl g-near" src="assets/poems/flowers.webp" width="1536" height="864" alt="" decoding="async">
     <div class="poster" id="poster">
       <p class="kicker">Poems by Rohit</p>
       <div class="rule" aria-hidden="true"><i>✦</i><i>✦</i></div>
@@ -29,27 +33,7 @@
       <div class="sides"><span>Notes app</span><span id="year-side"></span></div>
       <p class="quote">Short poems, written between screens.</p>
     </div>
-    <div class="flutter" aria-hidden="true">
-      <svg class="bfly b1" viewBox="0 0 40 30"><use href="#bfly"/></svg>
-      <svg class="bfly b2" viewBox="0 0 40 30"><use href="#bfly"/></svg>
-      <svg class="bfly b3" viewBox="0 0 40 30"><use href="#bfly"/></svg>
-    </div>
   </section>
-
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <radialGradient id="wing" cx="35%" cy="40%" r="75%">
-        <stop offset="0" stop-color="#ffb347"/>
-        <stop offset=".65" stop-color="#e8741f"/>
-        <stop offset="1" stop-color="#7a2e0b"/>
-      </radialGradient>
-      <g id="bfly">
-        <g class="w-l"><path d="M20 15C14 2 2 0 2 8c0 5 6 8 18 7Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><path d="M20 15C12 18 5 26 9 28c4 2 10-5 11-13Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><circle cx="7" cy="6" r="1.2" fill="#fff"/><circle cx="10" cy="4" r=".9" fill="#fff"/></g>
-        <g class="w-r"><path d="M20 15C26 2 38 0 38 8c0 5-6 8-18 7Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><path d="M20 15C28 18 35 26 31 28c-4 2-10-5-11-13Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><circle cx="33" cy="6" r="1.2" fill="#fff"/><circle cx="30" cy="4" r=".9" fill="#fff"/></g>
-        <path d="M20 8v15" stroke="#2a1406" stroke-width="1.6" stroke-linecap="round"/>
-      </g>
-    </defs>
-  </svg>
 
   <section class="band">
     <p class="sub">Written in a notes app, set here in ink.</p>
@@ -66,8 +50,7 @@
   </footer>
 
   <script src="poems-art.js?v=5"></script>
-  <script src="poems-hero.js?v=1"></script>
-  <script src="poems.js?v=7"></script>
+  <script src="poems.js?v=8"></script>
   <script src="turn.js?v=4"></script>
 </body>
 </html>

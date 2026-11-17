@@ -3,7 +3,7 @@
 // An empty string in lines leaves a stanza break. The title and date can be left out. Poems are numbered
 // in Roman numerals (the oldest is I) and dated the Roman way ("XVII November MMXXVI").
 // While POEMS is empty the page shows one honest inscription saying they are on their way.
-// The hero above them is painted by poems-hero.js; the laurel sprigs come from poems-art.js.
+// The hero above them is three image layers in assets/poems; the laurel sprigs come from poems-art.js.
 const POEMS = [];
 
 (() => {
@@ -23,15 +23,12 @@ const POEMS = [];
   const sprig = ENGRAVE.sprig();
   document.getElementById("sprig-foot").innerHTML = sprig;
 
-  // ---- the gate: paint it, then move its layers in a smooth, eased parallax
+  // ---- the gate: its three image layers move in a smooth, eased parallax
   const gate = document.getElementById("gate");
   const poster = document.getElementById("poster");
-  GATE.paint(gate);
-  let resizeT = 0;
-  addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { GATE.paint(gate); kick(); }, 220); });
   // each layer: how much of the scroll it follows (far things more, so they seem to lag behind), and how
   // far it leans toward the cursor; the near flowers rise faster than the page
-  const DEPTH = { "g-sky": [0.55, 10, 5], "g-dove": [0.45, 14, 7], "g-hills": [0.38, 14, 6], "g-mid": [0.2, 22, 8], "g-front": [0.06, 34, 10], "g-near": [-0.16, 46, 14] };
+  const DEPTH = { "g-sky": [0.42, 12, 6], "g-front": [0.08, 26, 8], "g-near": [-0.18, 40, 12] };
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
   let cur = scrollY, mx = 0, my = 0, tx = 0, ty = 0, raf = 0, away = false;
