@@ -19,7 +19,6 @@ const POEMS = [];
   const now = new Date();
   document.getElementById("yr").textContent = roman(now.getFullYear());
   document.getElementById("year-top").textContent = roman(now.getFullYear());
-  document.getElementById("year-side").textContent = roman(now.getFullYear());
   const sprig = ENGRAVE.sprig();
   document.getElementById("sprig-foot").innerHTML = sprig;
 

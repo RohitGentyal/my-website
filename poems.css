@@ -2,10 +2,12 @@
    in a smooth parallax, with poster type over it. Below it the writings are in ink: cobalt on paper,
    Cormorant Garamond, Roman numerals, laurel sprigs, each poem's lines drying in one by one. */
 :root {
-  --cobalt: #2b3ec7;
-  --cobalt-soft: rgba(43, 62, 199, .72);
-  --cobalt-faint: rgba(43, 62, 199, .5);
-  --paper: #f7f5ee;
+  /* stone ink and the hero's sky, on warm marble paper (the names are older than the palette) */
+  --cobalt: #2c3644;
+  --cobalt-soft: rgba(44, 54, 68, .78);
+  --cobalt-faint: rgba(44, 54, 68, .64);
+  --sky: #2f63ad;
+  --paper: #f6f3ec;
   --serif: "Cormorant Garamond", Georgia, serif;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: light;
@@ -21,7 +23,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
-::selection { background: var(--cobalt); color: var(--paper); }
+::selection { background: #cfe0f3; color: var(--cobalt); }
 
 /* arriving: a soft veil of sky lifts as the scene appears */
 .veil { position: fixed; inset: 0; z-index: 90; background: #e8eff6; pointer-events: none; animation: lift 1.4s cubic-bezier(.65, 0, .35, 1) .15s both; }
@@ -41,7 +43,7 @@ a { color: inherit; text-decoration: none; }
 }
 .p-mark { font: italic 500 20px/1 var(--serif); }
 .p-year { justify-self: end; font: 400 15px/1 "Antonio", sans-serif; letter-spacing: .12em; }
-.p-top .p-mark { text-shadow: 0 1px 8px rgba(30, 60, 110, .35); }
+.p-top .p-mark, .p-top .p-year { text-shadow: 0 1px 2px rgba(16, 34, 62, .6), 0 0 12px rgba(16, 34, 62, .4); }
 .back {
   justify-self: start;
   color: var(--cobalt-soft);
@@ -50,12 +52,27 @@ a { color: inherit; text-decoration: none; }
   transition: background-size .35s ease, color .25s ease;
 }
 .back:hover, .back:focus-visible { background-size: 100% 1px; color: var(--cobalt); outline: none; }
-.p-top .back { color: rgba(255, 255, 255, .85); text-shadow: 0 1px 8px rgba(30, 60, 110, .35); }
+.p-top .back { color: #fff; text-shadow: 0 1px 2px rgba(16, 34, 62, .6), 0 0 12px rgba(16, 34, 62, .4); }
 .p-top .back:hover, .p-top .back:focus-visible { color: #fff; }
 
 /* the gate: three rendered layers (assets/poems: the sky and mountains, the marble columns, the flowers in
    front), each moved in its own depth by poems.js. The sky layer is taller than the hero so it can drift */
 .gate { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: #9fc3ea; }
+/* legibility: a soft shade of sky at the top behind the bar, and a quiet darkening behind the title and the
+   line under it, so white type always has something to sit on; it reads as light, not as a box */
+.gate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(16, 34, 62, .42), rgba(16, 34, 62, 0) 16%),
+    radial-gradient(60% 34% at 50% 40%, rgba(16, 34, 62, .26), rgba(16, 34, 62, 0) 70%),
+    radial-gradient(40% 16% at 50% 79%, rgba(16, 34, 62, .3), rgba(16, 34, 62, 0) 75%);
+}
+/* the steps and flowers soften into the marble paper below, no hard edge */
+.gate::after { content: ""; position: absolute; inset: auto 0 0 0; height: 16%; z-index: 4; background: linear-gradient(to bottom, rgba(246, 243, 236, 0), var(--paper)); pointer-events: none; }
 .gate .gl { position: absolute; left: 0; width: 100%; object-fit: cover; object-position: 50% 100%; display: block; will-change: transform; pointer-events: none; user-select: none; }
 .gate .g-sky { top: -14%; height: 114%; object-position: 50% 70%; }
 .gate .g-front { bottom: 0; height: 100%; }
@@ -73,11 +90,13 @@ a { color: inherit; text-decoration: none; }
   top: 26%;
   color: #fff;
   text-align: center;
-  text-shadow: 0 2px 18px rgba(30, 60, 110, .25);
+  text-shadow: 0 1px 2px rgba(16, 34, 62, .35), 0 2px 22px rgba(16, 34, 62, .3);
   will-change: transform, opacity;
 }
-.kicker { margin: 0 0 1.4vh; font: 400 clamp(11px, .95vw, 15px)/1 var(--sans); letter-spacing: .5em; text-transform: uppercase; padding-left: .5em; }
-.rule { position: relative; height: 1px; margin: 0 4vw; background: rgba(255, 255, 255, .55); }
+.poster .kicker { text-shadow: 0 1px 3px rgba(20, 40, 70, .55), 0 0 18px rgba(20, 40, 70, .35); }
+.kicker { margin: 0 0 1.4vh; font: 500 clamp(12px, 1vw, 15px)/1 var(--sans); letter-spacing: .5em; text-transform: uppercase; padding-left: .5em; }
+.rule { position: relative; height: 1px; margin: 0 4vw; background: rgba(255, 255, 255, .7); box-shadow: 0 0 6px rgba(16, 34, 62, .25); }
+.poster { z-index: 5; }
 .rule i { position: absolute; top: -.62em; font-style: normal; font-size: 12px; line-height: 1; }
 .rule i:first-child { left: 16%; } .rule i:last-child { right: 16%; }
 .poster h1 {
@@ -86,36 +105,59 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: -0.01em;
   text-transform: uppercase;
 }
-.sides { display: flex; justify-content: space-between; margin: 1.2vh 15vw 0; font: 500 clamp(11px, .9vw, 14px)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
-.quote { margin: 30vh auto 0; max-width: 520px; font: italic 500 clamp(17px, 1.5vw, 22px)/1.35 var(--serif); }
-
-/* the writings begin in ink: a solid band with a meander printed in paper under it */
-.band { margin-top: -2px; background: var(--cobalt); color: var(--paper); padding: 36px 20px 0; text-align: center; }
-.sub { margin: 0 auto; max-width: 520px; font: italic 400 24px/1.35 var(--serif); }
-.meander {
-  height: 22px;
-  margin: 44px -20px 0;
-  border-top: 1.5px solid var(--paper);
-  border-bottom: 1.5px solid var(--paper);
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='22' viewBox='0 0 28 22'%3E%3Cpath d='M0 17H20V5H8V13H14V9' fill='none' stroke='%23f7f5ee' stroke-width='1.6' stroke-linecap='square'/%3E%3C/svg%3E") repeat-x 0 0 / 28px 22px;
-  background-color: var(--cobalt);
+.sides { text-shadow: 0 1px 2px rgba(16, 34, 62, .6), 0 0 14px rgba(16, 34, 62, .4);
+  display: flex; justify-content: space-between; margin: 1.2vh 15vw 0; font: 500 clamp(12px, 1vw, 15px)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
+/* what this side of the site is, said plainly, then the way in */
+.quote { text-wrap: balance; margin: 24vh auto 0; max-width: 560px; font: italic 500 clamp(18px, 1.6vw, 24px)/1.35 var(--serif); text-shadow: 0 1px 2px rgba(20, 40, 70, .45), 0 2px 22px rgba(20, 40, 70, .4); }
+.read {
+  position: relative;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  background: rgba(24, 40, 66, .38);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font: 500 14px/1 var(--sans);
+  letter-spacing: .02em;
+  text-shadow: none;
+  transition: background-color .25s ease, translate .35s cubic-bezier(.34, 1.56, .64, 1);
 }
+.read:hover, .read:focus-visible { background: rgba(24, 40, 66, .55); translate: 0 -2px; outline: none; }
+.read span { display: inline-block; transition: translate .35s cubic-bezier(.34, 1.56, .64, 1); }
+.read:hover span { translate: 0 2px; }
+html { scroll-behavior: smooth; }
+#poems-top { scroll-margin-top: 0; }
+
+/* the writings: a section header set like the poster above (spaced kicker, hairlines with ✦, the thin
+   condensed title), in stone ink on the marble paper the hero fades into */
+.sec { padding: 40px 0 8px; text-align: center; color: var(--cobalt); scroll-margin-top: 24px; }
+.sec .kicker { color: var(--sky); }
+.sec .rule { margin: 0 max(20px, calc(50% - 300px)); background: rgba(44, 54, 68, .28); box-shadow: none; }
+.sec .rule i { color: var(--sky); }
+.sec-title { margin: 18px 0 22px; font: 200 clamp(44px, 6vw, 84px)/.92 "Antonio", "Arial Narrow", sans-serif; letter-spacing: -0.005em; text-transform: uppercase; }
+.sub { text-wrap: balance; margin: 22px auto 0; max-width: 520px; font: italic 400 22px/1.4 var(--serif); color: var(--cobalt-soft); }
 
 /* the poems */
 .page { max-width: 640px; margin: 0 auto; padding: 0 20px; }
 .poem { padding: 72px 0 8px; text-align: center; }
-.poem .num { display: block; margin: 0 0 10px; font: 500 22px/1 var(--serif); letter-spacing: .08em; }
+.poem .num { display: block; margin: 0 0 12px; font: 400 18px/1 "Antonio", sans-serif; letter-spacing: .3em; color: var(--sky); padding-left: .3em; }
 .poem h2 { margin: 0 0 26px; font: italic 500 32px/1.15 var(--serif); }
 .poem .lines { margin: 0; font: 400 25px/1.55 var(--serif); }
 .poem .lines span { display: block; }
 .poem .lines .gap { height: .7em; }
-.poem time { display: block; margin-top: 26px; font: italic 400 17px/1 var(--serif); color: var(--cobalt-faint); }
-.sprig { width: 120px; margin: 56px auto 0; }
+.poem time { display: block; margin-top: 26px; font: 400 12px/1 "Antonio", sans-serif; letter-spacing: .28em; text-transform: uppercase; color: var(--cobalt-faint); }
+.sprig { --cobalt: var(--sky); width: 120px; margin: 56px auto 0; }
 .sprig svg { display: block; width: 100%; height: auto; }
 
 /* before any poem is here: one honest inscription and a notes-app caret */
 .empty { padding: 88px 0 16px; text-align: center; }
-.empty .num { display: block; margin-bottom: 18px; font: 500 22px/1 var(--serif); letter-spacing: .08em; }
+.empty .num { display: block; margin-bottom: 18px; font: 400 18px/1 "Antonio", sans-serif; letter-spacing: .3em; color: var(--sky); padding-left: .3em; }
 .empty p { margin: 0; font: italic 400 30px/1.35 var(--serif); }
 .empty p + p { margin-top: 6px; font-size: 22px; color: var(--cobalt-soft); }
 .empty p + p::after { content: ""; display: inline-block; width: 1px; height: .95em; margin-left: 4px; vertical-align: -0.12em; background: currentColor; animation: caret 1.1s steps(1, end) infinite; }
@@ -144,8 +186,9 @@ a { color: inherit; text-decoration: none; }
   .poster h1 { font-size: 13vw; white-space: nowrap; }
   .sides { margin: 1.2vh 8vw 0; }
   .kicker { letter-spacing: .35em; }
-  .quote { margin-top: 26vh; padding: 0 24px; }
-  .sub { font-size: 21px; }
+  .quote { margin-top: 20vh; max-width: 290px; padding: 0; font-size: 17px; }
+  .sec-title { font-size: 10.2vw; white-space: nowrap; }
+  .sub { font-size: 19px; padding: 0 20px; }
   .poem .lines { font-size: 22px; }
   .poem h2 { font-size: 28px; }
   .empty p { font-size: 26px; }
