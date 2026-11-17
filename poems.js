@@ -2,7 +2,7 @@
 //   { title: "Optional title", date: "2026-11-17", lines: ["first line", "second line", "", "a new stanza"] }
 // An empty string in lines leaves a stanza break. The title and date can be left out. Poems are numbered
 // in Roman numerals (the oldest is I) and dated the Roman way ("XVII November MMXXVI").
-// While POEMS is empty the page shows one honest inscription saying they are on their way.
+// While POEMS is empty the page says so, plainly: "Nothing here yet. Some things take longer to say."
 // The hero above them is three image layers in assets/poems; the laurel sprigs come from poems-art.js.
 const POEMS = [];
 
@@ -63,7 +63,7 @@ const POEMS = [];
   if (!POEMS.length) {
     const e = document.createElement("div");
     e.className = "empty";
-    e.innerHTML = '<span class="num">I</span><p>The first poems are still drying.</p><p>Come back soon.</p>';
+    e.innerHTML = '<span class="num">I</span><p>Nothing here yet.</p><p>Some things take longer to say.</p>';
     list.appendChild(e);
     return;
   }
