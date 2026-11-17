@@ -1640,136 +1640,27 @@ void main() {
     g.restore();
   }
 
-  // A honeybee drawn like a small natural-history plate, at the same size as before (head to sting
-  // ~15 units): a tapered amber abdomen with curved dark bands and a soft top light, a fuzzy thorax,
-  // a dark head with a big compound eye and elbowed antennae, three thin legs (the back one carrying
-  // a pollen basket), and two pairs of veined glassy wings that beat from the shoulder.
-  function beeWing(g, cx, cy, rx, ry, rot, a) {
-    g.save();
-    g.translate(cx, cy);
-    g.rotate(rot);
-    const w = g.createLinearGradient(0, -ry, 0, ry);
-    w.addColorStop(0, `rgba(255, 255, 255, ${0.5 * a})`);
-    w.addColorStop(1, `rgba(214, 226, 246, ${0.16 * a})`);
-    g.fillStyle = w;
-    g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = `rgba(52, 46, 58, ${0.32 * a})`;
-    g.lineWidth = 0.18;
-    g.stroke();
-    // two veins running out from the root
-    g.strokeStyle = `rgba(52, 46, 58, ${0.22 * a})`;
-    g.beginPath();
-    g.moveTo(rx * 0.9, 0); g.quadraticCurveTo(0, -ry * 0.25, -rx * 0.75, -ry * 0.35);
-    g.moveTo(rx * 0.9, 0); g.quadraticCurveTo(0, ry * 0.35, -rx * 0.55, ry * 0.45);
-    g.stroke();
-    g.restore();
-  }
-
   function drawHoneybee(g, b, now) {
     const k = 1.55 * S;
     g.save();
     g.translate(b.x, b.y);
     g.rotate(b.tilt);
     g.scale(b.face * k, k);
-    const flap = still.matches ? 0.8 : 0.35 + 0.65 * Math.abs(Math.sin(now * 0.05 + b.phase));
-    g.lineCap = "round";
-    g.lineJoin = "round";
-
-    // far wings, behind the body; they beat from the shoulder (1.2, -2)
-    g.save(); g.translate(1.2, -2); g.scale(1, flap); g.translate(-1.2, 2);
-    beeWing(g, 0, -4.4, 3.8, 1.35, -0.85, 0.5);
+    const flap = still.matches ? 0.8 : 0.45 + 0.55 * Math.abs(Math.sin(now * 0.05 + b.phase));
+    g.fillStyle = "rgba(255, 255, 255, .55)";
+    g.beginPath(); g.ellipse(-1.5, -4, 2.6, 4.4 * flap, -0.5, 0, Math.PI * 2); g.fill();
+    // body with two stripes, a dark head and a tiny sting
+    g.fillStyle = "#f6c23e";
+    g.beginPath(); g.ellipse(0, 0, 5.4, 3.7, 0, 0, Math.PI * 2); g.fill();
+    g.save(); g.clip();
+    g.fillStyle = "#3b2d1f";
+    g.fillRect(-2.2, -4, 1.5, 8); g.fillRect(0.9, -4, 1.5, 8);
     g.restore();
-
-    // legs: thin and dark, the back one with its pollen basket
-    g.strokeStyle = "#2a1d12";
-    g.lineWidth = 0.34;
-    g.beginPath();
-    g.moveTo(2.6, 1.8); g.lineTo(3.2, 3.6); g.lineTo(3.9, 4.3);
-    g.moveTo(1.5, 2.1); g.lineTo(1.3, 4.1); g.lineTo(0.7, 4.8);
-    g.moveTo(0.3, 2.2); g.lineTo(-1.1, 3.9); g.lineTo(-2.4, 4.6);
-    g.stroke();
-    g.fillStyle = "#eba23a";
-    g.beginPath(); g.ellipse(-1.3, 4.0, 0.7, 0.5, -0.5, 0, Math.PI * 2); g.fill();
-
-    // abdomen: a teardrop tapering to the sting, amber with a light along its back
-    g.beginPath();
-    g.moveTo(0.6, -2.5);
-    g.bezierCurveTo(-2.6, -3.5, -6.0, -1.8, -6.9, 0.5);
-    g.bezierCurveTo(-6.0, 2.6, -2.6, 3.6, 0.6, 2.6);
-    g.closePath();
-    const body = g.createLinearGradient(0, -3.2, 0, 3.2);
-    body.addColorStop(0, "#fbd877");
-    body.addColorStop(0.45, "#eeb138");
-    body.addColorStop(1, "#b9781c");
-    g.fillStyle = body;
-    g.fill();
-    g.save();
-    g.clip();
-    // curved dark bands, softer at their edges
-    g.beginPath();
-    for (const x of [-1.7, -3.6, -5.3]) { g.moveTo(x + 0.5, -4); g.quadraticCurveTo(x - 0.5, 0.3, x + 0.5, 4); }
-    g.strokeStyle = "rgba(42, 29, 18, .22)";
-    g.lineWidth = 1.25;
-    g.stroke();
-    g.strokeStyle = "rgba(42, 29, 18, .88)";
-    g.lineWidth = 0.75;
-    g.stroke();
-    // the tip goes dark
-    g.fillStyle = "#2a1d12";
-    g.beginPath(); g.ellipse(-7.1, 0.5, 1.2, 1.8, 0, 0, Math.PI * 2); g.fill();
-    // a soft sheen along the back
-    g.fillStyle = "rgba(255, 246, 214, .45)";
-    g.beginPath(); g.ellipse(-2.6, -1.7, 3.1, 0.7, -0.08, 0, Math.PI * 2); g.fill();
-    g.restore();
-    g.strokeStyle = "rgba(92, 56, 14, .55)";
-    g.lineWidth = 0.28;
-    g.stroke();
-    // sting
-    g.fillStyle = "#2a1d12";
-    g.beginPath(); g.moveTo(-6.8, 0.2); g.lineTo(-7.9, 0.6); g.lineTo(-6.8, 0.9); g.fill();
-
-    // thorax: round and fuzzy, hairs bristling at its edge
-    const fur = g.createRadialGradient(1.3, -0.9, 0.3, 1.6, 0, 2.7);
-    fur.addColorStop(0, "#d79b45");
-    fur.addColorStop(1, "#7a4d1c");
-    g.fillStyle = fur;
-    g.beginPath(); g.arc(1.6, 0, 2.55, 0, Math.PI * 2); g.fill();
-    // a soft fringe of hair, short and uneven, not a sunburst
-    g.strokeStyle = "rgba(226, 178, 104, .42)";
-    g.lineWidth = 0.22;
-    g.beginPath();
-    for (let i = 0; i < 30; i++) {
-      const a = (i / 30) * Math.PI * 2 + (i % 2) * 0.09;
-      const r = 2.25;
-      const l = 0.28 + ((i * 7) % 5) * 0.06;
-      g.moveTo(1.6 + Math.cos(a) * r, Math.sin(a) * r);
-      g.lineTo(1.6 + Math.cos(a + 0.12) * (r + l), Math.sin(a + 0.12) * (r + l));
-    }
-    g.stroke();
-
-    // head, eye and antennae
-    g.fillStyle = "#2a1d12";
-    g.beginPath(); g.ellipse(4.55, 0.45, 1.5, 1.8, 0.15, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#130d09";
-    g.beginPath(); g.ellipse(4.85, -0.05, 0.85, 1.25, 0.2, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "rgba(255, 255, 255, .75)";
-    g.beginPath(); g.arc(5.1, -0.6, 0.24, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = "#2a1d12";
-    g.lineWidth = 0.26;
-    g.beginPath();
-    g.moveTo(5.3, -1.2); g.lineTo(5.8, -2.5); g.quadraticCurveTo(6.3, -2.9, 6.9, -2.7);
-    g.stroke();
-    g.strokeStyle = "rgba(42, 29, 18, .55)";
-    g.beginPath();
-    g.moveTo(4.9, -1.4); g.lineTo(5.2, -2.7); g.quadraticCurveTo(5.7, -3.2, 6.3, -3.1);
-    g.stroke();
-
-    // near wings, over the body
-    g.save(); g.translate(1.2, -2); g.scale(1, flap); g.translate(-1.2, 2);
-    beeWing(g, -1.0, -4.1, 4.3, 1.5, -0.6, 1);
-    beeWing(g, -0.4, -3.0, 2.6, 0.95, -0.32, 0.8);
-    g.restore();
-
+    g.fillStyle = "#3b2d1f";
+    g.beginPath(); g.arc(5.2, 0.3, 2.3, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(-5.2, -0.6); g.lineTo(-7.4, 0.3); g.lineTo(-5.2, 1.1); g.fill();
+    g.fillStyle = "rgba(255, 255, 255, .8)";
+    g.beginPath(); g.ellipse(1, -4.4, 2.3, 4 * flap, 0.35, 0, Math.PI * 2); g.fill();
     g.restore();
   }
 
