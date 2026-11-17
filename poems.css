@@ -1,8 +1,6 @@
-/* The poems, in ink. One colour only: cobalt ink on paper, like a copperplate print. A classical plate
-   (poems-art.js) frames the title; its ground floods into a band of solid ink with a meander running
-   under it; the poems sit below on paper in Cormorant Garamond, numbered in Roman numerals and parted by
-   laurel sprigs. The page develops out of the ink it was opened with, and each poem's lines dry in one
-   by one as you reach them. */
+/* The poems page. The hero is a sunlit classical gate, painted in code (poems-hero.js) in layers that move
+   in a smooth parallax, with poster type over it. Below it the writings are in ink: cobalt on paper,
+   Cormorant Garamond, Roman numerals, laurel sprigs, each poem's lines drying in one by one. */
 :root {
   --cobalt: #2b3ec7;
   --cobalt-soft: rgba(43, 62, 199, .72);
@@ -25,14 +23,16 @@ body {
 a { color: inherit; text-decoration: none; }
 ::selection { background: var(--cobalt); color: var(--paper); }
 
-/* arriving: the ink the portfolio flooded with lifts away and the plate prints through it */
-.ink-in { position: fixed; inset: 0; z-index: 90; background: var(--cobalt); pointer-events: none; animation: ink-lift 1.3s cubic-bezier(.65, 0, .35, 1) .1s both; }
-@keyframes ink-lift { to { opacity: 0; visibility: hidden; } }
+/* arriving: a soft veil of sky lifts as the scene appears */
+.veil { position: fixed; inset: 0; z-index: 90; background: #e8eff6; pointer-events: none; animation: lift 1.4s cubic-bezier(.65, 0, .35, 1) .15s both; }
+@keyframes lift { to { opacity: 0; visibility: hidden; } }
 
 /* top bar, set like a printer's running head */
 .p-top {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 5;
+  color: #fff;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -40,7 +40,8 @@ a { color: inherit; text-decoration: none; }
   font-size: 13px;
 }
 .p-mark { font: italic 500 20px/1 var(--serif); }
-.p-year { justify-self: end; font: 500 15px/1 var(--serif); letter-spacing: .04em; color: var(--cobalt-soft); }
+.p-year { justify-self: end; font: 400 15px/1 "Antonio", sans-serif; letter-spacing: .12em; }
+.p-top .p-mark { text-shadow: 0 1px 8px rgba(30, 60, 110, .35); }
 .back {
   justify-self: start;
   color: var(--cobalt-soft);
@@ -49,40 +50,59 @@ a { color: inherit; text-decoration: none; }
   transition: background-size .35s ease, color .25s ease;
 }
 .back:hover, .back:focus-visible { background-size: 100% 1px; color: var(--cobalt); outline: none; }
+.p-top .back { color: rgba(255, 255, 255, .85); text-shadow: 0 1px 8px rgba(30, 60, 110, .35); }
+.p-top .back:hover, .p-top .back:focus-visible { color: #fff; }
 
-/* the plate */
-.plate { position: relative; margin: 0 auto; max-width: 1600px; }
-/* the plate is five layers in depth (poems-art.js); poems.js moves them in parallax */
-.art { position: relative; aspect-ratio: 16 / 9; overflow: hidden; animation: print 1.6s cubic-bezier(.22, 1, .36, 1) .35s both; }
-.art .layer { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; will-change: transform; }
-/* life in the plate: the sea sways, the galley rides it, the birds glide */
-.swell { animation: swell 9s ease-in-out infinite alternate; }
-@keyframes swell { from { transform: translateX(-7px); } to { transform: translateX(7px); } }
-.bob { transform-box: fill-box; transform-origin: 50% 90%; animation: bob-ship 5.5s ease-in-out infinite; }
-@keyframes bob-ship { 0%, 100% { transform: translateY(0) rotate(-.8deg); } 50% { transform: translateY(4px) rotate(.8deg); } }
-.birds { animation: glide 14s ease-in-out infinite alternate; }
-@keyframes glide { from { transform: translate(-10px, 4px); } to { transform: translate(14px, -6px); } }
-@keyframes print { from { opacity: 0; filter: blur(5px); scale: 1.015; } }
-.title {
+/* the gate: painted layers (poems-hero.js), poster type, butterflies */
+.gate { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: #b9d3ee; }
+.gate .gl { position: absolute; left: 0; display: block; will-change: transform; pointer-events: none; }
+.gate .g-dove { left: 24%; top: 9%; animation: dove-glide 16s ease-in-out infinite alternate; }
+@keyframes dove-glide { from { translate: 0 0; } to { translate: 6vw -2vh; } }
+.gate .g-near { z-index: 3; }
+.gate.is-away .g-dove, .gate.is-away .bfly, .gate.is-away .w-l, .gate.is-away .w-r { animation-play-state: paused; }
+.gate .gl, .poster { animation: appear 1.6s cubic-bezier(.22, 1, .36, 1) .2s both; }
+@keyframes appear { from { opacity: 0; } }
+
+/* poster type over the scene, after a movie-poster layout: kicker, hairlines with sparkles, a huge thin
+   condensed title, two side labels, a quiet line */
+.poster {
   position: absolute;
-  left: 50%;
-  top: 23%;
-  translate: -50% 0;
-  width: 42%;
+  z-index: 2;
+  left: 0; right: 0;
+  top: 26%;
+  color: #fff;
   text-align: center;
-  animation: print 1.4s cubic-bezier(.22, 1, .36, 1) .8s both;
+  text-shadow: 0 2px 18px rgba(30, 60, 110, .25);
+  will-change: transform, opacity;
 }
-.dateline { margin: 0 0 1.1vw; font: italic 400 clamp(14px, 1.25vw, 20px)/1 var(--serif); }
-.title h1 {
-  margin: 0;
-  font: 500 clamp(40px, 6.4vw, 108px)/.9 var(--serif);
-  letter-spacing: -0.015em;
+.kicker { margin: 0 0 1.4vh; font: 400 clamp(11px, .95vw, 15px)/1 var(--sans); letter-spacing: .5em; text-transform: uppercase; padding-left: .5em; }
+.rule { position: relative; height: 1px; margin: 0 4vw; background: rgba(255, 255, 255, .55); }
+.rule i { position: absolute; top: -.62em; font-style: normal; font-size: 12px; line-height: 1; }
+.rule i:first-child { left: 16%; } .rule i:last-child { right: 16%; }
+.poster h1 {
+  margin: 1.2vh 0 .4vh;
+  font: 200 clamp(58px, 11.5vw, 200px)/.86 "Antonio", "Arial Narrow", sans-serif;
+  letter-spacing: -0.01em;
   text-transform: uppercase;
 }
-.down { display: none; margin-top: 1.6vw; font-size: clamp(16px, 1.4vw, 22px); animation: bob 2.4s ease-in-out 2.4s infinite; }
-@keyframes bob { 50% { translate: 0 5px; } }
+.sides { display: flex; justify-content: space-between; margin: 1.2vh 15vw 0; font: 500 clamp(11px, .9vw, 14px)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
+.quote { margin: 30vh auto 0; max-width: 520px; font: italic 500 clamp(17px, 1.5vw, 22px)/1.35 var(--serif); }
 
-/* the ink band: the plate's flood carries on as a solid band, a meander printed in paper under it */
+/* butterflies: wings beat, each wanders its own loop */
+.flutter { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.bfly { position: absolute; width: 34px; height: 26px; overflow: visible; filter: drop-shadow(0 2px 3px rgba(60, 30, 10, .25)); }
+.bfly .w-l, .bfly .w-r { transform-box: view-box; transform-origin: 20px 15px; animation: flap .32s ease-in-out infinite alternate; }
+.bfly .w-r { animation-name: flap-r; }
+@keyframes flap { to { transform: scaleX(.25); } }
+@keyframes flap-r { to { transform: scaleX(.25); } }
+.b1 { left: 7%; top: 66%; animation: wander1 13s ease-in-out infinite alternate; }
+.b2 { left: 84%; top: 70%; width: 28px; animation: wander2 11s ease-in-out infinite alternate; }
+.b3 { left: 54%; top: 84%; width: 40px; animation: wander3 15s ease-in-out infinite alternate; }
+@keyframes wander1 { 0% { translate: 0 0; rotate: -10deg; } 50% { translate: 6vw -8vh; rotate: 8deg; } 100% { translate: 12vw -2vh; rotate: -4deg; } }
+@keyframes wander2 { 0% { translate: 0 0; rotate: 12deg; } 50% { translate: -5vw -10vh; rotate: -6deg; } 100% { translate: -9vw -4vh; rotate: 10deg; } }
+@keyframes wander3 { 0% { translate: 0 0; rotate: -6deg; } 50% { translate: -7vw -6vh; rotate: 10deg; } 100% { translate: 4vw -12vh; rotate: 0deg; } }
+
+/* the writings begin in ink: a solid band with a meander printed in paper under it */
 .band { margin-top: -2px; background: var(--cobalt); color: var(--paper); padding: 36px 20px 0; text-align: center; }
 .sub { margin: 0 auto; max-width: 520px; font: italic 400 24px/1.35 var(--serif); }
 .meander {
@@ -130,19 +150,19 @@ a { color: inherit; text-decoration: none; }
   .p-top { padding: 16px 20px; }
   .p-year { display: none; }
   .p-top { grid-template-columns: 1fr auto; }
-  .plate { display: flex; flex-direction: column; }
-  .title { order: -1; position: static; translate: none; width: auto; padding: 28px 20px 24px; }
-  .dateline { margin-bottom: 12px; font-size: 16px; }
-  .title h1 { font-size: 48px; }
-  .down { display: none; }
+  .poster { top: 22%; }
+  .poster h1 { font-size: 17vw; }
+  .sides { margin: 1.2vh 8vw 0; }
+  .kicker { letter-spacing: .35em; }
+  .quote { margin-top: 26vh; padding: 0 24px; }
   .sub { font-size: 21px; }
   .poem .lines { font-size: 22px; }
   .poem h2 { font-size: 28px; }
   .empty p { font-size: 26px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ink-in { animation-duration: .2s; animation-delay: 0s; }
-  .art, .title, .down, .swell, .bob, .birds { animation: none; }
+  .veil { animation-duration: .2s; animation-delay: 0s; }
+  .gate .gl, .poster, .gate .g-dove, .bfly, .bfly .w-l, .bfly .w-r { animation: none; }
   .poem .num, .poem h2, .poem .lines span, .poem time { opacity: 1; filter: none; translate: none; transition: none; }
   .empty p + p::after { animation: none; }
 }

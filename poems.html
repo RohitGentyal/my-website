@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Poems — Rohit</title>
   <meta name="description" content="Short poems by Rohit, written in a notes app, between screens.">
-  <meta name="theme-color" content="#2b3ec7">
+  <meta name="theme-color" content="#3f78c6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="poems.css?v=5">
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@200;400&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="poems.css?v=7">
 </head>
 <body>
-  <div class="ink-in" aria-hidden="true"></div>
+  <div class="veil" aria-hidden="true"></div>
 
   <header class="p-top">
     <a class="back" href="index.html#end" data-turn="paper"><span aria-hidden="true">←</span> Back to the hill</a>
@@ -20,17 +20,39 @@
     <span class="p-year" id="year-top"></span>
   </header>
 
-  <section class="plate">
-    <div class="art" id="art"></div>
-    <div class="title">
-      <p class="dateline" id="dateline"></p>
-      <h1>Between<br>the boxes</h1>
-      <span class="down" aria-hidden="true">↓</span>
+  <section class="gate" id="gate" aria-label="A sunlit classical gate: marble columns framing a blue sky, snowy mountains and a green valley, with doves and white flowers">
+    <div class="poster" id="poster">
+      <p class="kicker">Poems by Rohit</p>
+      <div class="rule" aria-hidden="true"><i>✦</i><i>✦</i></div>
+      <h1>Between the boxes</h1>
+      <div class="rule" aria-hidden="true"><i>✦</i><i>✦</i></div>
+      <div class="sides"><span>Notes app</span><span id="year-side"></span></div>
+      <p class="quote">Short poems, written between screens.</p>
+    </div>
+    <div class="flutter" aria-hidden="true">
+      <svg class="bfly b1" viewBox="0 0 40 30"><use href="#bfly"/></svg>
+      <svg class="bfly b2" viewBox="0 0 40 30"><use href="#bfly"/></svg>
+      <svg class="bfly b3" viewBox="0 0 40 30"><use href="#bfly"/></svg>
     </div>
   </section>
 
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="wing" cx="35%" cy="40%" r="75%">
+        <stop offset="0" stop-color="#ffb347"/>
+        <stop offset=".65" stop-color="#e8741f"/>
+        <stop offset="1" stop-color="#7a2e0b"/>
+      </radialGradient>
+      <g id="bfly">
+        <g class="w-l"><path d="M20 15C14 2 2 0 2 8c0 5 6 8 18 7Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><path d="M20 15C12 18 5 26 9 28c4 2 10-5 11-13Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><circle cx="7" cy="6" r="1.2" fill="#fff"/><circle cx="10" cy="4" r=".9" fill="#fff"/></g>
+        <g class="w-r"><path d="M20 15C26 2 38 0 38 8c0 5-6 8-18 7Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><path d="M20 15C28 18 35 26 31 28c-4 2-10-5-11-13Z" fill="url(#wing)" stroke="#3a1a08" stroke-width=".8"/><circle cx="33" cy="6" r="1.2" fill="#fff"/><circle cx="30" cy="4" r=".9" fill="#fff"/></g>
+        <path d="M20 8v15" stroke="#2a1406" stroke-width="1.6" stroke-linecap="round"/>
+      </g>
+    </defs>
+  </svg>
+
   <section class="band">
-    <p class="sub">Short poems from my notes app, written between screens, set here in ink.</p>
+    <p class="sub">Written in a notes app, set here in ink.</p>
     <div class="meander" aria-hidden="true"></div>
   </section>
 
@@ -43,8 +65,9 @@
     <p>© <span id="yr"></span> Rohit · <a class="back" href="index.html#end" data-turn="paper">Back to the hill</a></p>
   </footer>
 
-  <script src="poems-art.js?v=3"></script>
-  <script src="poems.js?v=5"></script>
-  <script src="turn.js?v=3"></script>
+  <script src="poems-art.js?v=5"></script>
+  <script src="poems-hero.js?v=1"></script>
+  <script src="poems.js?v=7"></script>
+  <script src="turn.js?v=4"></script>
 </body>
 </html>

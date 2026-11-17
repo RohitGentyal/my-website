@@ -3,6 +3,7 @@
 // An empty string in lines leaves a stanza break. The title and date can be left out. Poems are numbered
 // in Roman numerals (the oldest is I) and dated the Roman way ("XVII November MMXXVI").
 // While POEMS is empty the page shows one honest inscription saying they are on their way.
+// The hero above them is painted by poems-hero.js; the laurel sprigs come from poems-art.js.
 const POEMS = [];
 
 (() => {
@@ -18,46 +19,49 @@ const POEMS = [];
   const now = new Date();
   document.getElementById("yr").textContent = roman(now.getFullYear());
   document.getElementById("year-top").textContent = roman(now.getFullYear());
-  document.getElementById("dateline").textContent = romanDate(now);
-  document.getElementById("art").innerHTML = ENGRAVE.scene();
+  document.getElementById("year-side").textContent = roman(now.getFullYear());
   const sprig = ENGRAVE.sprig();
   document.getElementById("sprig-foot").innerHTML = sprig;
 
-  // parallax: the plate's layers drift at their own depth as you scroll, and lean a touch toward the
-  // cursor on desktop; the arch in front holds still, so you look through it into depth
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const art = document.getElementById("art");
-    const title = document.querySelector(".title");
-    const DEPTH = { "l-sky": [0.3, 16, 9], "l-shore": [0.17, 11, 6], "l-sea": [0.12, 6, 3], "l-ship": [0.14, 8, 4], "l-front": [0, 0, 0] };
-    const layers = [...art.querySelectorAll(".layer")].map((el) => [el, DEPTH[el.classList[1]] || [0, 0, 0]]);
-    const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-    let mx = 0, my = 0, tx = 0, ty = 0, raf = 0;
-    const frame = () => {
-      raf = 0;
-      tx += (mx - tx) * 0.08;
-      ty += (my - ty) * 0.08;
-      const h = art.offsetHeight;
-      const sy = Math.min(scrollY, h * 1.2);
-      // layers are in plate units; scroll offsets are in px against the plate's own height
-      layers.forEach(([el, [k, ax, ay]]) => {
-        el.style.transform = `translate3d(${(-tx * ax).toFixed(2)}px, ${(sy * k - ty * ay).toFixed(2)}px, 0)`;
+  // ---- the gate: paint it, then move its layers in a smooth, eased parallax
+  const gate = document.getElementById("gate");
+  const poster = document.getElementById("poster");
+  GATE.paint(gate);
+  let resizeT = 0;
+  addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { GATE.paint(gate); kick(); }, 220); });
+  // each layer: how much of the scroll it follows (far things more, so they seem to lag behind), and how
+  // far it leans toward the cursor; the near flowers rise faster than the page
+  const DEPTH = { "g-sky": [0.55, 10, 5], "g-dove": [0.45, 14, 7], "g-hills": [0.38, 14, 6], "g-mid": [0.2, 22, 8], "g-front": [0.06, 34, 10], "g-near": [-0.16, 46, 14] };
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  let cur = scrollY, mx = 0, my = 0, tx = 0, ty = 0, raf = 0, away = false;
+  function frame() {
+    raf = 0;
+    const H = gate.offsetHeight;
+    const target = Math.min(scrollY, H * 1.1);
+    // ease toward where the page is: the scene glides after the scroll instead of snapping to it
+    cur += (target - cur) * (calm ? 1 : 0.09);
+    tx += (mx - tx) * 0.06;
+    ty += (my - ty) * 0.06;
+    if (!calm) {
+      gate.querySelectorAll(".gl").forEach((c) => {
+        const d = DEPTH[c.classList[1]];
+        if (d) c.style.transform = `translate3d(${(-tx * d[1]).toFixed(2)}px, ${(cur * d[0] - ty * d[2]).toFixed(2)}px, 0)`;
       });
-      if (title && getComputedStyle(title).position === "absolute") {
-        title.style.transform = `translate3d(${(-tx * 5).toFixed(2)}px, ${(sy * 0.34).toFixed(2)}px, 0)`;
-        title.style.opacity = String(Math.max(0, 1 - sy / (h * 0.75)));
-      } else if (title) {
-        // phones: the title sits above the plate and stays put
-        title.style.transform = "";
-        title.style.opacity = "";
-      }
-      if (Math.abs(mx - tx) > 0.001 || Math.abs(my - ty) > 0.001) raf = requestAnimationFrame(frame);
-    };
-    const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
-    addEventListener("scroll", kick, { passive: true });
-    addEventListener("resize", kick);
-    if (fine) addEventListener("pointermove", (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; kick(); }, { passive: true });
-    kick();
+      poster.style.transform = `translate3d(${(-tx * 8).toFixed(2)}px, ${(cur * 0.32).toFixed(2)}px, 0)`;
+      poster.style.opacity = String(Math.max(0, 1 - cur / (H * 0.6)).toFixed(3));
+    }
+    if (Math.abs(target - cur) > 0.2 || Math.abs(mx - tx) > 0.001 || Math.abs(my - ty) > 0.001) raf = requestAnimationFrame(frame);
   }
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  addEventListener("scroll", () => { if (!away || scrollY < gate.offsetHeight * 1.2) kick(); }, { passive: true });
+  if (fine && !calm) addEventListener("pointermove", (e) => {
+    if (away) return;
+    mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; kick();
+  }, { passive: true });
+  // the dove and butterflies rest while the gate is off screen
+  new IntersectionObserver(([e]) => { away = !e.isIntersecting; gate.classList.toggle("is-away", away); }).observe(gate);
+  kick();
 
   const list = document.getElementById("poems");
   if (!POEMS.length) {
