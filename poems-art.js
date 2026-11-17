@@ -54,5 +54,21 @@ const ENGRAVE = (() => {
     return `<svg viewBox="0 0 120 40" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">${out.join("")}</svg>`;
   }
 
-  return { sprig };
+  // the page's seal: an engraved laurel wreath round an italic R, ringed by a line of text set in a circle
+  // (style.css turns the ring slowly). Drawn in currentColor so it can sit on the sky in white
+  function seal(ring) {
+    out = [];
+    seed = 5;
+    wreath(50, 50, 17, 8.5, 2.6);
+    const id = "sealring" + Math.floor(rnd() * 1e6);
+    return `<svg viewBox="0 0 100 100" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">
+      <defs><path id="${id}" d="M50 50m-38 0a38 38 0 1 1 76 0a38 38 0 1 1 -76 0"/></defs>
+      <g class="ring"><text font-family="Inter, sans-serif" font-size="8.4" font-weight="500" letter-spacing="3.1" fill="currentColor"><textPath href="#${id}" textLength="236" lengthAdjust="spacing">${ring}</textPath></text></g>
+      <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" stroke-width=".6" opacity=".7"/>
+      <g class="wreath">${out.join("")}</g>
+      <text x="50" y="58" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="25" font-style="italic" font-weight="500" fill="currentColor">R</text>
+    </svg>`;
+  }
+
+  return { sprig, seal };
 })();

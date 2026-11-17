@@ -18,7 +18,8 @@ const POEMS = [];
 
   const now = new Date();
   document.getElementById("yr").textContent = roman(now.getFullYear());
-  document.getElementById("year-top").textContent = roman(now.getFullYear());
+  // the seal at the top: its ring reads the name, the page and the year, round and round
+  document.getElementById("seal").innerHTML = ENGRAVE.seal(`ROHIT · POEMS · ${roman(now.getFullYear())} · `);
   const sprig = ENGRAVE.sprig();
   document.getElementById("sprig-foot").innerHTML = sprig;
 

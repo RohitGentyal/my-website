@@ -41,9 +41,24 @@ a { color: inherit; text-decoration: none; }
   padding: 18px 28px;
   font-size: 13px;
 }
-.p-mark { font: italic 500 20px/1 var(--serif); }
-.p-year { justify-self: end; font: 400 15px/1 "Antonio", sans-serif; letter-spacing: .12em; }
-.p-top .p-mark, .p-top .p-year { text-shadow: 0 1px 2px rgba(16, 34, 62, .6), 0 0 12px rgba(16, 34, 62, .4); }
+/* the seal: an engraved wreath and R in white, its ring of text turning slowly like a coin; a touch faster
+   on hover */
+.p-mark {
+  --cobalt: #fff;
+  --paper: transparent;
+  display: block;
+  width: 92px;
+  height: 92px;
+  margin: -10px 0 -24px;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(16, 34, 62, .55)) drop-shadow(0 0 10px rgba(16, 34, 62, .3));
+}
+.p-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.p-mark .ring { transform-box: view-box; transform-origin: 50px 50px; animation: seal-turn 36s linear infinite; }
+.p-mark:hover .ring { animation-duration: 9s; }
+.p-mark .wreath { transform-box: view-box; transform-origin: 50px 50px; transition: transform .8s cubic-bezier(.34, 1.56, .64, 1); }
+.p-mark:hover .wreath { transform: rotate(-8deg) scale(1.04); }
+@keyframes seal-turn { to { transform: rotate(360deg); } }
 .back {
   justify-self: start;
   color: var(--cobalt-soft);
@@ -184,13 +199,12 @@ html { scroll-behavior: smooth; }
 /* phones: the title sits above the plate so it never fights the drawing */
 @media (max-width: 760px) {
   .p-top { padding: 16px 20px; }
-  .p-year { display: none; }
-  .p-top { grid-template-columns: 1fr auto; }
+  .p-mark { width: 72px; height: 72px; margin: -6px 0 -18px; }
   .gate .g-front, .gate .g-near { width: 190vw; left: -45vw; height: auto; aspect-ratio: 16 / 9; }
   .gate .g-near { bottom: -8%; }
   .gate .g-front { bottom: 0; }
   .poster { top: 22%; }
-  .poster h1 { font-size: 13vw; white-space: nowrap; }
+  .poster h1 { font-size: 18vw; white-space: nowrap; }
   .line { font-size: 19px; max-width: 320px; }
   .kicker { letter-spacing: .35em; }
   .quote { margin-top: 20vh; max-width: 290px; padding: 0; font-size: 17px; }
@@ -202,7 +216,7 @@ html { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) {
   .veil { animation-duration: .2s; animation-delay: 0s; }
-  .gate .gl, .poster { animation: none; }
+  .gate .gl, .poster, .p-mark .ring { animation: none; }
   .poem .num, .poem h2, .poem .lines span, .poem time { opacity: 1; filter: none; translate: none; transition: none; }
   .empty p + p::after { animation: none; }
 }
