@@ -155,16 +155,16 @@ const POEMS = [
 
   // ---- poems.html: a list of poems, one row each, ruled with hairlines like a book's contents page: a
   // small framed thumbnail of its cover, its title, its first line, how long it takes to read. Hover: the
-  // row warms, the arrow slips out, and a framed print of the cover follows the cursor (fine pointers)
+  // row warms, the arrow slips out, and a small "✦ READ ✦" tag in Roman capitals trails the cursor (fine pointers)
   function cards() {
     list.classList.add("index");
-    let peek = null, img = null, px = 0, py = 0, tx = 0, ty = 0, pr = 0;
+    let peek = null, px = 0, py = 0, tx = 0, ty = 0, pr = 0;
     if (fine) {
       peek = document.createElement("div");
       peek.className = "peek";
       peek.setAttribute("aria-hidden", "true");
-      peek.innerHTML = "<span><img alt=''></span>";
-      img = peek.querySelector("img");
+      // a small tag in Roman capitals, not a picture (2026-11-17, my ask)
+      peek.innerHTML = "<span><i>✦</i>Read<i>✦</i></span>";
       document.body.appendChild(peek);
     }
     // the print trails the cursor with a soft lag
@@ -188,9 +188,8 @@ const POEMS = [
         <span class="text"><span class="name">${poem.title}</span><span class="first">${first}</span></span>
         <span class="kind">${roman(mins)} min<span class="arrow" aria-hidden="true">↗</span></span>`;
       a.setAttribute("aria-label", `${poem.title}. Read the poem, about ${mins} minute${mins > 1 ? "s" : ""}.`);
-      if (peek && cover) {
+      if (peek) {
         a.addEventListener("pointerenter", (e) => {
-          img.src = cover;
           px = tx = e.clientX; py = ty = e.clientY;
           peek.style.translate = `${tx}px ${ty}px`;
           peek.classList.add("on");
@@ -339,18 +338,20 @@ const POEMS = [
     // far it leans toward the cursor; the near flowers rise faster than the page
     const DEPTH = { "g-sky": [0.42, 12, 6], "g-front": [0.08, 26, 8], "g-near": [-0.18, 40, 12] };
     let cur = scrollY, mx = 0, my = 0, tx = 0, ty = 0, raf = 0, away = false;
+    // measured once (and on resize), and the layers looked up once, so a frame only writes transforms
+    let H = gate.offsetHeight;
+    addEventListener("resize", () => { H = gate.offsetHeight; }, { passive: true });
+    const layers = [...gate.querySelectorAll(".gl")].map((c) => [c, DEPTH[c.classList[1]]]).filter((l) => l[1]);
     function frame() {
       raf = 0;
-      const H = gate.offsetHeight;
       const target = Math.min(scrollY, H * 1.1);
       // ease toward where the page is: the scene glides after the scroll instead of snapping to it
       cur += (target - cur) * (calm ? 1 : 0.09);
       tx += (mx - tx) * 0.06;
       ty += (my - ty) * 0.06;
       if (!calm) {
-        gate.querySelectorAll(".gl").forEach((c) => {
-          const d = DEPTH[c.classList[1]];
-          if (d) c.style.transform = `translate3d(${(-tx * d[1]).toFixed(2)}px, ${(cur * d[0] - ty * d[2]).toFixed(2)}px, 0)`;
+        layers.forEach(([c, d]) => {
+          c.style.transform = `translate3d(${(-tx * d[1]).toFixed(2)}px, ${(cur * d[0] - ty * d[2]).toFixed(2)}px, 0)`;
         });
         poster.style.transform = `translate3d(${(-tx * 8).toFixed(2)}px, ${(cur * 0.32).toFixed(2)}px, 0)`;
         poster.style.opacity = String(Math.max(0, 1 - cur / (H * 0.6)).toFixed(3));
@@ -358,7 +359,7 @@ const POEMS = [
       if (Math.abs(target - cur) > 0.2 || Math.abs(mx - tx) > 0.001 || Math.abs(my - ty) > 0.001) raf = requestAnimationFrame(frame);
     }
     const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
-    addEventListener("scroll", () => { if (!away || scrollY < gate.offsetHeight * 1.2) kick(); }, { passive: true });
+    addEventListener("scroll", () => { if (!away || scrollY < H * 1.2) kick(); }, { passive: true });
     if (fine && !calm) addEventListener("pointermove", (e) => {
       if (away) return;
       mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; kick();
