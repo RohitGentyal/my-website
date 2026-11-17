@@ -4,7 +4,115 @@
 // in Roman numerals (the oldest is I) and dated the Roman way ("XVII November MMXXVI").
 // While POEMS is empty the page says so, plainly: "Nothing here yet. Some things take longer to say."
 // The hero above them is three image layers in assets/poems; the laurel sprigs come from poems-art.js.
-const POEMS = [];
+const POEMS = [
+  {
+    title: "Mansion",
+    date: "2026-11-17",
+    // the last line leaves a lamp on: a warm light comes up behind it once it has dried in
+    light: true,
+    lines: [
+    "I think there is a house inside me.",
+    "Not a metaphor I chose,",
+    "just something I noticed after spending too much time",
+    "walking through the same rooms",
+    "and calling them different names.",
+    "There is a room for the things I want,",
+    "another for the things I think I am allowed to want,",
+    "and somehow they never seem to be the same room.",
+    "I move between them quietly,",
+    "like I am visiting someone who might wake up.",
+    "Sometimes I find myself holding the handle of a door",
+    "for a long time,",
+    "not opening it,",
+    "not leaving either.",
+    "",
+    "There are people in this house",
+    "who don’t know they live here.",
+    "A laugh I remember at the wrong hour.",
+    "A voice I can still hear saying my name.",
+    "Someone’s shoulder beside mine.",
+    "A conversation that meant nothing at the time",
+    "and somehow became furniture.",
+    "I keep these things.",
+    "I don’t know why.",
+    "Maybe because some people leave so naturally",
+    "that you only realize they were important",
+    "when you find their absence",
+    "has taken up an entire room.",
+    "I have wanted to tell people,",
+    "stay, I’ve made space for you,",
+    "but the words always sound larger",
+    "once they leave the mouth.",
+    "So I say something smaller.",
+    "Something ordinary.",
+    "Something that can survive",
+    "if they decide to go.",
+    "",
+    "There is also a room I built myself.",
+    "No windows.",
+    "One chair.",
+    "A lock on the inside.",
+    "I go there when everything outside",
+    "starts asking too many questions.",
+    "It is quiet in there.",
+    "Almost comforting.",
+    "I can become detached without having to explain it.",
+    "I can want someone badly",
+    "and still convince myself I never needed them.",
+    "I can look at love and calculate",
+    "how much of myself I would have to lose",
+    "before it became dangerous.",
+    "Sometimes I think I deserve everything.",
+    "Sometimes I can’t understand",
+    "why anything would choose me.",
+    "Both thoughts can live in the same room.",
+    "That’s the strange part.",
+    "Neither one has to win.",
+    "",
+    "And then there is the room I avoid most.",
+    "The one where I keep God.",
+    "I only seem to remember the door",
+    "when I need something.",
+    "A little help.",
+    "A little mercy.",
+    "A reason for something to make sense.",
+    "Then I wonder if I have become",
+    "the kind of person I would resent,",
+    "someone who knocks only when they need warmth.",
+    "Maybe that’s why I understand leaving.",
+    "Maybe that’s why I fear being needed",
+    "more than I fear being alone.",
+    "I want to love people enough",
+    "to keep every version of them,",
+    "the beautiful parts,",
+    "the difficult parts,",
+    "the parts they hide when nobody is looking.",
+    "I want to say, you’re mine,",
+    "not like possession,",
+    "more like there is a place for you here.",
+    "And still,",
+    "there is no one standing outside my door",
+    "saying the same thing to me.",
+    "",
+    "So I walk the halls.",
+    "I straighten things that were never out of place.",
+    "I repaint walls that were only dirty because I kept touching them.",
+    "I tell myself this is what growing up looks like.",
+    "That everyone has rooms like these.",
+    "That everyone locks something away.",
+    "That wanting less is easier",
+    "and needing less is safer",
+    "and maybe safety is enough.",
+    "Then, somewhere between sleep and morning,",
+    "I hear the front door in my head.",
+    "For a second,",
+    "I think someone has come home.",
+    "I don’t check.",
+    "I already know there is no one there.",
+    "Still, I leave the light on.",
+    ],
+  },
+];
 
 (() => {
   const roman = (n) => {
@@ -78,38 +186,56 @@ const POEMS = [];
     }
     const a = document.createElement("article");
     a.className = "poem";
-    let i = 0;
-    const add = (el) => { el.style.setProperty("--i", i++); a.appendChild(el); return el; };
+    // a poem dries in a part at a time (its head, each stanza, its date), each as it comes into view, so a
+    // long poem never waits on lines far below the screen
+    const put = (box, el, i) => { el.style.setProperty("--i", i); box.appendChild(el); return el; };
+    const part = (tag, cls) => { const d = document.createElement(tag); d.className = "dry " + cls; return d; };
+
+    const head = part("header", "poem-head");
     const num = document.createElement("span");
     num.className = "num";
     num.textContent = roman(POEMS.length - k);
-    add(num);
+    put(head, num, 0);
     if (poem.title) {
       const h = document.createElement("h2");
       h.textContent = poem.title;
-      add(h);
+      put(head, h, 1);
     }
-    const lines = document.createElement("p");
-    lines.className = "lines";
+    a.appendChild(head);
+
+    // stanzas, split at the empty lines
+    const stanzas = [[]];
     poem.lines.forEach((l) => {
-      const s = document.createElement("span");
-      if (l.trim()) s.textContent = l; else s.className = "gap";
-      s.style.setProperty("--i", i++);
-      lines.appendChild(s);
+      if (l.trim()) stanzas[stanzas.length - 1].push(l);
+      else if (stanzas[stanzas.length - 1].length) stanzas.push([]);
     });
-    a.appendChild(lines);
+    const body = document.createElement("div");
+    body.className = "lines";
+    stanzas.forEach((st, n) => {
+      const box = part("p", "stanza");
+      st.forEach((l, i) => {
+        const s = document.createElement("span");
+        s.textContent = l;
+        if (poem.light && n === stanzas.length - 1 && i === st.length - 1) s.className = "light";
+        put(box, s, i);
+      });
+      body.appendChild(box);
+    });
+    a.appendChild(body);
+
     if (poem.date) {
+      const end = part("footer", "poem-end");
       const t = document.createElement("time");
       t.dateTime = poem.date;
       t.textContent = romanDate(new Date(poem.date + "T00:00:00"));
-      add(t);
+      put(end, t, 0);
+      a.appendChild(end);
     }
     list.appendChild(a);
   });
 
-  // each poem's lines dry in as it comes into view
   const io = new IntersectionObserver((entries) => {
     entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); } });
-  }, { rootMargin: "0px 0px -15% 0px" });
-  list.querySelectorAll(".poem").forEach((p) => io.observe(p));
+  }, { rootMargin: "0px 0px -12% 0px" });
+  list.querySelectorAll(".dry").forEach((p) => io.observe(p));
 })();
