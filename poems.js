@@ -153,35 +153,54 @@ const POEMS = [
   }
   if (reading) read(); else cards();
 
-  // ---- poems.html: each poem is a card, like the work cards on the hill: a framed well holding its
-  // cover, then its title (with ↗) and how long it takes to read, and its first line under that. Hover
-  // pushes the picture in a little, as the journey does, and a "Read the poem" pill follows the cursor
+  // ---- poems.html: a list of poems, one row each, ruled with hairlines like a book's contents page: a
+  // small framed thumbnail of its cover, its title, its first line, how long it takes to read. Hover: the
+  // row warms, the arrow slips out, and a framed print of the cover follows the cursor (fine pointers)
   function cards() {
-    list.classList.add("shelf");
+    list.classList.add("index");
+    let peek = null, img = null, px = 0, py = 0, tx = 0, ty = 0, pr = 0;
+    if (fine) {
+      peek = document.createElement("div");
+      peek.className = "peek";
+      peek.setAttribute("aria-hidden", "true");
+      peek.innerHTML = "<span><img alt=''></span>";
+      img = peek.querySelector("img");
+      document.body.appendChild(peek);
+    }
+    // the print trails the cursor with a soft lag
+    const trail = () => {
+      pr = 0;
+      tx += (px - tx) * (calm ? 1 : 0.18);
+      ty += (py - ty) * (calm ? 1 : 0.18);
+      peek.style.translate = `${tx.toFixed(1)}px ${ty.toFixed(1)}px`;
+      if (Math.abs(px - tx) > 0.3 || Math.abs(py - ty) > 0.3) pr = requestAnimationFrame(trail);
+    };
     POEMS.forEach((poem) => {
       const a = document.createElement("a");
-      a.className = "pc";
+      a.className = "row";
       a.href = `poem.html#${poem.slug}`;
       const words = poem.lines.join(" ").split(/\s+/).filter(Boolean).length;
       const mins = Math.max(1, Math.round(words / 180));
       const first = poem.lines.find((l) => l.trim()) || "";
+      const cover = poem.cover ? `assets/poems/${poem.slug}/${poem.cover}.webp` : "";
       a.innerHTML = `
-        <figure class="frame">
-          <span class="win">${poem.cover ? `<img src="assets/poems/${poem.slug}/${poem.cover}.webp" alt="" loading="lazy" decoding="async" style="view-transition-name: cover-${poem.slug}">` : ""}</span>
-          <span class="pill" aria-hidden="true">Read the poem</span>
-        </figure>
-        <span class="cap"><span class="name">${poem.title}<span class="arrow" aria-hidden="true">↗</span></span><span class="kind">${roman(mins)} min</span></span>
-        <span class="first">${first}</span>`;
+        <span class="thumb">${cover ? `<img src="${cover}" alt="" loading="lazy" decoding="async" style="view-transition-name: cover-${poem.slug}">` : ""}</span>
+        <span class="text"><span class="name">${poem.title}</span><span class="first">${first}</span></span>
+        <span class="kind">${roman(mins)} min<span class="arrow" aria-hidden="true">↗</span></span>`;
       a.setAttribute("aria-label", `${poem.title}. Read the poem, about ${mins} minute${mins > 1 ? "s" : ""}.`);
-      // the pill follows the cursor inside the frame
-      const frame = a.querySelector(".frame"), pill = a.querySelector(".pill");
-      if (fine) frame.addEventListener("pointermove", (e) => {
-        const b = frame.getBoundingClientRect();
-        pill.style.left = e.clientX - b.left + "px";
-        pill.style.top = e.clientY - b.top + "px";
-      });
+      if (peek && cover) {
+        a.addEventListener("pointerenter", (e) => {
+          img.src = cover;
+          px = tx = e.clientX; py = ty = e.clientY;
+          peek.style.translate = `${tx}px ${ty}px`;
+          peek.classList.add("on");
+        });
+        a.addEventListener("pointermove", (e) => { px = e.clientX; py = e.clientY; if (!pr) pr = requestAnimationFrame(trail); });
+        a.addEventListener("pointerleave", () => peek.classList.remove("on"));
+      }
       list.appendChild(a);
     });
+    addEventListener("scroll", () => peek && peek.classList.remove("on"), { passive: true });
   }
 
   // ---- poem.html#<slug>: one poem, opening on its title, its art walking behind it

@@ -38,4 +38,26 @@
   addEventListener("pageshow", (e) => {
     if (e.persisted) document.querySelectorAll(".turn").forEach((c) => c.remove());
   });
+
+  // coming back to the hill from the poems, by any way (a link or the browser's back button), lands on the
+  // hill itself at the top, not on the footer the poems were opened from
+  const onHill = !/poem/.test(location.pathname);
+  let away = false;
+  try { away = sessionStorage.getItem("leftHill") === "1"; } catch (_) {}
+  if (onHill) {
+    document.querySelectorAll("a[data-turn]").forEach((a) => a.addEventListener("click", () => {
+      try { sessionStorage.setItem("leftHill", "1"); } catch (_) {}
+    }));
+    const toTop = () => {
+      try { sessionStorage.removeItem("leftHill"); } catch (_) {}
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      scrollTo(0, 0);
+    };
+    if (away) toTop();
+    addEventListener("pageshow", (e) => {
+      let back = false;
+      try { back = sessionStorage.getItem("leftHill") === "1"; } catch (_) {}
+      if (e.persisted && back) toTop();
+    });
+  }
 })();

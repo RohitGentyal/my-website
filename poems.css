@@ -261,77 +261,71 @@ html { scroll-behavior: smooth; }
   .journey::after { background: rgba(246, 243, 236, .42); }
 }
 
-/* the shelf of poems (poems.html): cards built like the work cards on the hill, a little wider than the
-   reading column, two to a row (one alone spans both, 16:9). Each card is a frame: a pale mat round its
-   cover, the picture slightly aged; under it the title in the poster's thin capitals with ↗, how long it
-   takes to read in Roman numerals, and its first line in italic. Hover pushes the picture in slowly (as
-   the journey does), lifts it a touch, and a frosted "Read the poem" pill follows the cursor */
-.shelf {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 48px 22px;
-  width: min(992px, calc(100vw - 40px));
-  margin: 64px 0 0 50%;
-  translate: -50% 0;
-  text-align: left;
-}
-.pc { display: block; color: inherit; -webkit-tap-highlight-color: transparent; }
-.pc:only-child { grid-column: 1 / -1; }
-.frame {
+/* the list of poems (poems.html), after my reference of a ruled list of writings, set in this page's
+   paper, stone ink and sky: rows between hairlines, a small framed thumbnail of each poem's cover (a pale
+   mat round it, like a print), the title in EB Garamond, its first line in italic under it, and how long it
+   takes to read in Roman numerals on the right. Hover: the row warms, the arrow slips out, and a framed
+   print of the cover trails the cursor (.peek, fine pointers only) */
+.index { margin: 56px -12px 0; text-align: left; border-top: 1px solid rgba(44, 54, 68, .14); }
+.row {
   position: relative;
-  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(44, 54, 68, .14);
+  border-radius: 4px;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color .35s ease;
+}
+.row .thumb { display: block; width: 52px; height: 52px; padding: 4px; border-radius: 6px; background: #ebe5d9; box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .14); }
+.row .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 3px; filter: saturate(.86) sepia(.08); }
+.row .text { min-width: 0; }
+.row .name { display: block; font: 500 22px/1.2 "EB Garamond", Georgia, serif; color: var(--cobalt); }
+.row .first { display: block; margin-top: 3px; font: italic 400 16px/1.4 "EB Garamond", Georgia, serif; color: var(--cobalt-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .kind { display: inline-flex; align-items: baseline; gap: 8px; font: 400 12px/1 "Antonio", sans-serif; letter-spacing: .28em; text-transform: uppercase; color: var(--sky); white-space: nowrap; }
+.row .arrow { display: inline-block; width: 0; overflow: hidden; font: 400 14px/1 var(--sans); letter-spacing: 0; opacity: 0; translate: -6px 0; transition: width .35s cubic-bezier(.23, 1, .32, 1), opacity .3s ease, translate .35s cubic-bezier(.23, 1, .32, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .row:hover { background: rgba(235, 229, 217, .7); }
+  .row:hover .arrow { width: 14px; opacity: 1; translate: 0 0; }
+}
+.row:active { background: rgba(235, 229, 217, .9); }
+.row:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+
+/* the print that follows the cursor over a row: the cover in a pale mat, slightly aged, lifted on a soft
+   shadow; it grows from the cursor and sits just below and right of it */
+.peek {
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+.peek span {
+  display: block;
+  width: 240px;
   aspect-ratio: 4 / 3;
-  padding: clamp(10px, 1.4vw, 16px);
+  padding: 8px;
   border-radius: 6px;
   background: #ebe5d9;
-  box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .12), 0 1px 2px rgba(44, 54, 68, .05);
-  transition: translate .6s cubic-bezier(.23, 1, .32, 1), box-shadow .6s ease;
-}
-.pc:only-child .frame { aspect-ratio: 16 / 9; }
-.frame .win { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 2px; background: #d9d2c4; box-shadow: 0 0 0 1px rgba(44, 54, 68, .14); }
-.frame img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(.86) sepia(.08); transform: scale(1.02); transition: transform 1.6s cubic-bezier(.22, 1, .36, 1); user-select: none; }
-.pill {
-  position: absolute;
-  left: 50%; top: 50%;
-  z-index: 2;
-  padding: 9px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, .45);
-  background: rgba(24, 40, 66, .5);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  font: 500 13px/1 var(--sans);
-  letter-spacing: .02em;
-  white-space: nowrap;
-  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .12), 0 22px 44px -20px rgba(28, 40, 60, .5);
+  transform-origin: 0 0;
+  transform: translate(18px, 18px) scale(.6) rotate(-2deg);
   opacity: 0;
-  transform: translate(-50%, -50%) scale(.85);
-  transition: opacity .3s ease, transform .45s cubic-bezier(.34, 1.56, .64, 1);
+  transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1);
 }
-@media (hover: hover) and (pointer: fine) {
-  .pc:hover .frame { translate: 0 -4px; box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .14), 0 18px 40px -22px rgba(28, 40, 60, .45); }
-  .pc:hover .frame img { transform: scale(1.07); }
-  .pc:hover .pill { opacity: 1; transform: translate(-50%, calc(-50% + 30px)) scale(1); }
-  .pc:hover { cursor: pointer; }
-}
-/* touch: the pill rests at the foot of the picture */
-@media (hover: none) {
-  .pill { top: auto; bottom: 22px; opacity: 1; transform: translate(-50%, 0); }
-}
-.pc:active .frame { translate: 0 -1px; }
-.pc .cap { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 18px; }
-.pc .name { font: 200 clamp(34px, 3.4vw, 46px)/1 "Antonio", "Arial Narrow", sans-serif; letter-spacing: .02em; text-transform: uppercase; color: var(--cobalt); }
-.pc .arrow { display: inline-block; margin-left: 8px; font: 400 16px/1 var(--sans); color: var(--cobalt-faint); vertical-align: .9em; transition: translate .3s cubic-bezier(.23, 1, .32, 1), color .3s; }
-.pc:hover .arrow, .pc:focus-visible .arrow { translate: 2px -2px; color: var(--sky); }
-.pc .kind { font: 400 12px/1 "Antonio", sans-serif; letter-spacing: .28em; text-transform: uppercase; color: var(--sky); white-space: nowrap; }
-.pc .first { display: block; margin-top: 8px; font: italic 500 20px/1.4 var(--serif); color: var(--cobalt-soft); }
-.pc:focus-visible { outline: none; }
-.pc:focus-visible .frame { box-shadow: inset 0 0 0 1px rgba(44, 54, 68, .14), 0 0 0 2px var(--sky); }
+.peek.on span { opacity: 1; transform: translate(18px, 18px) scale(1) rotate(0); }
+.peek img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 3px; filter: saturate(.86) sepia(.08); }
 @media (max-width: 760px) {
-  .shelf { grid-template-columns: 1fr; width: 100%; margin: 44px 0 0; translate: none; }
-  .pc:only-child .frame { aspect-ratio: 4 / 3; }
+  .index { margin: 40px -8px 0; }
+  .row { gap: 14px; padding: 14px 8px; }
+  .row .thumb { width: 46px; height: 46px; }
+  .row .name { font-size: 20px; }
+  .row .first { font-size: 15px; }
+  .row .kind { letter-spacing: .2em; }
 }
+@media (prefers-reduced-motion: reduce) { .peek span { transition: opacity .2s ease; } }
 
 /* the reading page (poem.html): the bar sits on paper, so its words and the seal are in ink */
 .p-top.on-paper { color: var(--cobalt); }
