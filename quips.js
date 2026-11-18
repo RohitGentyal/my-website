@@ -28,7 +28,6 @@
     stack: {
       figma: ["Figma, where it all starts", "Figma, my second home"],
       ai: ["AI: Claude, ChatGPT, Gemini", "AI, for the 2 a.m. ideas", "AI, my thinking partner"],
-      vibe: ["vibe coding: HTML, CSS, JS, React", "I describe it, it ships", "this site, vibe coded"],
       framer: ["Framer, sites that ship fast", "Framer, for motion that publishes"],
     },
     verse: ["there’s an open sky past this", "the softer side", "lights low, this way"],

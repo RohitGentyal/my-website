@@ -286,8 +286,6 @@ video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fi
 }
 [data-theme="night"] .stack li { background: #171c27; }
 .stack svg { width: 20px; height: 20px; fill: currentColor; }
-/* vibe coding is drawn in strokes, not filled */
-.stack svg.line { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .stack li:hover, .stack li:focus-visible {
   translate: 0 -3px;
   color: var(--brand);
