@@ -340,11 +340,54 @@ h2.sub { margin: var(--sub) 0 0; }
     repeating-linear-gradient(97deg, transparent 0 3px, color-mix(in srgb, var(--ink) 9%, transparent) 3px 4px),
     radial-gradient(closest-side, color-mix(in srgb, var(--ink) 19%, transparent), transparent);
 }
+/* The footer: the far end of the hill's world, painted on one canvas (meadow.js). The page fades into its
+   sky (the mask) the way the hill fades into the page, so there is no edge. Words sit on the sky in the
+   hero's cream; the sign-off sits on the grass with the caption's soft shadow. Inside it, the ink tokens
+   turn cream so the rubbed-out words still work */
 .foot {
-  padding-top: var(--sec);
-  padding-bottom: 40px;
+  --ink: #fffbea;
+  --ink-soft: rgba(255, 251, 234, .88);
+  --ink-faint: rgba(255, 251, 234, .72);
+  position: relative;
+  margin-top: 24px;
+  height: clamp(700px, 56vw, 820px);
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 14px;
+  background: var(--paper);
+  transition: background-color 1.8s ease .4s; /* in step with the page when the theme switches */
+}
+.meadow {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,.12) 70px, rgba(0,0,0,.45) 150px, rgba(0,0,0,.85) 230px, #000 290px);
+  mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,.12) 70px, rgba(0,0,0,.45) 150px, rgba(0,0,0,.85) 230px, #000 290px);
+}
+.foot-in {
+  position: relative;
+  height: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 300px 40px 26px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  text-shadow: 0 1px 2px rgba(16, 34, 62, .28);
+}
+.foot-top { display: flex; justify-content: space-between; gap: 40px; }
+.foot-name { margin: 0 0 6px; font: italic 400 34px/1.1 var(--serif); }
+.foot-say { margin: 0; color: var(--ink-soft); font-size: 15px; }
+.foot-cols { display: flex; gap: 64px; }
+.foot-cols div { display: flex; flex-direction: column; gap: 8px; min-width: 96px; }
+.foot-cols h3 { margin: 0 0 4px; font: 500 13px/1.4 var(--sans); color: var(--ink-faint); letter-spacing: .01em; }
+.foot-cols a {
+  width: fit-content;
+  font-size: 15px; color: var(--ink);
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
+  padding-bottom: 1px;
+  transition: background-size .35s ease;
+}
+.foot-cols a:hover, .foot-cols a:focus-visible { background-size: 100% 1px; outline: none; }
+.foot-row {
   font-size: 13px;
-  color: var(--ink-faint);
+  text-shadow: 0 1px 2px rgba(20, 36, 8, .55), 0 0 14px rgba(20, 36, 8, .35);
 }
 
 @media (max-width: 560px) {
@@ -355,7 +398,11 @@ h2.sub { margin: var(--sub) 0 0; }
   h2 { font-size: 19px; }
   .exp dd { font-size: 15px; }
   .exp .when { font-size: 13px; }
-  .foot { font-size: 13px; }
+  .foot { height: 860px; }
+  .foot-in { padding: 250px 20px 18px; }
+  .foot-top { flex-direction: column; gap: 32px; }
+  .foot-cols { gap: 48px; }
+  .foot-name { font-size: 30px; }
   .live .clock { font-size: 13px; }
   .top { padding: 18px 20px; }
   .top nav { gap: 16px; }
@@ -418,10 +465,10 @@ h2.sub { margin: var(--sub) 0 0; }
 /* The door to the poems: a small secret under the footer, quieter than the footer itself. Hover and it
    comes up to ink, the line draws under it and a little arrow slips out; click floods the page with ink
    from the cursor (turn.js) and opens poems.html */
-.verse-p { margin: 56px 0 0; }
+.verse-p { margin: 18px 0 0; }
 .verse {
   font-size: 13px;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
   padding-bottom: 2px;
   transition: background-size .35s ease, color .25s ease, opacity .25s ease;
@@ -434,7 +481,6 @@ h2.sub { margin: var(--sub) 0 0; }
    the footer signs off with their small laurel R; and in the last screen of the page a faint wash of their
    open sky rises from the bottom (depth.js). */
 a.hob { color: var(--ink); }
-.foot-sign { display: inline-flex; align-items: center; gap: 8px; }
 .open-sky {
   position: fixed;
   inset: auto 0 0 0;

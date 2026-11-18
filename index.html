@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); try { if (localStorage.getItem("theme") === "night") document.documentElement.dataset.theme = "night"; } catch (e) {}</script>
-  <link rel="stylesheet" href="style.css?v=nostack1">
+  <link rel="stylesheet" href="style.css?v=meadow4">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -106,12 +106,33 @@
   </main>
 
   <div class="open-sky" aria-hidden="true"></div>
-  <footer class="col foot" id="end">
-    <div class="foot-row">
-      <span class="foot-sign"><span>© <span id="yr">2026</span> Rohit</span></span>
-      <span>Drawn, <s>erased</s>, framed, <s class="del">deleted</s>, and finally built by hand.</span>
+  <footer class="foot" id="end">
+    <canvas class="meadow" id="meadow" aria-hidden="true"></canvas>
+    <div class="foot-in">
+      <div class="foot-top">
+        <div class="foot-id">
+          <p class="foot-name">Rohit Gentyal</p>
+          <p class="foot-say">Thanks for walking all the way down.</p>
+          <p class="verse-p"><a class="verse" id="verse" href="poems.html" data-turn="sky">Still here? I write poems too.<span class="verse-arrow" aria-hidden="true">→</span></a></p>
+        </div>
+        <nav class="foot-cols" aria-label="More">
+          <div>
+            <h3>Work</h3>
+            <a href="https://genzoui.vercel.app" target="_blank" rel="noopener">Genzo ↗</a>
+          </div>
+          <div>
+            <h3>Say hi</h3>
+            <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=rohitgentyal0201@gmail.com" target="_blank" rel="noopener">Email</a>
+            <a href="https://www.linkedin.com/in/rohit-gentyal-407803183/" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="https://x.com/roh1168" target="_blank" rel="noopener">Twitter</a>
+          </div>
+        </nav>
+      </div>
+      <div class="foot-row">
+        <span>© <span id="yr">2026</span> Rohit</span>
+        <span>Drawn, <s>erased</s>, framed, <s class="del">deleted</s>, and finally built by hand.</span>
+      </div>
     </div>
-    <p class="verse-p"><a class="verse" id="verse" href="poems.html" data-turn="sky">Still here? I write poems too.<span class="verse-arrow" aria-hidden="true">→</span></a></p>
   </footer>
 
   <script src="loader.js?v=2"></script>
@@ -119,6 +140,7 @@
   <script src="work.js?v=5"></script>
   <script src="turn.js?v=5"></script>
   <script src="depth.js?v=8"></script>
+  <script src="meadow.js?v=6"></script>
   <script src="quips.js?v=18"></script>
 </body>
 </html>
