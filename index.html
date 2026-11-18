@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=1">
   <title>Rohit — UX Designer</title>
   <meta name="description" content="UX designer at Subculture Media Tech, leading product design for the Native Universe app.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); try { if (localStorage.getItem("theme") === "night") document.documentElement.dataset.theme = "night"; } catch (e) {}</script>
-  <link rel="stylesheet" href="style.css?v=meadow4">
+  <link rel="stylesheet" href="style.css?v=drift2">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -50,6 +49,7 @@
         <canvas id="glow"></canvas>
         <canvas id="bees"></canvas>
         <div class="fade" aria-hidden="true"></div>
+        <div class="blend" aria-hidden="true"></div>
         <figcaption class="live">
           <span class="line">“Every path on this hill began as someone walking the wrong way.”</span>
           <span class="clock" id="clock"></span>
@@ -107,7 +107,10 @@
 
   <div class="open-sky" aria-hidden="true"></div>
   <footer class="foot" id="end">
+    <canvas class="meadow" id="meadowSky" aria-hidden="true"></canvas>
+    <div class="meadow meadow-clouds" id="meadowClouds" aria-hidden="true"></div>
     <canvas class="meadow" id="meadow" aria-hidden="true"></canvas>
+    <canvas class="meadow" id="meadowSway" aria-hidden="true" hidden></canvas>
     <div class="foot-in">
       <div class="foot-top">
         <div class="foot-id">
@@ -140,7 +143,7 @@
   <script src="work.js?v=5"></script>
   <script src="turn.js?v=5"></script>
   <script src="depth.js?v=8"></script>
-  <script src="meadow.js?v=6"></script>
+  <script src="meadow.js?v=11"></script>
   <script src="quips.js?v=18"></script>
 </body>
 </html>

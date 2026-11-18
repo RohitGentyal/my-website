@@ -132,6 +132,8 @@ a { color: inherit; text-decoration: none; }
   transition: text-decoration-color .25s ease;
 }
 .ul:hover, .ul:focus-visible { text-decoration-color: var(--on-sky); outline: none; }
+/* the hill always melts into the page at the very bottom, at any scroll, so it never ends in a line */
+.scene .blend { position: absolute; inset: auto 0 0 0; height: 64px; background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 0%, transparent), color-mix(in srgb, var(--paper) 55%, transparent) 55%, var(--paper)); pointer-events: none; }
 /* Scene */
 .scene {
   position: absolute;
@@ -172,7 +174,7 @@ a { color: inherit; text-decoration: none; }
 }
 .live {
   position: absolute;
-  right: 28px; bottom: 22px;
+  right: 28px; bottom: 58px;
   text-align: right;
   /* cream with a soft shadow on the grass; as the hill fades into the page on
      scroll (scene.js sets --over-page 0 → 1) it turns to the page's ink */
@@ -350,7 +352,7 @@ h2.sub { margin: var(--sub) 0 0; }
   --ink-faint: rgba(255, 251, 234, .72);
   position: relative;
   margin-top: 24px;
-  height: clamp(700px, 56vw, 820px);
+  height: clamp(820px, 64vw, 920px);
   overflow: hidden;
   color: var(--ink);
   font-size: 14px;
@@ -362,6 +364,8 @@ h2.sub { margin: var(--sub) 0 0; }
   -webkit-mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,.12) 70px, rgba(0,0,0,.45) 150px, rgba(0,0,0,.85) 230px, #000 290px);
   mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,.12) 70px, rgba(0,0,0,.45) 150px, rgba(0,0,0,.85) 230px, #000 290px);
 }
+.meadow-clouds { overflow: hidden; pointer-events: none; }
+.meadow-clouds canvas { position: absolute; left: 0; top: 0; will-change: transform; }
 .foot-in {
   position: relative;
   height: 100%;
@@ -398,7 +402,7 @@ h2.sub { margin: var(--sub) 0 0; }
   h2 { font-size: 19px; }
   .exp dd { font-size: 15px; }
   .exp .when { font-size: 13px; }
-  .foot { height: 860px; }
+  .foot { height: 880px; }
   .foot-in { padding: 250px 20px 18px; }
   .foot-top { flex-direction: column; gap: 32px; }
   .foot-cols { gap: 48px; }
@@ -410,7 +414,7 @@ h2.sub { margin: var(--sub) 0 0; }
   .intro p.lead { font-size: 19px; }
   .hero .intro { margin: 0 20px; }
   .hero { min-height: 720px; }
-  .live { right: 16px; left: 16px; bottom: 16px; }
+  .live { right: 16px; left: 16px; bottom: 52px; }
   .live .line { font-size: 16px; }
   .foot-row { flex-direction: column; gap: 4px; }
 }

@@ -10,6 +10,9 @@
   const cv = document.getElementById("meadow");
   if (!foot || !cv) return;
   const main = cv.getContext("2d");
+  const skyCv = document.getElementById("meadowSky"), skyG = skyCv.getContext("2d");
+  const cloudBox = document.getElementById("meadowClouds");
+  let drift = []; // { el, x, w } for each cloud
   let g = main;
 
   let seed;
@@ -97,12 +100,36 @@
     });
   }
 
+  // one cloud on its own little canvas, cropped to it, so it can drift by transform alone
+  function cloudOn(cx, base, u, pal) {
+    const x0 = cx - 0.62 * u, y0 = base - 0.62 * u - 8 * S, w = 1.24 * u, h = 0.62 * u + 12 * S;
+    const el = document.createElement("canvas");
+    el.width = Math.ceil(w * dpr); el.height = Math.ceil(h * dpr);
+    el.style.width = w + "px"; el.style.height = h + "px";
+    const keep = g;
+    g = el.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, -x0 * dpr, -y0 * dpr);
+    puff(cx, base, u, pal);
+    g = keep;
+    el.style.transform = `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px)`;
+    cloudBox.appendChild(el);
+    drift.push({ el, x: x0, y: y0, w });
+  }
+
   function clouds(pal) {
     // a bank resting on the far hills (their bases hide behind them), smaller ones further off, and one
     // drifting high on the right; sized so they stay under the footer's words
     const max = narrow ? 150 : 230;
-    const xs = narrow ? [0.12, 0.5, 0.86] : [0.04, 0.2, 0.37, 0.55, 0.72, 0.9];
-    xs.forEach((u, i) => puff(u * W + r(-30, 30) * S, far(u * W) + 14 * S, r(0.62, 1) * max * S * (i % 2 ? 0.8 : 1), pal));
+    // a gap is left under the link columns on the right, so that sky stays open
+    const xs = narrow ? [0.12, 0.5, 0.86] : [0.02, 0.17, 0.32, 0.5, 0.93];
+    // the words above must stay on clear sky: each cloud is capped so its top stays under them
+    const top = foot.querySelector(".foot-top"), fr = foot.getBoundingClientRect();
+    const clear = top ? top.getBoundingClientRect().bottom - fr.top + 18 : 0;
+    xs.forEach((u, i) => {
+      const x = u * W + r(-30, 30) * S, base = far(u * W) + 14 * S;
+      const size = Math.min(r(0.62, 1) * max * S * (i % 2 ? 0.8 : 1), (base - clear) / 0.58);
+      if (size > 40 * S) cloudOn(x, base, size, pal);
+    });
   }
 
   function hills(night) {
@@ -114,17 +141,33 @@
     fg.addColorStop(0, "#a9d0a4"); fg.addColorStop(1, "#7fb07a");
     g.fillStyle = fg; g.fill(p);
     g.save(); g.clip(p);
-    for (let i = 0; i < W / 1.5; i++) {
-      const x = r(0, W), y = r(far(x), far(x) + H * 0.1);
-      g.fillStyle = pick(["#8dbd8f", "#a7cfa3", "#93c294", "#78a974", "#b5d6ad"]); g.globalAlpha = 0.55;
-      g.beginPath(); g.ellipse(x, y, r(6, 16) * S, r(1.5, 3) * S, 0, 0, Math.PI * 2); g.fill();
+    // soft shade where the far slope folds down behind the meadow
+    const fold = g.createLinearGradient(0, H * (0.63 + lift), 0, H * (0.72 + lift));
+    fold.addColorStop(0, "rgba(90, 140, 85, 0)"); fold.addColorStop(1, "rgba(90, 140, 85, 0.35)");
+    g.fillStyle = fold; g.fillRect(0, H * (0.6 + lift), W, H * 0.14);
+    // distant grass: thousands of short upright strokes, shorter and paler the further up the slope
+    g.lineCap = "round";
+    const FAR = ["#9cc898", "#a9d0a4", "#8fbe8c", "#b3d6ab", "#86b583", "#97c493"];
+    const n = Math.round(W * H * 0.11 / 5);
+    for (let i = 0; i < n; i++) {
+      const x = r(0, W), top = far(x), y = r(top + 1, top + H * 0.12);
+      const t = clamp((y - top) / (H * 0.1), 0, 1);
+      g.strokeStyle = pick(FAR); g.globalAlpha = 0.5 + 0.4 * t; g.lineWidth = (0.6 + 0.7 * t) * S;
+      const len = (1.5 + 4 * t) * S, a = -Math.PI / 2 + r(-0.35, 0.35);
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke();
     }
     g.globalAlpha = 1;
+    // a lighter crest catching the sun
+    for (let x = 0; x < W; x += r(1.5, 3)) {
+      g.strokeStyle = rand() < 0.6 ? "#b8dab0" : "#a7cfa3"; g.lineWidth = 0.9 * S;
+      const y = far(x) + 1;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + r(-0.8, 0.8) * S, y - r(1.5, 3.5) * S); g.stroke();
+    }
     // a row of far trees along the crest, little rounded dabs
     for (let x = r(0, 30); x < W; x += r(14, 60) * S) {
       const y = far(x) + 2, s = r(4, 9) * S;
       g.fillStyle = pick(["#6fa070", "#7aac78", "#64946a"]);
-      g.beginPath(); g.ellipse(x, y - s * 0.6, s, s * 0.85, 0, 0, Math.PI * 2); g.fill();
+      for (let k = 0; k < 5; k++) { g.beginPath(); g.ellipse(x + r(-0.5, 0.5) * s, y - s * r(0.4, 0.9), s * r(0.45, 0.7), s * r(0.4, 0.6), 0, 0, Math.PI * 2); g.fill(); }
     }
     g.restore();
   }
@@ -150,7 +193,9 @@
       if (y < near(x) + 1) continue;
       const d = depth(y), n = patch(x, y);
       const set = rand() < 0.5 ? tone(n + 0.7) : tone(n - 0.5);
-      blade(x, y, r(3, 9) * S * (0.9 + d) * 2.2, -Math.PI / 2 + r(-0.6, 0.35), r(0.7, 1.5) * S * (0.8 + d * 0.8), pick(set));
+      const len = r(3, 9) * S * (0.9 + d) * 2.2, ang = -Math.PI / 2 + r(-0.6, 0.35), w = r(0.7, 1.5) * S * (0.8 + d * 0.8), c = pick(set);
+      if (useGL) blades.push({ x, y, len, ang, w, c, j: r(-1, 1) });
+      else blade(x, y, len, ang, w, c);
     }
     g.restore();
     // a crisp grassy edge against the far hills
@@ -198,6 +243,7 @@
     L.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)));
     [...R].reverse().forEach(([x, y]) => shape.lineTo(x, y));
     shape.closePath();
+    pathShape = shape;
     g.fillStyle = PATH; g.fill(shape);
     g.save(); g.clip(shape);
     pts.forEach(([x, y]) => {
@@ -275,6 +321,7 @@
       : [[0.05, 0.82], [0.2, 0.8], [0.66, 0.86], [0.76, 0.79], [0.88, 0.84], [0.97, 0.76], [0.33, 0.95], [0.5, 0.9]];
     spots.forEach(([u, v]) => {
       const cx = u * W, cy = Math.max(v * H, near(cx) + 0.04 * H), d = depth(cy), R = 70 * S * (0.3 + d);
+      clumps.push({ x: cx, y: cy, R });
       const pal = pick(BLOOMS), alt = pick(BLOOMS);
       for (let k = 0; k < 50; k++) {
         g.fillStyle = pick(LEAVES);
@@ -309,23 +356,206 @@
     g.restore();
   }
 
+  // ---------------------------------------------------------------- swaying grass
+  // The meadow's blades on the graphics card with the hero's own sway (scene.js, SWAY_VS): a swell rolling
+  // right to left over a longer, slower one, the field leaning and rocking, a flutter per blade, crests a
+  // touch lighter. The cursor parts them with the hero's per-blade springs. Only while the footer is on
+  // screen, never with reduced motion. Without WebGL2 the blades stay painted, still, on the canvas.
+  const swayCv = document.getElementById("meadowSway");
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  let useGL = false, blades = [], clumps = [], pathShape = null;
+  let gl = null, prog, vao, inst, bendBuf, U, count = 0, bends = new Float32Array(0), dirty = false;
+  const VS = `#version 300 es
+layout(location = 0) in vec2 aCorner;
+layout(location = 1) in vec4 aBlade;
+layout(location = 2) in vec3 aShape;
+layout(location = 3) in vec3 aColor;
+layout(location = 4) in float aBend;
+uniform vec2 uSize;
+uniform float uTime, uS, uPx;
+out vec3 vColor;
+out float vEdge, vHalf;
+void main() {
+  vec2 root = aBlade.xy;
+  float len = aBlade.z, ang = aBlade.w, w = aShape.x, j = aShape.y, ph = aShape.z;
+  float swell = 0.5 + 0.5 * sin(6.2832 * (root.x / (520.0 * uS) + uTime / 6.0) + root.y * 0.012);
+  float roll = 0.5 + 0.5 * sin(6.2832 * (root.x / (1400.0 * uS) + uTime / 14.0));
+  float bend = -(0.09 + 0.52 * swell * (0.4 + 0.6 * roll)) + 0.07 * sin(uTime * 1.5 + ph * 6.2832) + aBend;
+  float t = aCorner.x;
+  vec2 p1 = root + vec2(cos(ang + bend * 0.4), sin(ang + bend * 0.4)) * len * 0.5 + vec2(j, 0.0);
+  vec2 p2 = root + vec2(cos(ang + bend), sin(ang + bend)) * len;
+  vec2 pos = mix(mix(root, p1, t), mix(p1, p2, t), t);
+  vec2 tg = mix(p1 - root, p2 - p1, t);
+  tg = length(tg) > 1e-4 ? normalize(tg) : vec2(0.0, -1.0);
+  float hw = w * 0.5;
+  pos += vec2(-tg.y, tg.x) * aCorner.y * (hw + uPx) + tg * (t > 0.99 ? hw : 0.0);
+  vEdge = aCorner.y * (hw + uPx);
+  vHalf = hw;
+  vColor = aColor * (1.0 + 0.09 * swell * roll);
+  gl_Position = vec4(pos.x / uSize.x * 2.0 - 1.0, 1.0 - pos.y / uSize.y * 2.0, 0.0, 1.0);
+}`;
+  const FS = `#version 300 es
+precision highp float;
+in vec3 vColor;
+in float vEdge, vHalf;
+uniform float uPx;
+out vec4 o;
+void main() {
+  float a = clamp((vHalf - abs(vEdge)) / uPx + 0.5, 0.0, 1.0);
+  o = vec4(vColor * a, a);
+}`;
+  function initGL() {
+    if (gl !== null) return !!gl;
+    gl = false;
+    const c = swayCv && swayCv.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
+    if (!c) return false;
+    const sh = (type, src) => { const s = c.createShader(type); c.shaderSource(s, src); c.compileShader(s); return c.getShaderParameter(s, c.COMPILE_STATUS) ? s : null; };
+    const vs = sh(c.VERTEX_SHADER, VS), fs = sh(c.FRAGMENT_SHADER, FS);
+    if (!vs || !fs) return false;
+    prog = c.createProgram(); c.attachShader(prog, vs); c.attachShader(prog, fs); c.linkProgram(prog);
+    if (!c.getProgramParameter(prog, c.LINK_STATUS)) return false;
+    vao = c.createVertexArray(); c.bindVertexArray(vao);
+    c.bindBuffer(c.ARRAY_BUFFER, c.createBuffer());
+    c.bufferData(c.ARRAY_BUFFER, new Float32Array([0, -1, 0, 1, 1 / 3, -1, 1 / 3, 1, 2 / 3, -1, 2 / 3, 1, 1, -1, 1, 1]), c.STATIC_DRAW);
+    c.enableVertexAttribArray(0); c.vertexAttribPointer(0, 2, c.FLOAT, false, 0, 0);
+    inst = c.createBuffer(); c.bindBuffer(c.ARRAY_BUFFER, inst);
+    [[1, 4, 0], [2, 3, 16], [3, 3, 28]].forEach(([loc, n, off]) => { c.enableVertexAttribArray(loc); c.vertexAttribPointer(loc, n, c.FLOAT, false, 40, off); c.vertexAttribDivisor(loc, 1); });
+    bendBuf = c.createBuffer(); c.bindBuffer(c.ARRAY_BUFFER, bendBuf);
+    c.enableVertexAttribArray(4); c.vertexAttribPointer(4, 1, c.FLOAT, false, 4, 0); c.vertexAttribDivisor(4, 1);
+    c.enable(c.BLEND); c.blendFunc(c.ONE, c.ONE_MINUS_SRC_ALPHA);
+    U = ["uSize", "uTime", "uS", "uPx"].reduce((u, n) => ((u[n] = c.getUniformLocation(prog, n)), u), {});
+    // if the graphics card drops the context, repaint with the blades painted still
+    swayCv.addEventListener("webglcontextlost", () => { gl = false; count = 0; swayCv.hidden = true; painted = ""; if (near_) paint(); });
+    gl = c;
+    return true;
+  }
+  const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255);
+  // the night's multiply, the same one the land layer gets, so the blades sit in the same moonlight
+  const MOON = rgb("#4a5f96");
+
+  // blades in a grid of cells, so the cursor only looks at its neighbours
+  const CELL = 48;
+  let grid = [], cols = 0, rows = 0, active = new Set(), springRaf = 0;
+  function buildSway(night, dpr) {
+    // keep off the path, the flower clumps and the foot of the tree, which are painted on top
+    const kept = blades.filter((b) => {
+      if (pathShape && g.isPointInPath(pathShape, b.x * dpr, b.y * dpr)) return false;
+      if (Math.abs(b.x - tree.x) < tree.h * 0.07 && Math.abs(b.y - tree.y) < 10 * S) return false;
+      return !clumps.some((c) => Math.abs(b.x - c.x) < c.R * 0.95 && b.y > c.y - c.R * 0.35 && b.y < c.y + c.R * 0.35);
+    });
+    const data = new Float32Array(kept.length * 10);
+    cols = Math.ceil(W / CELL); rows = Math.ceil(H / CELL);
+    grid = Array.from({ length: cols * rows }, () => []);
+    kept.forEach((b, i) => {
+      let [cr, cg, cb] = rgb(b.c);
+      if (night) { cr *= MOON[0]; cg *= MOON[1]; cb *= MOON[2]; }
+      data.set([b.x, b.y, b.len, b.ang, b.w, b.j, (b.x * 0.0137 + b.y * 0.031) % 1, cr, cg, cb], i * 10);
+      b.i = i; b.b = 0; b.v = 0;
+      const cx = clamp(Math.floor(b.x / CELL), 0, cols - 1), cy = clamp(Math.floor(b.y / CELL), 0, rows - 1);
+      grid[cy * cols + cx].push(b);
+    });
+    swayCv.width = Math.round(W * dpr); swayCv.height = Math.round(H * dpr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, inst); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    bends = new Float32Array(kept.length);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bendBuf); gl.bufferData(gl.ARRAY_BUFFER, bends, gl.DYNAMIC_DRAW);
+    active.clear();
+    count = kept.length;
+    gl.useProgram(prog);
+    gl.uniform2f(U.uSize, W, H); gl.uniform1f(U.uS, S); gl.uniform1f(U.uPx, 1 / dpr);
+    swayCv.hidden = false;
+    blades = [];
+    drawSway(performance.now());
+    run();
+  }
+  function drawSway(now) {
+    if (!gl || !count) return;
+    if (dirty) { gl.bindBuffer(gl.ARRAY_BUFFER, bendBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, bends); dirty = false; }
+    gl.viewport(0, 0, swayCv.width, swayCv.height);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(prog); gl.bindVertexArray(vao);
+    gl.uniform1f(U.uTime, still.matches ? 0 : (now / 1000) % 3600);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 8, count);
+  }
+  // the loop runs only while the footer is on screen
+  let loop = 0, onScreen = false;
+  let lastT = 0;
+  const frame = (now) => {
+    loop = 0;
+    const dt = lastT ? Math.min(100, now - lastT) / 1000 : 0;
+    lastT = now;
+    drawSway(now);
+    const v = (narrow ? 7 : 11) * S;
+    drift.forEach((c) => {
+      c.x -= v * dt;
+      if (c.x + c.w < 0) c.x += W + c.w;
+      c.el.style.transform = `translate(${c.x.toFixed(1)}px, ${c.y.toFixed(1)}px)`;
+    });
+    if (onScreen && !still.matches) loop = requestAnimationFrame(frame); else lastT = 0;
+  };
+  function run() { if (!loop && onScreen && (count || drift.length) && !still.matches) { lastT = 0; loop = requestAnimationFrame(frame); } }
+  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; run(); }).observe(foot);
+
+  // the hero's springs: a brushed blade is pushed away from the cursor and along its movement, then
+  // wobbles back to rest
+  function step() {
+    springRaf = 0;
+    active.forEach((b) => {
+      b.v = (b.v - b.b * 0.08) * 0.84;
+      b.b = clamp(b.b + b.v, -1.3, 1.3);
+      if (Math.abs(b.b) < 0.002 && Math.abs(b.v) < 0.002) { b.b = b.v = 0; active.delete(b); }
+      bends[b.i] = b.b; dirty = true;
+    });
+    if (still.matches) drawSway(performance.now());
+    if (active.size) springRaf = requestAnimationFrame(step);
+  }
+  function brush(x, y, dx) {
+    const reach = 60 * S;
+    const x0 = clamp(Math.floor((x - reach) / CELL), 0, cols - 1), x1 = clamp(Math.floor((x + reach) / CELL), 0, cols - 1);
+    const y0 = clamp(Math.floor((y - reach) / CELL), 0, rows - 1), y1 = clamp(Math.floor((y + reach) / CELL), 0, rows - 1);
+    for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) grid[cy * cols + cx].forEach((b) => {
+      const mx = b.x + Math.cos(b.ang) * b.len * 0.6, my = b.y + Math.sin(b.ang) * b.len * 0.6;
+      const dist = Math.hypot(mx - x, my - y);
+      if (dist > reach) return;
+      const f = 1 - dist / reach;
+      b.v += (clamp(dx, -30, 30) * 0.02 + Math.sign(mx - x || 1) * 0.08) * f;
+      active.add(b);
+    });
+    if (!springRaf && active.size) springRaf = requestAnimationFrame(step);
+  }
+  let lastX = null, scrolledAt = 0;
+  addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
+  foot.addEventListener("pointermove", (e) => {
+    // Chrome reports the page sliding under a still cursor as moves; ignore those, like the hero
+    if (e.pointerType !== "mouse" || !count || performance.now() - scrolledAt < 150) { lastX = null; return; }
+    const r0 = foot.getBoundingClientRect(), x = e.clientX - r0.left, y = e.clientY - r0.top;
+    if (lastX !== null) brush(x, y, x - lastX);
+    lastX = x;
+  }, { passive: true });
+  foot.addEventListener("pointerleave", () => { lastX = null; });
+
   let maskCopy = null;
   const landMask = () => maskCopy;
-  let painted = "", near_ = false;
+  let painted = "", near_ = false, dpr = 1;
   function paint() {
     const night = document.documentElement.dataset.theme === "night";
     const w = foot.clientWidth, h = foot.clientHeight;
     const key = `${w}x${h}:${night}`;
     if (!w || !h || key === painted) return;
     painted = key;
-    W = w; H = h; narrow = W < 640; lift = narrow ? 0.09 : 0; S = clamp(W / 1440, 0.62, 1.15);
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = w; H = h; narrow = W < 640; lift = narrow ? 0.09 : 0.05; S = clamp(W / 1440, 0.62, 1.15);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    skyCv.width = cv.width; skyCv.height = cv.height;
+    cloudBox.replaceChildren(); drift = [];
+    useGL = initGL(); blades = []; clumps = []; pathShape = null; count = 0;
+    if (!useGL && swayCv) swayCv.hidden = true;
     seed = 4242;
+    g = skyG; g.setTransform(dpr, 0, 0, dpr, 0, 0);
     sky(night ? NIGHT_SKY : DAY_SKY);
     seed = 77;
     if (night) stars();
+    g = main;
     seed = 91;
     clouds(night ? NIGHT_CLOUD : DAY_CLOUD);
     // at night the land is painted on its own layer and cooled in one pass, so the tint touches only the
@@ -348,6 +578,8 @@
     flowers();
     seed = 21;
     drawTree();
+    if (useGL) buildSway(night, dpr);
+    run();
     if (night) {
       g.setTransform(1, 0, 0, 1, 0, 0);
       maskCopy = document.createElement("canvas"); maskCopy.width = layer.width; maskCopy.height = layer.height;
