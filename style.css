@@ -259,8 +259,8 @@ video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fi
 
 #about p { color: var(--ink-soft); margin: 0 0 14px; }
 #about p:first-of-type { color: var(--ink); }
-/* Services: three things, in one quiet row, then one muted line on how to work together */
-.svc { list-style: none; display: grid; grid-template-columns: repeat(3, auto); justify-content: start; column-gap: 40px; gap: 6px 24px; margin: 18px 0 0; padding: 0; color: var(--ink); font-weight: 500; }
+/* Services: two quiet columns of what I do, then one muted line on how to work together */
+.svc { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; margin: 18px 0 0; padding: 0; color: var(--ink); font-weight: 500; }
 #about .svc-ways { margin: 20px 0 14px; color: var(--ink-faint); font-size: 14px; }
 @media (max-width: 560px) { .svc { grid-template-columns: 1fr; } }
 /* Stack: a row of small tiles, each tool's logo in muted ink. Hover (or keyboard focus) lifts the tile
@@ -268,13 +268,11 @@ video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fi
    Logos from Simple Icons (CC0) */
 .stack { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 14px; padding: 0; }
 .stack li {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 38px;
-  padding: 0 13px 0 11px;
-  font-size: 14px;
-  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: 1px solid var(--rule);
   background: var(--tile);
   color: var(--ink-faint);
@@ -283,9 +281,9 @@ video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fi
   transition: translate .35s cubic-bezier(.34, 1.56, .64, 1), color .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 [data-theme="night"] .stack li { background: #171c27; }
-.stack svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
-.stack li span { color: var(--ink-soft); transition: color .25s ease; }
-.stack li:hover span, .stack li:focus-visible span { color: var(--ink); }
+.stack svg { width: 20px; height: 20px; fill: currentColor; }
+/* vibe coding is drawn in strokes, not filled */
+.stack svg.line { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .stack li:hover, .stack li:focus-visible {
   translate: 0 -3px;
   color: var(--brand);
