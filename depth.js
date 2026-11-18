@@ -11,7 +11,6 @@
   // [element, how much of its distance from the screen's middle it moves, which property]
   document.querySelectorAll("section.col h2").forEach((el) => items.push([el, 0.022, "translate"]));
   document.querySelectorAll(".board .shot").forEach((el) => items.push([el, -0.05, "translate"]));
-  document.querySelectorAll(".stack li").forEach((el, i) => items.push([el, [0.012, -0.008, 0.018][i % 3], "transform"]));
   const sky = document.querySelector(".open-sky");
 
   let cur = scrollY, raf = 0, tops = [], last = 0;

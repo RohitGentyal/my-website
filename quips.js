@@ -9,15 +9,15 @@
   // plain words: say what the thing is and what a click does
   const LINES = {
     genzo: {
-      offer: ["Offer Applied, a Genzo component", "Open Genzo in a new tab"],
-      code: ["Code Input, a Genzo component", "Open Genzo in a new tab"],
-      hold: ["Hold to Confirm, a Genzo component", "Open Genzo in a new tab"],
+      offer: ["See Offer Applied in Genzo ↗"],
+      code: ["See Code Input in Genzo ↗"],
+      hold: ["See Hold to Confirm in Genzo ↗"],
     },
-    verse: ["Read my poems"],
+    verse: ["Come read my poems"],
     hob: {
-      football: { fresh: ["Click to play a football sound"], heard: ["Play it again"] },
-      barbell: { fresh: ["Click to play a gym sound"], heard: ["Play it again"] },
-      game: { fresh: ["Click to play a gaming sound"], heard: ["Play it again"] },
+      football: { fresh: ["Hear my goal celebration"], heard: ["Once more?"] },
+      barbell: { fresh: ["Hear my gym hype"], heard: ["One more rep?"] },
+      game: { fresh: ["Hear my game-night call"], heard: ["Another round?"] },
     },
   };
 
