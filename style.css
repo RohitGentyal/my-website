@@ -462,9 +462,6 @@ h2.sub { margin: 40px 0 0; }
    open sky rises from the bottom (depth.js). */
 a.hob { color: var(--ink); }
 .foot-sign { display: inline-flex; align-items: center; gap: 8px; }
-.foot-mark { display: inline-block; width: 18px; height: 18px; color: var(--ink-faint); opacity: .8; }
-.foot-mark svg { display: block; width: 100%; height: 100%; }
-.foot-mark text { font-family: Georgia, serif; }
 .open-sky {
   position: fixed;
   inset: auto 0 0 0;
