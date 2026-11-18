@@ -324,8 +324,10 @@
     g.clip(hillPath());
     const px = narrow ? W * 0.35 : W * 0.66, py = lerp(ridge(px), H, 0.3);
     const pool = g.createRadialGradient(px, py, 0, px, py, Math.max(W, H) * 0.55);
-    pool.addColorStop(0, "rgba(120, 150, 215, .38)");
-    pool.addColorStop(0.5, "rgba(80, 105, 170, .16)");
+    // kept faint (2026-11-19, my note: the slope looked plastic): the moonlight only touches the grass,
+    // its brushwork stays visible as it is by day
+    pool.addColorStop(0, "rgba(120, 150, 215, .13)");
+    pool.addColorStop(0.5, "rgba(80, 105, 170, .05)");
     pool.addColorStop(1, "rgba(60, 80, 140, 0)");
     g.fillStyle = pool;
     g.fillRect(0, 0, W, H);
@@ -347,7 +349,7 @@
     s.lineWidth = 7 * S;
     for (let x = 0; x < W; x += 6) {
       const near = 1 - clamp(Math.abs(x - m.x) / (W * 0.7), 0, 1);
-      s.strokeStyle = `rgba(150, 178, 240, ${0.04 + 0.16 * near})`;
+      s.strokeStyle = `rgba(150, 178, 240, ${0.02 + 0.07 * near})`;
       s.beginPath(); s.moveTo(x, ridge(x) + 6 * S); s.lineTo(x + 6, ridge(x + 6) + 6 * S); s.stroke();
     }
     g.save();
@@ -1519,7 +1521,7 @@ void main() {
     // tints the hill, shadows, grass and flowers together (.land): one filter over
     // the stack looks the same as one on each layer (it's a colour matrix), and
     // the compositor redoes one full-screen pass a frame instead of four.
-    const f = p || d ? `brightness(${lerp(1, 0.48, p) - 0.08 * d}) sepia(${0.4 * d}) saturate(${lerp(1, 0.7, p) + 0.2 * d}) hue-rotate(${lerp(0, 16, p) - 12 * d}deg)` : "";
+    const f = p || d ? `brightness(${lerp(1, 0.48, p) - 0.08 * d}) sepia(${0.4 * d}) saturate(${lerp(1, 0.86, p) + 0.2 * d}) hue-rotate(${lerp(0, 16, p) - 12 * d}deg)` : "";
     if (landEl) landEl.style.filter = f;
     else [canvas, shade, touch, swayCanvas].forEach((el) => { if (el) el.style.filter = f; });
     // the 2D shade layer (no WebGL2) is also blurred so every shadow has a soft edge
