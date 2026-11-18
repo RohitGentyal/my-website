@@ -189,7 +189,10 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* Sections */
-section.col { padding-top: 96px; font-size: 16px; }
+/* rhythm: a wide gap between main sections, a medium one between the parts of About (2026-11-19, my ask: a bit more air) */
+:root { --sec: 136px; --sub: 76px; }
+@media (max-width: 560px) { :root { --sec: 104px; --sub: 60px; } }
+section.col { padding-top: var(--sec); font-size: 16px; }
 /* section labels speak in the hill's voice: the italic serif of the name and the corner quote */
 h2 {
   font: italic 400 20px/1.3 var(--serif);
@@ -289,7 +292,7 @@ video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fi
   box-shadow: 0 8px 16px -10px color-mix(in srgb, var(--brand) 60%, transparent);
 }
 @media (prefers-reduced-motion: reduce) { .stack li { transition: color .25s ease, border-color .25s ease; } .stack li:hover, .stack li:focus-visible { translate: none; } }
-h2.sub { margin: 40px 0 0; }
+h2.sub { margin: var(--sub) 0 0; }
 .exp { margin: 0 0 32px; padding: 0; }
 .exp div { padding: 14px 0; border-bottom: 1px solid var(--rule); }
 .exp div:first-child { border-top: 1px solid var(--rule); margin-top: 18px; }
@@ -364,7 +367,7 @@ h2.sub { margin: 40px 0 0; }
     radial-gradient(closest-side, color-mix(in srgb, var(--ink) 19%, transparent), transparent);
 }
 .foot {
-  padding-top: 96px;
+  padding-top: var(--sec);
   padding-bottom: 40px;
   font-size: 13px;
   color: var(--ink-faint);
@@ -582,10 +585,9 @@ a.hob { color: var(--ink); }
   #work h2 { line-height: 1.2; }
   .cards { width: 100%; margin-left: 0; translate: none; }
   /* Experience: level with the first company, below the about text */
-  section.col h2.sub { margin-top: 58px; }
-  .exp div:first-child { margin-top: 56px; }
-  .svc { margin-top: 56px; }
-  .stack { margin-top: 56px; }
-  section.col h2.sub:has(+ .stack) { margin-top: 52px; }
-  section.col h2.sub:has(+ .svc) { margin-top: 43px; }
+  /* each part sits var(--sub) below the last; its label is nudged level with it (measured) */
+  section.col h2.sub { margin-top: calc(var(--sub) + var(--nudge, 0px)); }
+  .exp div:first-child, .svc, .stack { margin-top: var(--sub); }
+  section.col h2.sub:has(+ .svc) { --nudge: -14px; }
+  section.col h2.sub:has(+ .stack) { --nudge: -5px; }
 }
