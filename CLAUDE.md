@@ -59,7 +59,16 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
 - **Contact:** the Email / LinkedIn / Twitter row at the end of About was removed 2026-11-17 (my ask); contact lives in the hero intro (Twitter, LinkedIn, copy my email) (the nav's Email was removed too, 2026-11-17). No GitHub link.
 
-## Resume here (2026-11-17)
+## Resume here (2026-11-19): senior-designer review applied
+
+I asked for an honest review, then "fix the rest" (everything except the NU case study and "Twitter", which stay as they are):
+- **Hero:** name is "Rohit Gentyal"; the lead line is the headline (21px, 19 on phones); the email is shown in full ("Write to rohitgentyal0201@gmail.com"; click still copies it).
+- **Work:** the Genzo card plays three component clips in turn (`assets/genzo-offer/code/hold.mp4`, the 1440×1080 post videos from Genzo's `tools/posts/out`), each once, then the next (`work.js`); they load only near the screen. Its line no longer promises Compose code: "Everyday interface elements with motion. Designers open the Figma file; Android code is on its way." The old `genzo-*.png` shots are unused.
+- **About:** "since 2025" is gone; it opens with how I work. **Services:** three (Product Design · Design Systems · Motion); "Full-time" dropped from the ways to work. **Stack:** labelled chips (icon + name), no depth drift. **Experience:** one line per company on what I did.
+- **Section labels** are in the hill's italic Instrument Serif (20px), tying the page to the hero. The hero's screen-reader description follows day / night (`showMode` in scene.js).
+- **Still open (needs me):** the NU case study, a CV PDF to link, and any real outcomes/metrics to show.
+
+## Earlier (2026-11-17)
 
 Today was the **poems side** (all pushed; details in the Poems notes under Current state):
 - **Main site:** the About hobby line ends at "game" (the "short poems" link is gone: the poems are a secret, found only by the small line under the footer). "Back to the hill" and the browser's Back button both land at the top of the hill (`turn.js`).

@@ -12,10 +12,9 @@
 
   const LINES = {
     genzo: {
-      home: ["every element moves. go see", "free, even for client work"],
-      components: ["8 components, 0 invoices", "hover them, they flinch"],
-      icons: ["356 icons, 162 of them dance", "icons that answer back"],
-      calendar: ["pick a date, any date", "Diwali's in there. tap it"],
+      offer: ["the coupon tears. try it", "free, even for client work"],
+      code: ["type 246810, go on", "wrong code? it shakes its head"],
+      hold: ["hold it like you mean it", "no accidental deletes"],
     },
     email: {
       morning: ["first email of the day?", "morning hi > evening hi"],
@@ -122,9 +121,8 @@
   const card = document.querySelector(".pcard");
   if (card) {
     const shot = () => {
-      const on = card.querySelector(".board img.on") || card.querySelector(".board img");
-      const key = (on.getAttribute("src").match(/genzo-(\w+)\./) || [])[1] || "home";
-      return LINES.genzo[key] || LINES.genzo.home;
+      const on = card.querySelector(".board .shot.on") || card.querySelector(".board .shot");
+      return LINES.genzo[on && on.dataset.key] || LINES.genzo.offer;
     };
     wire(card, shot);
     new MutationObserver(() => refresh(card)).observe(card.querySelector(".board"), { subtree: true, attributeFilter: ["class"] });

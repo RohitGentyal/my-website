@@ -1705,7 +1705,12 @@ void main() {
   // The moon in the top bar switches the whole page to night (and the sun back);
   // the choice is remembered. The sky, hill and moonlight cross-fade in CSS.
   const modeBtn = document.getElementById("mode");
+  const sceneEl = document.getElementById("scene");
   function showMode() {
+    // the scene's description follows the light, so a screen reader hears the night when it shows
+    if (sceneEl) sceneEl.setAttribute("aria-label", isNight
+      ? "A painted hillside at night under a full moon and stars, fireflies over the flowers, and a sandy path winding up the grassy slope past a few rocks."
+      : "A painted summer hillside under a teal sky with one towering cloud, and a sandy path winding up the grassy slope past a few rocks.");
     if (!modeBtn) return;
     modeBtn.setAttribute("aria-pressed", isNight);
     modeBtn.setAttribute("aria-label", isNight ? "Day mode" : "Night mode");

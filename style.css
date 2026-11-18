@@ -115,7 +115,7 @@ a { color: inherit; text-decoration: none; }
 }
 .intro p { color: var(--on-sky-soft); margin: 0 0 14px; }
 /* the lead line reads first: brighter, a touch heavier */
-.intro p.lead { color: var(--on-sky); font-weight: 500; }
+.intro p.lead { color: var(--on-sky); font-weight: 500; font-size: 21px; line-height: 1.45; letter-spacing: -0.01em; margin-bottom: 18px; text-wrap: balance; }
 /* inline links in the intro: always quietly underlined, the line goes solid on hover */
 .ul {
   position: relative;
@@ -190,12 +190,12 @@ a { color: inherit; text-decoration: none; }
 
 /* Sections */
 section.col { padding-top: 96px; font-size: 16px; }
+/* section labels speak in the hill's voice: the italic serif of the name and the corner quote */
 h2 {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ink-faint);
+  font: italic 400 20px/1.3 var(--serif);
+  color: var(--ink-soft);
   margin: 0 0 18px;
-  letter-spacing: .02em;
+  letter-spacing: 0;
 }
 
 /* Work: project cards in a grid a little wider than the text. Each board is a soft well holding a
@@ -222,7 +222,7 @@ h2 {
   overflow: hidden;
 }
 .pcard:only-child .board { aspect-ratio: 16 / 9; }
-.board img {
+.board .shot {
   position: absolute;
   inset: var(--pad);
   margin: auto;
@@ -235,9 +235,11 @@ h2 {
   opacity: 0;
   transition: opacity .9s cubic-bezier(.23, 1, .32, 1), transform .6s cubic-bezier(.23, 1, .32, 1);
 }
-.board img.on { opacity: 1; }
-@media (hover: hover) and (pointer: fine) { .pcard:hover .board img { transform: translateY(-4px); } }
-.pcard:active .board img { transform: scale(.99); }
+/* the clips are 4:3: sized by the board's height, cropped a hair if the board is narrower */
+video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fit: cover; background: #f7f5f0; }
+.board .shot.on { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .pcard:hover .board .shot { transform: translateY(-4px); } }
+.pcard:active .board .shot { transform: scale(.99); }
 .dots { position: absolute; left: 50%; bottom: 10px; translate: -50% 0; display: flex; gap: 5px; }
 .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink); opacity: .16; transition: opacity .4s cubic-bezier(.23, 1, .32, 1); }
 .dots i.on { opacity: .55; }
@@ -252,13 +254,13 @@ h2 {
   .cards { grid-template-columns: 1fr; width: 100%; margin-left: 0; translate: none; }
   .pcard:only-child .board { aspect-ratio: 4 / 3; }
 }
-@media (prefers-reduced-motion: reduce) { .board img { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .board .shot { transition: none; } }
 
 
 #about p { color: var(--ink-soft); margin: 0 0 14px; }
 #about p:first-of-type { color: var(--ink); }
-/* Services: two quiet columns of what I do, then one muted line on how to work together */
-.svc { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; margin: 18px 0 0; padding: 0; color: var(--ink); font-weight: 500; }
+/* Services: three things, in one quiet row, then one muted line on how to work together */
+.svc { list-style: none; display: grid; grid-template-columns: repeat(3, auto); justify-content: start; column-gap: 40px; gap: 6px 24px; margin: 18px 0 0; padding: 0; color: var(--ink); font-weight: 500; }
 #about .svc-ways { margin: 20px 0 14px; color: var(--ink-faint); font-size: 14px; }
 @media (max-width: 560px) { .svc { grid-template-columns: 1fr; } }
 /* Stack: a row of small tiles, each tool's logo in muted ink. Hover (or keyboard focus) lifts the tile
@@ -266,11 +268,13 @@ h2 {
    Logos from Simple Icons (CC0) */
 .stack { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 14px; padding: 0; }
 .stack li {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 13px 0 11px;
+  font-size: 14px;
+  border-radius: 11px;
   border: 1px solid var(--rule);
   background: var(--tile);
   color: var(--ink-faint);
@@ -279,7 +283,9 @@ h2 {
   transition: translate .35s cubic-bezier(.34, 1.56, .64, 1), color .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 [data-theme="night"] .stack li { background: #171c27; }
-.stack svg { width: 20px; height: 20px; fill: currentColor; }
+.stack svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+.stack li span { color: var(--ink-soft); transition: color .25s ease; }
+.stack li:hover span, .stack li:focus-visible span { color: var(--ink); }
 .stack li:hover, .stack li:focus-visible {
   translate: 0 -3px;
   color: var(--brand);
@@ -302,6 +308,7 @@ h2.sub { margin: 40px 0 0; }
   line-height: 1.5;
   padding: 3px 0;
 }
+.exp dd.did { display: block; color: var(--ink-faint); font-size: 14px; padding: 0 0 6px; }
 .exp .when { color: var(--ink-faint); font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* the role I'm in now: a small green dot that breathes, a ring easing out of it */
 .exp .now {
@@ -372,7 +379,7 @@ h2.sub { margin: 40px 0 0; }
   section.col { font-size: 16px; }
   body { font-size: 16px; }
   .top { font-size: 16px; }
-  h2 { font-size: 14px; }
+  h2 { font-size: 19px; }
   .exp dd { font-size: 15px; }
   .exp .when { font-size: 13px; }
   .foot { font-size: 13px; }
@@ -380,6 +387,7 @@ h2.sub { margin: 40px 0 0; }
   .top { padding: 18px 20px; }
   .top nav { gap: 16px; }
   .intro h1 { font-size: 40px; }
+  .intro p.lead { font-size: 19px; }
   .hero .intro { margin: 0 20px; }
   .hero { min-height: 720px; }
   .live { right: 16px; left: 16px; bottom: 16px; }
@@ -574,7 +582,7 @@ a.hob { color: var(--ink); }
     margin: 0;
     text-align: right;
     font-weight: 400;
-    line-height: 1.65;
+    line-height: 1.32;
     letter-spacing: 0;
   }
   /* Work: level with the top of the card */
