@@ -1,7 +1,7 @@
 // The footer: the far end of the hero's world. The same sky, cloud and meadow, painted in the same hand
 // (seeded brush marks, the hill's palette), seen from further off: a bank of cumulus sitting on the far
 // hills, the sandy path from the top of the page finally arriving at a lone tree, flowers along the way.
-// At night: the night sky, stars, the land tinted moonlit, a few fireflies.
+// At night: the night sky, stars and night clouds, and the land under the hill's own night filter (style.css).
 // One canvas, painted once when the footer comes near (and again only if its width or the theme changes).
 // No per-frame work. The page fades into its sky (style.css, .meadow mask), the way the hill fades into
 // the page, so the flow never breaks.
@@ -344,11 +344,6 @@
   const touchCv = document.getElementById("meadowTouch"), tg = touchCv.getContext("2d");
   const hex = (c) => "#" + c.map((v) => Math.round(clamp(v, 0, 1) * 255).toString(16).padStart(2, "0")).join("");
   const moonOf = (c) => { const [a, b, d] = [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255); return hex([a * MOON[0], b * MOON[1], d * MOON[2]]); };
-  function tintFlowers() {
-    fl.leaves.forEach((l) => (l.c = moonOf(l.c)));
-    fl.stems.forEach((s) => { s.heart = moonOf(s.heart); s.dabs.forEach((p) => (p.c = moonOf(p.c))); });
-    fl.stemC = moonOf(LEAVES[0]);
-  }
   function drawFlowers() {
     tg.setTransform(1, 0, 0, 1, 0, 0);
     tg.clearRect(0, 0, touchCv.width, touchCv.height);
@@ -430,19 +425,6 @@
       lg.restore();
       return true;
     });
-  }
-
-  // moonlight: the land cooled and dimmed in one pass (like the hero's night filter), then fireflies
-  function moonlit() {
-    g.save();
-    for (let i = 0; i < (narrow ? 7 : 14); i++) {
-      const x = r(0.04, 0.96) * W, y = r(H * 0.7, H * 0.95), R = r(10, 18) * S;
-      const gl = g.createRadialGradient(x, y, 0, x, y, R);
-      gl.addColorStop(0, "rgba(240, 255, 170, 0.9)"); gl.addColorStop(0.25, "rgba(220, 250, 130, 0.45)"); gl.addColorStop(1, "rgba(200, 245, 100, 0)");
-      g.fillStyle = gl; g.beginPath(); g.arc(x, y, R, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#f3ffb8"; g.beginPath(); g.arc(x, y, 1.4 * S, 0, Math.PI * 2); g.fill();
-    }
-    g.restore();
   }
 
   // ---------------------------------------------------------------- swaying grass
@@ -632,13 +614,11 @@ void main() {
   }, { passive: true });
   foot.addEventListener("pointerleave", () => { lastX = null; });
 
-  let maskCopy = null;
-  const landMask = () => maskCopy;
   let painted = "", near_ = false, dpr = 1;
   function paint() {
     const night = document.documentElement.dataset.theme === "night";
     const w = foot.clientWidth, h = foot.clientHeight;
-    const key = `${w}x${h}:${night}`;
+    const key = `${w}x${h}:${night}`; // night repaints the sky and clouds; the land is the same
     if (!w || !h || key === painted) return;
     painted = key;
     W = w; H = h; narrow = W < 640; lift = narrow ? 0.09 : 0.05; S = clamp(W / 1440, 0.62, 1.15);
@@ -659,15 +639,8 @@ void main() {
     g = main;
     seed = 91;
     clouds(night ? NIGHT_CLOUD : DAY_CLOUD);
-    // at night the land is painted on its own layer and cooled in one pass, so the tint touches only the
-    // land (tree crown included) and never the sky
-    let layer = null;
-    if (night) {
-      layer = document.createElement("canvas");
-      layer.width = cv.width; layer.height = cv.height;
-      g = layer.getContext("2d");
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+    // the land is painted in its day colours whatever the theme: at night .meadow-land carries the hill's
+    // exact night filter (style.css), so the footer's grass reads as the same grass as the hill's
     seed = 13;
     hills(night);
     meadow();
@@ -679,27 +652,10 @@ void main() {
     flowers();
     seed = 21;
     drawTree();
-    if (useGL) buildSway(night, dpr);
-    if (night) tintFlowers();
+    if (useGL) buildSway(false, dpr);
     drawFlowers();
-    setLeaves(night);
+    setLeaves(false);
     run();
-    if (night) {
-      g.setTransform(1, 0, 0, 1, 0, 0);
-      maskCopy = document.createElement("canvas"); maskCopy.width = layer.width; maskCopy.height = layer.height;
-      maskCopy.getContext("2d").drawImage(layer, 0, 0);
-      g.globalCompositeOperation = "multiply";
-      g.fillStyle = "#4a5f96"; g.fillRect(0, 0, layer.width, layer.height);
-      g.globalCompositeOperation = "destination-in";   // keep the land's own shape after multiplying
-      g.drawImage(landMask(layer), 0, 0);
-      g.globalCompositeOperation = "source-over";
-      g = main;
-      g.setTransform(1, 0, 0, 1, 0, 0);
-      g.drawImage(layer, 0, 0);
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      maskCopy = null; // freed: both scratch canvases go once the night is painted
-      seed = 3; moonlit();
-    }
   }
 
   const later = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 60));

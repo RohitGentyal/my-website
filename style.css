@@ -365,6 +365,11 @@ h2.sub { margin: var(--sub) 0 0; }
   mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,.12) 70px, rgba(0,0,0,.45) 150px, rgba(0,0,0,.85) 230px, #000 290px);
 }
 .meadow-clouds { overflow: hidden; pointer-events: none; }
+/* the land's layers sit in one wrapper; at night it takes the hill's own night filter (scene.js, applyNight at
+   full night), so the footer's grass, tree and flowers match the hill's dark grass exactly */
+.meadow-land canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.meadow-land canvas.meadow-leaves { inset: auto; }
+[data-theme="night"] .meadow-land { filter: brightness(.48) saturate(.7) hue-rotate(16deg); }
 .meadow-clouds canvas { position: absolute; left: 0; top: 0; will-change: transform; }
 .meadow-leaves { will-change: contents; }
 .foot-in {
