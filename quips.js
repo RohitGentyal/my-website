@@ -1,42 +1,23 @@
-// The cursor's capsule. Over anything clickable (the intro's links, the Genzo card, the hobby words,
-// Email, LinkedIn) one small speech bubble trails the cursor, its tail at the arrow's tip, and says
-// something picked for the moment (style.css, .quip). It trails a little and never tilts:
-// - the Genzo card speaks about whichever screenshot is up, and changes with it while you hover;
-// - Email reads the visitor's own clock; "copy my email" knows once it has copied;
-// - the hobby words change once you've heard them, and show an equalizer while their sound plays;
-// - a line never repeats the one shown just before it, so each hover says something new.
+// The cursor's capsule: one small speech bubble that trails the cursor, its tail at the arrow's tip (style.css, .quip).
+// Only on three things (my ask): the Genzo card (names the clip on show), the poems line under the footer, and the
+// hobby words (says a click plays a sound; an equalizer while it plays). Plain words, nothing cryptic.
 // Touch screens don't get it (no cursor to follow).
 (() => {
   if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // plain words: say what the thing is and what a click does
   const LINES = {
     genzo: {
-      offer: ["the coupon tears. try it", "free, even for client work"],
-      code: ["type 246810, go on", "wrong code? it shakes its head"],
-      hold: ["hold it like you mean it", "no accidental deletes"],
+      offer: ["Offer Applied, a Genzo component", "Open Genzo in a new tab"],
+      code: ["Code Input, a Genzo component", "Open Genzo in a new tab"],
+      hold: ["Hold to Confirm, a Genzo component", "Open Genzo in a new tab"],
     },
-    email: {
-      morning: ["first email of the day?", "morning hi > evening hi"],
-      day: ["say hi, I'm nice", "lunch-break email? bold"],
-      evening: ["evening mail hits different", "no meeting, just a hi"],
-      night: ["night owl? same", "I'll reply after sleeping"],
-    },
-    linkedin: ["connect, don't lurk", "endorse me for vibes", "less posting, more design", "we'd make a strong tie"],
-    x: ["mostly design, some memes", "follow for pixels", "I post when it moves"],
-    about: ["it's just below", "spoiler: football"],
-    stack: {
-      figma: ["Figma, where it all starts", "Figma, my second home"],
-      ai: ["AI: Claude, ChatGPT, Gemini", "AI, for the 2 a.m. ideas", "AI, my thinking partner"],
-      framer: ["Framer, sites that ship fast", "Framer, for motion that publishes"],
-    },
-    verse: ["there’s an open sky past this", "the softer side", "lights low, this way"],
-    poemDoor: ["they live under an open sky", "come and read a few", "the quiet side of me"],
-    copy: { fresh: ["one click, it's yours", "no typing, promise"], done: ["copied. paste away", "it's in your clipboard"] },
+    verse: ["Read my poems"],
     hob: {
-      football: { fresh: ["kick it", "goal?", "on the pitch"], heard: ["again? fine", "encore"] },
-      barbell: { fresh: ["lift it", "spot me?", "light weight"], heard: ["one more rep", "no pain"] },
-      game: { fresh: ["press start", "insert coin", "player 2?"], heard: ["continue? 9… 8…", "new high score"] },
+      football: { fresh: ["Click to play a football sound"], heard: ["Play it again"] },
+      barbell: { fresh: ["Click to play a gym sound"], heard: ["Play it again"] },
+      game: { fresh: ["Click to play a gaming sound"], heard: ["Play it again"] },
     },
   };
 
@@ -126,29 +107,11 @@
     new MutationObserver(() => refresh(card)).observe(card.querySelector(".board"), { subtree: true, attributeFilter: ["class"] });
   }
 
-  // ---- Email, LinkedIn and X at the end of About
-  document.querySelectorAll(".links a").forEach((a) => {
-    const mail = a.href.startsWith("mailto:");
-    wire(a, () => {
-      if (!mail) return a.hostname === "x.com" ? LINES.x : LINES.linkedin;
-      const h = new Date().getHours(), e = LINES.email;
-      return h >= 5 && h < 11 ? e.morning : h < 17 ? e.day : h < 22 ? e.evening : e.night;
-    });
-  });
-
-  // ---- the intro's inline links. "copy my email" copies it (and says so); if the clipboard is refused
-  // it copies through a hidden field, and only if that fails too, opens the mail app
-  document.querySelectorAll(".intro [data-quip]").forEach((el) => {
-    const kind = el.dataset.quip;
-    let copied = false;
-    const byClock = () => { const h = new Date().getHours(), e = LINES.email; return h >= 5 && h < 11 ? e.morning : h < 17 ? e.day : h < 22 ? e.evening : e.night; };
-    const get = () => kind === "copy" ? LINES.copy[copied ? "done" : "fresh"]
-      : kind === "email" ? byClock() : LINES[kind];
-    wire(el, get);
-    if (kind !== "copy") return;
+  // ---- "copy my email" in the intro: no bubble (only Work, the poems line and the hobby words have one),
+  // but a click still copies the address while the link opens Gmail
+  document.querySelectorAll('.intro [data-quip="copy"]').forEach((el) => {
     el.addEventListener("click", () => {
       const mail = el.dataset.email;
-      const done = () => { copied = true; refresh(el); };
       const fallback = () => {
         const f = document.createElement("textarea");
         f.value = mail;
@@ -156,25 +119,17 @@
         f.style.cssText = "position:fixed;opacity:0;pointer-events:none";
         document.body.appendChild(f);
         f.select();
-        let ok = false;
-        try { ok = document.execCommand("copy"); } catch (e) {}
+        try { document.execCommand("copy"); } catch (e) {}
         f.remove();
-        el.focus({ preventScroll: true });
-        if (ok) done(); else if (el.tagName !== "A") location.href = "mailto:" + mail; // a link opens Gmail anyway
       };
-      if (navigator.clipboard) navigator.clipboard.writeText(mail).then(done, fallback);
+      if (navigator.clipboard) navigator.clipboard.writeText(mail).catch(fallback);
       else fallback();
     });
   });
 
   // ---- the doors to the poems: the secret line under the footer, and "short poems" in About
-  const poemDoor = document.querySelector(".poem-door");
-  if (poemDoor) wire(poemDoor, () => LINES.poemDoor);
   const verse = document.getElementById("verse");
   if (verse) wire(verse, () => LINES.verse);
-
-  // ---- Stack tiles: the tool's name, with an aside
-  document.querySelectorAll(".stack li[data-tool]").forEach((li) => wire(li, () => LINES.stack[li.dataset.tool]));
 
   // ---- hobby words: fresh lines until you've played it, then they know; an equalizer while it plays
   document.querySelectorAll(".hob[data-sound]").forEach((w) => {
