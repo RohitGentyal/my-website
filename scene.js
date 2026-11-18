@@ -1711,6 +1711,7 @@ void main() {
     if (sceneEl) sceneEl.setAttribute("aria-label", isNight
       ? "A painted hillside at night under a full moon and stars, fireflies over the flowers, and a sandy path winding up the grassy slope past a few rocks."
       : "A painted summer hillside under a teal sky with one towering cloud, and a sandy path winding up the grassy slope past a few rocks.");
+    tick();
     if (!modeBtn) return;
     modeBtn.setAttribute("aria-pressed", isNight);
     modeBtn.setAttribute("aria-label", isNight ? "Day mode" : "Night mode");
@@ -1851,9 +1852,9 @@ void main() {
 
   function tick() {
     if (!clock) return;
+    // the words follow the hill, not the visitor's clock: morning while it's day, night once it turns dark
     const now = new Date();
-    const h = now.getHours();
-    const part = h < 5 ? "Late night" : h < 12 ? "Morning" : h < 17 ? "Afternoon" : h < 20 ? "Golden hour" : "Evening";
+    const part = isNight ? "Night" : "Morning";
     clock.textContent = `${part} on the hill · ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} where you are`;
   }
   tick();

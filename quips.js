@@ -142,8 +142,9 @@
   document.querySelectorAll(".intro [data-quip]").forEach((el) => {
     const kind = el.dataset.quip;
     let copied = false;
+    const byClock = () => { const h = new Date().getHours(), e = LINES.email; return h >= 5 && h < 11 ? e.morning : h < 17 ? e.day : h < 22 ? e.evening : e.night; };
     const get = () => kind === "copy" ? LINES.copy[copied ? "done" : "fresh"]
-      : LINES[kind];
+      : kind === "email" ? byClock() : LINES[kind];
     wire(el, get);
     if (kind !== "copy") return;
     el.addEventListener("click", () => {

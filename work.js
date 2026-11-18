@@ -16,10 +16,15 @@
       shots[i].classList.add("on"); dots[i] && dots[i].classList.add("on");
       if (live) play();
     };
-    shots.forEach((v) => v.addEventListener("ended", () => show((i + 1) % shots.length)));
+    // fetch a clip only when it is about to be needed: the one on show, and the next once that one plays
+    const fetchClip = (v) => { if (v.preload !== "auto") { v.preload = "auto"; v.load(); } };
+    shots.forEach((v, n) => {
+      v.addEventListener("ended", () => show((i + 1) % shots.length));
+      v.addEventListener("playing", () => fetchClip(shots[(n + 1) % shots.length]), { once: true });
+    });
     new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        shots.forEach((v) => { if (v.preload !== "auto") { v.preload = "auto"; v.load(); } });
+        fetchClip(shots[i]);
         if (calm) return;
         live = true; play();
       } else { live = false; shots[i].pause(); }
