@@ -2,6 +2,40 @@
 // Only on three things (my ask): the Genzo card (names the clip on show), the poems line under the footer, and the
 // hobby words (says a click plays a sound; an equalizer while it plays). Plain words, nothing cryptic.
 // Touch screens don't get it (no cursor to follow).
+
+// "Email" in the footer copies the address on any device: the word turns to "Copied" for a moment, and
+// the bubble (on a mouse) says so too
+(() => {
+  document.querySelectorAll("[data-copy]").forEach((el) => {
+    const label = el.textContent;
+    let t = 0;
+    el.addEventListener("click", () => {
+      const text = el.dataset.copy;
+      const done = () => {
+        el.textContent = "Copied"; el.dataset.copied = "1";
+        el.dispatchEvent(new Event("copied"));
+        clearTimeout(t); t = setTimeout(() => { el.textContent = label; }, 1600);
+      };
+      const fallback = () => {
+        const f = document.createElement("textarea");
+        f.value = text; f.setAttribute("readonly", ""); f.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+        document.body.appendChild(f); f.select();
+        let ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) {}
+        f.remove(); el.focus({ preventScroll: true });
+        if (ok) done(); else location.href = "mailto:" + text;
+      };
+      // the clipboard can wait forever in a window without focus; after half a second copy the old way
+      let settled = false;
+      const once = (fn) => () => { if (!settled) { settled = true; fn(); } };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(once(done), once(fallback));
+        setTimeout(once(fallback), 500);
+      } else fallback();
+    });
+  });
+})();
+
 (() => {
   if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -15,7 +49,7 @@
     },
     verse: ["Come read my poems"],
     say: {
-      email: ["Write to me, I read every one"],
+      email: { fresh: ["Click to copy my email"], done: ["Copied, paste it anywhere"] },
       linkedin: ["Let's connect on LinkedIn"],
       twitter: ["Follow along on Twitter"],
     },
@@ -136,7 +170,12 @@
   const verse = document.getElementById("verse");
   if (verse) wire(verse, () => LINES.verse);
   // ---- the footer's Say hi links
-  document.querySelectorAll(".foot-cols [data-quip]").forEach((a) => wire(a, () => LINES.say[a.dataset.quip]));
+  document.querySelectorAll(".foot-cols [data-quip]").forEach((a) => {
+    const k = a.dataset.quip;
+    if (k !== "email") { wire(a, () => LINES.say[k]); return; }
+    wire(a, () => LINES.say.email[a.dataset.copied ? "done" : "fresh"]);
+    a.addEventListener("copied", () => refresh(a));
+  });
 
   // ---- hobby words: fresh lines until you've played it, then they know; an equalizer while it plays
   document.querySelectorAll(".hob[data-sound]").forEach((w) => {

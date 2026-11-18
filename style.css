@@ -387,14 +387,15 @@ h2.sub { margin: var(--sub) 0 0; }
 .foot-cols { display: flex; gap: 64px; }
 .foot-cols div { display: flex; flex-direction: column; gap: 8px; min-width: 96px; }
 .foot-cols h3 { margin: 0 0 4px; font: 500 13px/1.4 var(--sans); color: var(--ink-faint); letter-spacing: .01em; }
-.foot-cols a {
+.foot-cols a, .foot-copy {
   width: fit-content;
   font-size: 15px; color: var(--ink);
   background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
   padding-bottom: 1px;
   transition: background-size .35s ease;
 }
-.foot-cols a:hover, .foot-cols a:focus-visible { background-size: 100% 1px; outline: none; }
+.foot-copy { padding: 0 0 1px; border: 0; background-color: transparent; font: inherit; font-size: 15px; text-align: left; cursor: pointer; text-shadow: inherit; }
+.foot-cols a:hover, .foot-cols a:focus-visible, .foot-copy:hover, .foot-copy:focus-visible { background-size: 100% 1px; outline: none; }
 .foot-row {
   font-size: 13px;
   text-shadow: 0 1px 2px rgba(20, 36, 8, .55), 0 0 14px rgba(20, 36, 8, .35);
