@@ -14,6 +14,11 @@
       hold: ["See Hold to Confirm in Genzo ↗"],
     },
     verse: ["Come read my poems"],
+    say: {
+      email: ["Write to me, I read every one"],
+      linkedin: ["Let's connect on LinkedIn"],
+      twitter: ["Follow along on Twitter"],
+    },
     hob: {
       football: { fresh: ["Hear my goal celebration"], heard: ["Once more?"] },
       barbell: { fresh: ["Hear my gym hype"], heard: ["One more rep?"] },
@@ -130,6 +135,8 @@
   // ---- the doors to the poems: the secret line under the footer, and "short poems" in About
   const verse = document.getElementById("verse");
   if (verse) wire(verse, () => LINES.verse);
+  // ---- the footer's Say hi links
+  document.querySelectorAll(".foot-cols [data-quip]").forEach((a) => wire(a, () => LINES.say[a.dataset.quip]));
 
   // ---- hobby words: fresh lines until you've played it, then they know; an equalizer while it plays
   document.querySelectorAll(".hob[data-sound]").forEach((w) => {

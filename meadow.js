@@ -324,22 +324,111 @@
       clumps.push({ x: cx, y: cy, R });
       const pal = pick(BLOOMS), alt = pick(BLOOMS);
       for (let k = 0; k < 50; k++) {
-        g.fillStyle = pick(LEAVES);
-        g.beginPath(); g.ellipse(cx + r(-R, R), cy + r(-R * 0.3, R * 0.3), r(3, 6) * S * (0.4 + d), r(1.2, 2.6) * S * (0.4 + d), r(-0.9, 0.9), 0, Math.PI * 2); g.fill();
+        fl.leaves.push({ x: cx + r(-R, R), y: cy + r(-R * 0.3, R * 0.3), rx: r(3, 6) * S * (0.4 + d), ry: r(1.2, 2.6) * S * (0.4 + d), a: r(-0.9, 0.9), c: pick(LEAVES) });
       }
       const n = 26 + Math.floor(rand() * 12);
       for (let k = 0; k < n; k++) {
         const bx = cx + r(-R, R) * 0.9, by = cy + r(-R * 0.25, R * 0.3), tall = r(8, 20) * S * (0.35 + d);
         const hx = bx + r(-3, 3) * S, hy = by - tall, size = r(3, 5) * S * (0.4 + d), P = rand() < 0.28 ? alt : pal;
-        g.strokeStyle = LEAVES[0]; g.lineWidth = 0.9 * S * (0.5 + d);
-        g.beginPath(); g.moveTo(bx, by); g.quadraticCurveTo(bx, (by + hy) / 2, hx, hy); g.stroke();
+        const dabs = [];
         for (let p = 0; p < 5; p++) {
           const a = (p / 5) * Math.PI * 2 + r(-0.2, 0.2);
-          g.fillStyle = P[p % 2];
-          g.beginPath(); g.ellipse(hx + Math.cos(a) * size * 0.9, hy + Math.sin(a) * size * 0.6, size * 0.85, size * 0.5, a, 0, Math.PI * 2); g.fill();
+          dabs.push({ dx: Math.cos(a) * size * 0.9, dy: Math.sin(a) * size * 0.6, rx: size * 0.85, ry: size * 0.5, a, c: P[p % 2] });
         }
-        g.fillStyle = P[2]; g.beginPath(); g.arc(hx, hy, size * 0.38, 0, Math.PI * 2); g.fill();
+        fl.stems.push({ x: bx, y: by, hx, hy, w: 0.9 * S * (0.5 + d), dabs, heart: P[2], hs: size * 0.38, b: 0, v: 0 });
       }
+    });
+  }
+
+  let fl = { leaves: [], stems: [] };
+  const touchCv = document.getElementById("meadowTouch"), tg = touchCv.getContext("2d");
+  const hex = (c) => "#" + c.map((v) => Math.round(clamp(v, 0, 1) * 255).toString(16).padStart(2, "0")).join("");
+  const moonOf = (c) => { const [a, b, d] = [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255); return hex([a * MOON[0], b * MOON[1], d * MOON[2]]); };
+  function tintFlowers() {
+    fl.leaves.forEach((l) => (l.c = moonOf(l.c)));
+    fl.stems.forEach((s) => { s.heart = moonOf(s.heart); s.dabs.forEach((p) => (p.c = moonOf(p.c))); });
+    fl.stemC = moonOf(LEAVES[0]);
+  }
+  function drawFlowers() {
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    tg.clearRect(0, 0, touchCv.width, touchCv.height);
+    tg.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fl.leaves.forEach((l) => { tg.fillStyle = l.c; tg.beginPath(); tg.ellipse(l.x, l.y, l.rx, l.ry, l.a, 0, Math.PI * 2); tg.fill(); });
+    tg.lineCap = "round";
+    fl.stems.forEach((s) => {
+      const dx = s.hx - s.x, dy = s.hy - s.y, c = Math.cos(s.b), sn = Math.sin(s.b);
+      const ox = s.x + dx * c - dy * sn - s.hx, oy = s.y + dx * sn + dy * c - s.hy;
+      tg.strokeStyle = fl.stemC || LEAVES[0]; tg.lineWidth = s.w;
+      tg.beginPath(); tg.moveTo(s.x, s.y); tg.quadraticCurveTo(s.x + ox * 0.3, (s.y + s.hy) / 2, s.hx + ox, s.hy + oy); tg.stroke();
+      s.dabs.forEach((p) => { tg.fillStyle = p.c; tg.beginPath(); tg.ellipse(s.hx + ox + p.dx, s.hy + oy + p.dy, p.rx, p.ry, p.a, 0, Math.PI * 2); tg.fill(); });
+      tg.fillStyle = s.heart; tg.beginPath(); tg.arc(s.hx + ox, s.hy + oy, s.hs, 0, Math.PI * 2); tg.fill();
+    });
+  }
+
+  // ---------------------------------------------------------------- falling leaves
+  // Now and then a leaf lets go of the tree and drifts down, slow and calm: it sways side to side,
+  // turns over as it falls (it narrows as it shows its edge), drifts a little with the breeze, settles
+  // in the grass, rests a moment and fades. Never more than five at once. Only on its own small canvas
+  // round the tree, so each frame costs next to nothing.
+  const leafCv = document.createElement("canvas");
+  leafCv.setAttribute("aria-hidden", "true");
+  leafCv.className = "meadow-leaves";
+  const lg = leafCv.getContext("2d");
+  let fallen = [], nextLeaf = 0, box = null, leafNight = false;
+  const LEAF_DAY = ["#b4d75a", "#c9cf5a", "#d8c05a", "#e0a94a", "#d98f3e", "#a9c24c"];
+  function setLeaves(night) {
+    const { x, y, h } = tree;
+    box = { x: x - h * 0.95, y: y - h * 1.15, w: h * 1.9, h: h * 1.15 + 34 * S };
+    leafCv.width = Math.round(box.w * dpr); leafCv.height = Math.round(box.h * dpr);
+    leafCv.style.cssText = `position:absolute;left:${box.x.toFixed(1)}px;top:${box.y.toFixed(1)}px;width:${box.w.toFixed(1)}px;height:${box.h.toFixed(1)}px;pointer-events:none`;
+    if (!leafCv.parentNode) touchCv.after(leafCv);
+    fallen = []; nextLeaf = 1.2; leafNight = night;
+  }
+  function fall(dt) {
+    if (!box) return;
+    const { x, y, h } = tree, R = h * 0.4, cx = x + h * 0.02, cy = y - h * 0.66;
+    nextLeaf -= dt;
+    if (nextLeaf <= 0 && fallen.length < 5) {
+      nextLeaf = r(2.2, 4.5);
+      const c = pick(LEAF_DAY);
+      fallen.push({
+        x0: cx + r(-0.85, 0.85) * R, y: cy + r(0, 0.45) * R, t: 0, ph: r(0, 6.28), w: r(0.7, 1.15),
+        amp: r(10, 22) * S, wind: r(-9, -2) * S, vy: r(10, 16) * S, size: r(4.6, 6.4) * S,
+        ground: y + r(-4, 26) * S, rest: -1, c: leafNight ? moonOf(c) : c,
+      });
+    }
+    lg.setTransform(1, 0, 0, 1, 0, 0);
+    lg.clearRect(0, 0, leafCv.width, leafCv.height);
+    lg.setTransform(dpr, 0, 0, dpr, -box.x * dpr, -box.y * dpr);
+    fallen = fallen.filter((l) => {
+      l.t += dt;
+      let a = 1, flip, tilt;
+      if (l.rest < 0) {
+        l.y += l.vy * dt;
+        l.x = l.x0 + l.wind * l.t + l.amp * Math.sin(l.w * l.t + l.ph);
+        flip = Math.cos(l.t * l.w * 1.6 + l.ph);
+        tilt = 0.7 * Math.sin(l.w * l.t + l.ph + 1.2);
+        if (l.y >= l.ground) { l.rest = 0; l.flip = flip; l.tilt = tilt; }
+      } else {
+        l.rest += dt; flip = l.flip; tilt = l.tilt;
+        a = l.rest < 2.5 ? 1 : 1 - (l.rest - 2.5) / 2;
+        if (a <= 0) return false;
+      }
+      lg.save();
+      lg.globalAlpha = a;
+      lg.translate(l.x, l.y); lg.rotate(tilt);
+      lg.fillStyle = l.c;
+      // a leaf: a pointed oval that narrows as it turns edge-on, with a faint midrib
+      const ry = l.size * 0.48 * (0.25 + 0.75 * Math.abs(flip));
+      lg.beginPath();
+      lg.moveTo(-l.size, 0);
+      lg.quadraticCurveTo(0, -ry * 2, l.size, 0);
+      lg.quadraticCurveTo(0, ry * 2, -l.size, 0);
+      lg.fill();
+      lg.strokeStyle = "rgba(60, 90, 30, 0.35)"; lg.lineWidth = 0.5 * S;
+      lg.beginPath(); lg.moveTo(-l.size * 0.9, 0); lg.lineTo(l.size * 1.25, 0); lg.stroke();
+      lg.restore();
+      return true;
     });
   }
 
@@ -484,6 +573,7 @@ void main() {
     const dt = lastT ? Math.min(100, now - lastT) / 1000 : 0;
     lastT = now;
     drawSway(now);
+    fall(dt);
     const v = (narrow ? 7 : 11) * S;
     drift.forEach((c) => {
       c.x -= v * dt;
@@ -497,19 +587,28 @@ void main() {
 
   // the hero's springs: a brushed blade is pushed away from the cursor and along its movement, then
   // wobbles back to rest
+  let flowersMoved = false;
   function step() {
     springRaf = 0;
     active.forEach((b) => {
       b.v = (b.v - b.b * 0.08) * 0.84;
       b.b = clamp(b.b + b.v, -1.3, 1.3);
       if (Math.abs(b.b) < 0.002 && Math.abs(b.v) < 0.002) { b.b = b.v = 0; active.delete(b); }
-      bends[b.i] = b.b; dirty = true;
+      if (b.hx === undefined) { bends[b.i] = b.b; dirty = true; } else flowersMoved = true;
     });
+    if (flowersMoved) { drawFlowers(); flowersMoved = false; }
     if (still.matches) drawSway(performance.now());
     if (active.size) springRaf = requestAnimationFrame(step);
   }
   function brush(x, y, dx) {
     const reach = 60 * S;
+    fl.stems.forEach((s) => {
+      const dist = Math.hypot(s.hx - x, s.hy - y);
+      if (dist > reach) return;
+      const f = 1 - dist / reach;
+      s.v += (clamp(dx, -30, 30) * 0.015 + Math.sign(s.hx - x || 1) * 0.06) * f;
+      active.add(s);
+    });
     const x0 = clamp(Math.floor((x - reach) / CELL), 0, cols - 1), x1 = clamp(Math.floor((x + reach) / CELL), 0, cols - 1);
     const y0 = clamp(Math.floor((y - reach) / CELL), 0, rows - 1), y1 = clamp(Math.floor((y + reach) / CELL), 0, rows - 1);
     for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) grid[cy * cols + cx].forEach((b) => {
@@ -526,7 +625,7 @@ void main() {
   addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
   foot.addEventListener("pointermove", (e) => {
     // Chrome reports the page sliding under a still cursor as moves; ignore those, like the hero
-    if (e.pointerType !== "mouse" || !count || performance.now() - scrolledAt < 150) { lastX = null; return; }
+    if (e.pointerType !== "mouse" || !(count || fl.stems.length) || performance.now() - scrolledAt < 150) { lastX = null; return; }
     const r0 = foot.getBoundingClientRect(), x = e.clientX - r0.left, y = e.clientY - r0.top;
     if (lastX !== null) brush(x, y, x - lastX);
     lastX = x;
@@ -547,6 +646,8 @@ void main() {
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     skyCv.width = cv.width; skyCv.height = cv.height;
+    touchCv.width = cv.width; touchCv.height = cv.height;
+    fl = { leaves: [], stems: [] };
     cloudBox.replaceChildren(); drift = [];
     useGL = initGL(); blades = []; clumps = []; pathShape = null; count = 0;
     if (!useGL && swayCv) swayCv.hidden = true;
@@ -579,6 +680,9 @@ void main() {
     seed = 21;
     drawTree();
     if (useGL) buildSway(night, dpr);
+    if (night) tintFlowers();
+    drawFlowers();
+    setLeaves(night);
     run();
     if (night) {
       g.setTransform(1, 0, 0, 1, 0, 0);

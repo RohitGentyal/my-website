@@ -366,6 +366,7 @@ h2.sub { margin: var(--sub) 0 0; }
 }
 .meadow-clouds { overflow: hidden; pointer-events: none; }
 .meadow-clouds canvas { position: absolute; left: 0; top: 0; will-change: transform; }
+.meadow-leaves { will-change: contents; }
 .foot-in {
   position: relative;
   height: 100%;
