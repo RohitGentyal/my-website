@@ -43,9 +43,10 @@
   // plain words: say what the thing is and what a click does
   const LINES = {
     genzo: {
-      offer: ["See Offer Applied in Genzo ↗"],
-      code: ["See Code Input in Genzo ↗"],
-      hold: ["See Hold to Confirm in Genzo ↗"],
+      home: ["Open Genzo ↗"],
+      components: ["See the components in Genzo ↗"],
+      icons: ["See the icons in Genzo ↗"],
+      calendar: ["See Calendar in Genzo ↗"],
     },
     verse: ["Come read my poems"],
     say: {
@@ -140,7 +141,7 @@
   if (card) {
     const shot = () => {
       const on = card.querySelector(".board .shot.on") || card.querySelector(".board .shot");
-      return LINES.genzo[on && on.dataset.key] || LINES.genzo.offer;
+      return LINES.genzo[on && on.dataset.key] || LINES.genzo.home;
     };
     wire(card, shot);
     new MutationObserver(() => refresh(card)).observe(card.querySelector(".board"), { subtree: true, attributeFilter: ["class"] });

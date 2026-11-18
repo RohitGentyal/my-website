@@ -254,8 +254,6 @@ h2 {
   opacity: 0;
   transition: opacity .9s cubic-bezier(.23, 1, .32, 1), transform .6s cubic-bezier(.23, 1, .32, 1);
 }
-/* the clips are 4:3: sized by the board's height, cropped a hair if the board is narrower */
-video.shot { height: calc(100% - 2 * var(--pad)); aspect-ratio: 4 / 3; object-fit: cover; background: #f7f5f0; }
 .board .shot.on { opacity: 1; }
 @media (hover: hover) and (pointer: fine) { .pcard:hover .board .shot { transform: translateY(-4px); } }
 .pcard:active .board .shot { transform: scale(.99); }

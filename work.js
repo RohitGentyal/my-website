@@ -1,33 +1,22 @@
-// Project boards: short clips of single components take turns while the board is on screen. Each clip
-// plays once, then the next one crossfades in; the dots under them show which one is up (style.css, .board).
-// Clips load only once the board is near the screen. Reduced motion shows the first clip's opening frame.
+// Project boards: the screenshots take turns while the board is on screen, crossfading every 3.2s; the
+// dots under them show which one is up (style.css, .board). Reduced motion keeps the first one.
 (() => {
-  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   document.querySelectorAll(".board[data-cycle]").forEach((board) => {
     const shots = [...board.querySelectorAll(".shot")];
     const dots = [...board.querySelectorAll(".dots i")];
-    if (!shots.length) return;
-    let i = 0, live = false;
-    const play = () => { const v = shots[i]; v.currentTime = 0; const p = v.play(); if (p) p.catch(() => {}); };
+    if (shots.length < 2) return;
+    let i = 0, timer = 0;
     const show = (n) => {
       shots[i].classList.remove("on"); dots[i] && dots[i].classList.remove("on");
-      shots[i].pause();
       i = n;
       shots[i].classList.add("on"); dots[i] && dots[i].classList.add("on");
-      if (live) play();
     };
-    // fetch a clip only when it is about to be needed: the one on show, and the next once that one plays
-    const fetchClip = (v) => { if (v.preload !== "auto") { v.preload = "auto"; v.load(); } };
-    shots.forEach((v, n) => {
-      v.addEventListener("ended", () => show((i + 1) % shots.length));
-      v.addEventListener("playing", () => fetchClip(shots[(n + 1) % shots.length]), { once: true });
-    });
+    const start = () => { if (!timer) timer = setInterval(() => show((i + 1) % shots.length), 3200); };
+    const stop = () => { clearInterval(timer); timer = 0; };
+    // the next shots start loading only once the board is near the screen
     new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        fetchClip(shots[i]);
-        if (calm) return;
-        live = true; play();
-      } else { live = false; shots[i].pause(); }
+      if (e.isIntersecting) { shots.forEach((s) => (s.loading = "eager")); start(); } else stop();
     }, { rootMargin: "200px 0px" }).observe(board);
   });
 })();

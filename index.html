@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); /* night first (my ask, 2026-11-19): a first visit opens at night; a saved "day" keeps day */ let t = null; try { t = localStorage.getItem("theme"); } catch (e) {} if (t !== "day") document.documentElement.dataset.theme = "night";</script>
-  <link rel="stylesheet" href="style.css?v=night1">
+  <link rel="stylesheet" href="style.css?v=shots1">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -62,10 +62,11 @@
       <div class="cards">
         <a class="pcard" href="https://genzoui.vercel.app" target="_blank" rel="noopener" aria-label="Genzo, component library (opens in a new tab)">
           <figure class="board" data-cycle>
-            <video class="shot on" data-key="offer" src="assets/genzo-offer.mp4" width="1440" height="1080" muted playsinline preload="none" aria-label="Offer Applied: a coupon's stub tears off and drops into the price"></video>
-            <video class="shot" data-key="code" src="assets/genzo-code.mp4" width="1440" height="1080" muted playsinline preload="none" aria-label="Code Input: a typed code turns into a tick"></video>
-            <video class="shot" data-key="hold" src="assets/genzo-hold.mp4" width="1440" height="1080" muted playsinline preload="none" aria-label="Hold to Confirm: a button fills while held"></video>
-            <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></span>
+            <img class="shot on" data-key="home" src="assets/genzo-home.png" width="1280" height="800" alt="Genzo's home page" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-key="components" src="assets/genzo-components.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-key="icons" src="assets/genzo-icons.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-key="calendar" src="assets/genzo-calendar.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
           </figure>
           <span class="cap"><span class="name">Genzo <span class="arrow" aria-hidden="true">↗</span></span><span class="kind">Component library</span></span>
           <span class="line">Everyday interface elements with motion. Designers open the Figma file; Android code is on its way.</span>
@@ -142,10 +143,10 @@
 
   <script src="loader.js?v=2"></script>
   <script src="scene.js?v=night1"></script>
-  <script src="work.js?v=5"></script>
+  <script src="work.js?v=6"></script>
   <script src="turn.js?v=5"></script>
   <script src="reveal.js?v=2"></script>
   <script src="meadow.js?v=15"></script>
-  <script src="quips.js?v=21"></script>
+  <script src="quips.js?v=22"></script>
 </body>
 </html>
