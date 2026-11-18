@@ -59,7 +59,11 @@ a { color: inherit; text-decoration: none; }
   font-size: 15px;
   z-index: 2;
 }
-.mark { font-weight: 500; color: var(--on-sky); }
+/* the mark: the poems' laurel and R (no ring), in the sky's cream, in place of the name */
+.mark { display: block; width: 46px; height: 46px; margin: -10px 0 -10px -6px; color: var(--on-sky); filter: drop-shadow(0 1px 2px rgba(16, 34, 62, .35)); transition: opacity .2s ease; }
+.mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.mark:hover { opacity: .85; }
+.mark:focus-visible { outline: 2px solid var(--on-sky); outline-offset: 2px; border-radius: 50%; }
 .top nav { display: flex; align-items: center; gap: 22px; }
 .top nav a { color: var(--on-sky-soft); transition: color .2s, background-size .35s ease; }
 .top nav a:hover { color: var(--on-sky); }
