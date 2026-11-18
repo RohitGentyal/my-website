@@ -161,7 +161,7 @@
         try { ok = document.execCommand("copy"); } catch (e) {}
         f.remove();
         el.focus({ preventScroll: true });
-        if (ok) done(); else location.href = "mailto:" + mail;
+        if (ok) done(); else if (el.tagName !== "A") location.href = "mailto:" + mail; // a link opens Gmail anyway
       };
       if (navigator.clipboard) navigator.clipboard.writeText(mail).then(done, fallback);
       else fallback();
