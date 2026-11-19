@@ -633,3 +633,23 @@ a.hob { color: var(--ink); }
   section.col h2.sub:has(+ .svc) { --nudge: -14px; }
 }
 .pcard[href$=".html"]:hover .cap .arrow, .pcard[href$=".html"]:focus-visible .cap .arrow { translate: 3px 0; } /* in-site case study: the arrow points on, not out */
+
+/* Work, bigger (2026-11-19): a wider section than the text column, two large cards side by side
+   (about 1040px across on desktop), the "Work" label above them aligned to the grid, caption on one line
+   (name left, kind right) with the one-line summary under it. One column on phones. */
+#work.col { max-width: 1088px; padding: 0 24px; }
+.cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 16px; width: 100%; margin-left: 0; translate: none; }
+.board { aspect-ratio: 4 / 3; --pad: clamp(20px, 4.4vw, 56px); border-radius: 18px; }
+.cap { margin-top: 16px; flex-wrap: wrap; row-gap: 2px; }
+.cap .name { font-size: 17px; white-space: nowrap; }
+.cap .kind { font-size: 15px; }
+.pcard .line { font-size: 15px; margin-top: 4px; }
+#work h2 { margin-bottom: 28px; }
+@media (min-width: 1200px) {
+  #work h2 { position: static; width: auto; text-align: left; margin: 0 0 28px; }
+}
+@media (max-width: 720px) {
+  #work.col { padding: 0 20px; }
+  .cards { grid-template-columns: 1fr; gap: 44px; }
+}
+@media (max-width: 720px) { .cap { flex-direction: column; align-items: flex-start; } }
