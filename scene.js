@@ -211,10 +211,13 @@
   let casters = [];
   function lightAt(p) {
     const s = sunUp(p), m = moonUp(p), src = s >= m ? sunAt(p) : moonNow(p);
-    const elev = clamp((ridge(src.x) - src.y) / (H * 0.45), 0.05, 1);
+    const raw = (ridge(src.x) - src.y) / (H * 0.45), elev = clamp(raw, 0.05, 1);
     const reach = clamp(0.55 / elev, 0.55, 2.6);
+    // a sun or moon at or behind the ridge casts nothing (2026-11-19 fix: while the moon rose from
+    // behind the hill it threw the pools up into the sky and over the cloud); they fade in as it clears
+    const clear = clamp(raw / 0.08, 0, 1), up = clear * clear * (3 - 2 * clear);
     // longer shadows are paler, like real raking light
-    return { x: src.x, y: src.y, reach, strength: (s >= m ? 0.3 * s : 0.42 * m) / (0.7 + 0.3 * reach) };
+    return { x: src.x, y: src.y, reach, strength: up * (s >= m ? 0.3 * s : 0.42 * m) / (0.7 + 0.3 * reach) };
   }
 
   // where a point `h` tall at (x, y) throws its shadow tip, on the slope. It runs
@@ -224,7 +227,8 @@
   function cast(L, x, y, h) {
     const vx = x - L.x, vy = y - L.y;
     const d = Math.hypot(vx, vy) || 1, k = h * L.reach;
-    tip.dx = (vx / d) * k; tip.dy = (vy / d) * k * 0.35;
+    // the light is always above and behind the hill, so a shadow only ever falls down the slope
+    tip.dx = (vx / d) * k; tip.dy = Math.max(0, (vy / d) * k * 0.35);
     return tip;
   }
 
