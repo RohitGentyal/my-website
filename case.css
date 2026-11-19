@@ -275,3 +275,9 @@ h3 { font: 500 clamp(22px, 2.2vw, 28px)/1.2 var(--sans); letter-spacing: -.02em;
 .shot.compact video.clip { width: min(100%, 620px); border-radius: 12px; }
 .shot.compact .cap { text-align: center; max-width: 46ch; }
 .face .aa { color: var(--ink); }
+
+/* At a glance v2: each change is a small stat (number on top, one plain sentence under it) */
+.deltas { gap: 18px; }
+.deltas li { display: block; }
+.deltas b { display: block; font: 300 26px/1.1 var(--sans); letter-spacing: -.02em; color: var(--ink); margin-bottom: 4px; }
+.deltas span { display: block; font-size: 15.5px; line-height: 1.5; color: var(--ink-soft); }
