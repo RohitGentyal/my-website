@@ -59,6 +59,14 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
 - **Contact:** the Email / LinkedIn / Twitter row at the end of About was removed 2026-11-17 (my ask); contact lives in the hero intro (Twitter, LinkedIn, copy my email) (the nav's Email was removed too, 2026-11-17). No GitHub link.
 
+## Digital Nexus AI case study (2026-11-19, NOT pushed yet: waiting for my review)
+
+- **nexus.html + case.css:** a short decision-led case study ("An AI company's website that shows the work, not the hype."), structured after my Behance reference (Dybo CMS): meta strip, statement hero, numbered sections 01-06 in bands, a "How might we" band, five decisions (Why / What I did + screen), visual design (5 swatches, 3 type specimens), screens, quality checks, next, honest note. Same tokens as style.css (paper by day, night first), Inter + Instrument Serif; Funnel Display/Sans load only for the specimens.
+- **My calls (2026-11-19):** real company name in the text; screens show the placeholder brand **Vantyx** with one note saying so; framed as internship (May-Dec 2025) plus a self-initiated concept; no results claimed.
+- **Screens:** `assets/nexus/*.webp`, captured with headless Chrome from the coded redesign (Desktop/work/digital-nexus-ai, served on :5173), plus `before-hero.webp` from digitalnexusai.com.
+- **Work card:** second card after Genzo (cycles hero / products / work shots; arrow points right since it stays on the site); style.css bumped to v=blend4.
+- Checked at 1440, 1280 and 375: no overlaps, no sideways overflow, all images load, decision rows centred on their screens.
+
 ## Resume here (2026-11-19): senior-designer review applied
 
 I asked for an honest review, then "fix the rest" (everything except the NU case study and "Twitter", which stay as they are):

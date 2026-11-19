@@ -630,3 +630,4 @@ a.hob { color: var(--ink); }
   .exp div:first-child, .svc { margin-top: var(--sub); }
   section.col h2.sub:has(+ .svc) { --nudge: -14px; }
 }
+.pcard[href$=".html"]:hover .cap .arrow, .pcard[href$=".html"]:focus-visible .cap .arrow { translate: 3px 0; } /* in-site case study: the arrow points on, not out */
