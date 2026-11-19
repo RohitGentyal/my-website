@@ -1,5 +1,6 @@
 // The cursor's capsule: one small speech bubble that trails the cursor, its tail at the arrow's tip (style.css, .quip).
-// Only on three things (my ask): the Genzo card (names the clip on show), the poems line under the footer, and the
+// Only on a few things (my ask): the two Work cards (Genzo names the clip on show; Vantyx offers the case study),
+// the poems line under the footer, and the
 // hobby words (says a click plays a sound; an equalizer while it plays). Plain words, nothing cryptic.
 // Touch screens don't get it (no cursor to follow).
 
@@ -48,6 +49,7 @@
       icons: ["See the icons in Genzo ↗"],
       calendar: ["See Calendar in Genzo ↗"],
     },
+    vantyx: ["Read the case study →"],
     verse: ["Come read my poems"],
     say: {
       email: { fresh: ["Click to copy my email"], done: ["Copied, paste it anywhere"] },
@@ -127,7 +129,20 @@
 
   addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; if (host) kick(); }, { passive: true });
   // scrolling can slide the element out from under a still cursor
-  addEventListener("scroll", () => { if (host && !host.matches(":hover")) hide(host); }, { passive: true });
+  // scrolling slides things out from under a still cursor without the browser updating :hover (the gliding
+  // wheel scrolls by script), so check what is really under the cursor now and let the bubble go if it left
+  // (2026-11-19: the card's bubble stayed on screen after the card had scrolled away)
+  let px = -1, py = -1, sRaf = 0;
+  addEventListener("pointermove", (e) => { px = e.clientX; py = e.clientY; }, { passive: true });
+  addEventListener("scroll", () => {
+    if (!host || sRaf) return;
+    sRaf = requestAnimationFrame(() => {
+      sRaf = 0;
+      if (!host) return;
+      const under = px < 0 ? null : document.elementFromPoint(px, py);
+      if (!under || !host.contains(under)) hide(host);
+    });
+  }, { passive: true });
 
   const wire = (el, getLines) => {
     el.addEventListener("pointerenter", (e) => show(el, getLines, e));
@@ -136,8 +151,11 @@
     el.addEventListener("blur", () => hide(el));
   };
 
-  // ---- the Genzo card: the line follows the screenshot on show
-  const card = document.querySelector(".pcard");
+  // ---- the Work cards, each found by where it goes (not by order: the first card used to be Genzo, and when
+  // Vantyx moved first it showed "Open Genzo", 2026-11-19). Genzo's line follows the screenshot on show.
+  const vantyx = document.querySelector('.pcard[href="nexus.html"]');
+  if (vantyx) wire(vantyx, () => LINES.vantyx);
+  const card = document.querySelector('.pcard[href*="genzoui"]');
   if (card) {
     const shot = () => {
       const on = card.querySelector(".board .shot.on") || card.querySelector(".board .shot");

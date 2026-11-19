@@ -14,9 +14,11 @@
     };
     const start = () => { if (!timer) timer = setInterval(() => show((i + 1) % shots.length), 3200); };
     const stop = () => { clearInterval(timer); timer = 0; };
-    // the next shots start loading only once the board is near the screen
+    // only the first shot loads with the page; the rest (data-src) are fetched once the board is on screen,
+    // since they only show 3.2s later (2026-11-19: all seven loaded at the top, 75% of the first load)
+    const fetchRest = () => shots.forEach((s) => { if (s.dataset.src) { s.src = s.dataset.src; delete s.dataset.src; } });
     new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { shots.forEach((s) => (s.loading = "eager")); start(); } else stop();
-    }, { rootMargin: "200px 0px" }).observe(board);
+      if (e.isIntersecting) { fetchRest(); start(); } else stop();
+    }, { threshold: 0.1 }).observe(board);
   });
 })();

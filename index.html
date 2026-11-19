@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <script>document.documentElement.classList.add("loading"); /* night first (my ask, 2026-11-19): a first visit opens at night; a saved "day" keeps day */ let t = null; try { t = localStorage.getItem("theme"); } catch (e) {} if (t !== "day") document.documentElement.dataset.theme = "night";</script>
-  <link rel="stylesheet" href="style.css?v=work8">
+  <link rel="stylesheet" href="style.css?v=sun2">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -60,22 +60,22 @@
     <section class="col" id="work">
       <h2>Work</h2>
       <div class="cards">
-        <a class="pcard" href="nexus.html" aria-label="Digital Nexus AI, website redesign concept (case study)">
+        <a class="pcard" href="nexus.html" aria-label="Vantyx, a website concept for an AI company (case study)">
           <figure class="board" data-cycle>
-            <img class="shot on" src="assets/nexus/hero.webp?v=5" width="1440" height="900" alt="Digital Nexus AI redesign concept, home page" decoding="async" loading="lazy" draggable="false">
-            <img class="shot" src="assets/nexus/products.webp?v=6" width="1440" height="900" alt="" decoding="async" loading="lazy" draggable="false">
-            <img class="shot" src="assets/nexus/work.webp?v=6" width="1440" height="900" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot on" src="assets/nexus/hero.webp?v=5" width="1440" height="900" alt="Vantyx website concept, home page" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-src="assets/nexus/products.webp?v=6" width="1440" height="900" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-src="assets/nexus/work.webp?v=6" width="1440" height="900" alt="" decoding="async" loading="lazy" draggable="false">
             <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></span>
           </figure>
-          <span class="cap"><span class="name">Digital Nexus AI <span class="arrow" aria-hidden="true">&rarr;</span></span><span class="kind">Website redesign concept</span></span>
+          <span class="cap"><span class="name">Vantyx <span class="arrow" aria-hidden="true">&rarr;</span></span><span class="kind">AI website concept</span></span>
           <span class="line">An AI company&rsquo;s site that shows the work, not the hype. Five decisions, built in code.</span>
         </a>
         <a class="pcard" href="https://genzoui.vercel.app" target="_blank" rel="noopener" aria-label="Genzo, component library (opens in a new tab)">
           <figure class="board" data-cycle>
-            <img class="shot on" data-key="home" src="assets/genzo-home.png" width="1280" height="800" alt="Genzo's home page" decoding="async" loading="lazy" draggable="false">
-            <img class="shot" data-key="components" src="assets/genzo-components.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
-            <img class="shot" data-key="icons" src="assets/genzo-icons.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
-            <img class="shot" data-key="calendar" src="assets/genzo-calendar.png" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot on" data-key="home" src="assets/genzo-home.webp" width="1280" height="800" alt="Genzo's home page" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-key="components" data-src="assets/genzo-components.webp" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-key="icons" data-src="assets/genzo-icons.webp" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
+            <img class="shot" data-key="calendar" data-src="assets/genzo-calendar.webp" width="1280" height="800" alt="" decoding="async" loading="lazy" draggable="false">
             <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
           </figure>
           <span class="cap"><span class="name">Genzo <span class="arrow" aria-hidden="true">↗</span></span><span class="kind">Component library</span></span>
@@ -134,6 +134,7 @@
         <nav class="foot-cols" aria-label="More">
           <div>
             <h3>Work</h3>
+            <a href="nexus.html">Vantyx</a>
             <a href="https://genzoui.vercel.app" target="_blank" rel="noopener">Genzo ↗</a>
           </div>
           <div>
@@ -152,12 +153,12 @@
   </footer>
 
   <script src="loader.js?v=2"></script>
-  <script src="scene.js?v=shade2"></script>
-  <script src="work.js?v=6"></script>
+  <script src="scene.js?v=sun4"></script>
+  <script src="work.js?v=8"></script>
   <script src="turn.js?v=5"></script>
   <script src="glide.js?v=2"></script>
   <script src="reveal.js?v=2"></script>
-  <script src="meadow.js?v=15"></script>
-  <script src="quips.js?v=22"></script>
+  <script src="meadow.js?v=sun4"></script>
+  <script src="quips.js?v=24"></script>
 </body>
 </html>

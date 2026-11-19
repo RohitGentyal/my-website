@@ -26,6 +26,14 @@
   const landEl = document.getElementById("land");
   const glowCanvas = document.getElementById("glow");
   const glowCtx = glowCanvas && glowCanvas.getContext("2d");
+  // The whole page follows the same sunset (2026-11-19, my ask: "if the sun is going down, the entire page's
+  // sun is going down"): a warm wash over the page below the hero, the footer's sky and land, and the corner
+  // caption all key off the hero's one night timeline (glowT), so nothing changes ahead of the light.
+  const footEl = document.getElementById("end");
+  const meadowLand = document.getElementById("meadowLand");
+  const wash = document.createElement("div");
+  wash.className = "wash"; wash.setAttribute("aria-hidden", "true");
+  document.body.appendChild(wash);
   // sky and cloud paint on their own layer so they can drift behind the hill
   let ctx = skyCtx;
 
@@ -1087,9 +1095,12 @@ void main() {
   o = vec4(vColor * a, a);
 }`;
 
-  function initGL() {
+  function initGL(dpr) {
     if (gl !== null) return !!gl;
     gl = false;
+    // size the canvas before its context exists: resizing a WebGL canvas afterwards makes the driver
+    // reallocate it (seconds on some iGPUs; the footer had the same stall, 2026-11-19)
+    if (swayCanvas) { swayCanvas.width = Math.round(W * dpr); swayCanvas.height = Math.round(H * dpr); }
     const g = swayCanvas && swayCanvas.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
     if (!g) return false;
     const shader = (type, src) => { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); return g.getShaderParameter(s, g.COMPILE_STATUS) ? s : null; };
@@ -1135,7 +1146,7 @@ void main() {
     glOn = false; shOn = false;
     // the shadows sit on the 2D #shade layer unless the graphics card takes them (sizeShade)
     if (shade) shade.hidden = false;
-    if (!initGL()) { sh = null; if (swayCanvas) swayCanvas.hidden = true; return; }
+    if (!initGL(dpr)) { sh = null; if (swayCanvas) swayCanvas.hidden = true; return; }
     const blades = live.filter((o) => !o.leaf && !o.stem && /^#[0-9a-f]{6}$/i.test(o.color));
     if (blades.length !== live.filter((o) => !o.leaf && !o.stem).length) { swayCanvas.hidden = true; return; }
     const data = new Float32Array(blades.length * 10);
@@ -1144,8 +1155,8 @@ void main() {
       o.gi = i;
       data.set([o.x, o.y, o.len, o.ang, o.w, o.j, (o.x * 0.0137 + o.y * 0.031) % 1, cr, cg, cb], k);
     });
-    swayCanvas.width = Math.round(W * dpr);
-    swayCanvas.height = Math.round(H * dpr);
+    if (swayCanvas.width !== Math.round(W * dpr)) swayCanvas.width = Math.round(W * dpr);
+    if (swayCanvas.height !== Math.round(H * dpr)) swayCanvas.height = Math.round(H * dpr);
     gl.bindBuffer(gl.ARRAY_BUFFER, glInst);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
     bends = new Float32Array(blades.length);
@@ -1512,6 +1523,7 @@ void main() {
   // moonlight, the moon rising, stars coming out, and bees becoming fireflies.
   const root = document.documentElement, SWITCH = 2800;
   let isNight = root.dataset.theme === "night", nightT = isNight ? 1 : 0, glowT = nightT;
+  let labelNight = isNight, labelT = 0; // the corner caption's day/night words (setLabel, near the end)
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
   function applyNight() {
@@ -1530,8 +1542,31 @@ void main() {
     else [canvas, shade, touch, swayCanvas].forEach((el) => { if (el) el.style.filter = f; });
     // the 2D shade layer (no WebGL2) is also blurred so every shadow has a soft edge
     if (shade && !shOn) shade.style.filter = `blur(${(1.4 * S).toFixed(2)}px)${landEl ? "" : " " + f}`;
-    drawShade();
+    // the shadows follow the light, but only while the hero is on screen; scrolled away they catch up on return
+    if (heroOnScreen) { drawShade(); shadeLate = false; } else shadeLate = true;
+    // the footer: same filter on its land, its night sky and night clouds fade in on the same curve
+    if (meadowLand) meadowLand.style.filter = f;
+    if (footEl) footEl.style.setProperty("--nt", p.toFixed(3));
+    // below the hero the page gets the same warm dusk light (the hero has its own); fades out with the switch
+    const below = clamp((window.scrollY - heroH * 0.35) / (heroH * 0.5), 0, 1);
+    wash.style.opacity = (d * 0.22 * below).toFixed(3);
+    // the corner caption says night only once the hill has actually turned
+    setLabel(p >= 0.5);
   }
+
+  // the switch runs on its own frame loop, so it keeps playing (and the page stays in step) when the visitor
+  // scrolls away from the hero straight after pressing it; the hero's drawing loop (buzz) still only runs on screen
+  let nightRaf = 0, nightLast = 0, shadeLate = false, heroH = hero.offsetHeight;
+  addEventListener("resize", () => { heroH = hero.offsetHeight; }, { passive: true });
+  function nightLoop(now) {
+    nightRaf = 0;
+    const dt = nightLast ? Math.min(now - nightLast, 100) : 16;
+    nightLast = now;
+    stepNight(dt);
+    if (nightT !== (isNight ? 1 : 0)) nightRaf = requestAnimationFrame(nightLoop);
+    else nightLast = 0;
+  }
+  function startNight() { if (!nightRaf) { nightLast = 0; nightRaf = requestAnimationFrame(nightLoop); } }
 
   function stepNight(dt) {
     const target = isNight ? 1 : 0;
@@ -1590,7 +1625,6 @@ void main() {
   function moveBees(now) {
     const dt = lastBuzz ? Math.min(now - lastBuzz, 100) : 16;
     lastBuzz = now;
-    stepNight(dt);
     bees.forEach((b) => {
       b.clock += dt * (1 - 0.5 * glowT);
       const px = b.x;
@@ -1696,7 +1730,11 @@ void main() {
   function wake() {
     if (!beeRaf && bees.length && heroOnScreen && !still.matches) beeRaf = requestAnimationFrame(buzz);
   }
-  new IntersectionObserver(([e]) => { heroOnScreen = e.isIntersecting; lastBuzz = 0; wake(); }).observe(hero);
+  new IntersectionObserver(([e]) => {
+    heroOnScreen = e.isIntersecting; lastBuzz = 0;
+    if (heroOnScreen && shadeLate) { shadeLate = false; drawShade(); }
+    wake();
+  }).observe(hero);
   // jump straight to the current mode (reduced motion, or nothing animating)
   function settleNight() {
     nightT = glowT = isNight ? 1 : 0;
@@ -1726,13 +1764,15 @@ void main() {
     showMode();
     modeBtn.addEventListener("click", () => {
       isNight = !isNight;
+      // the page colours animate only on a real switch, never on load (style.css, :root.themed)
+      root.classList.add("themed");
       if (isNight) root.dataset.theme = "night"; else delete root.dataset.theme;
       try { localStorage.setItem("theme", isNight ? "night" : "day"); } catch (e) {}
       showMode();
       clearTimeout(unprime);
       lastBuzz = 0;
-      if (still.matches || !heroOnScreen || !bees.length) settleNight();
-      else { if (isNight) paintNight(true); wake(); }
+      if (still.matches || !bees.length) settleNight();
+      else { if (isNight) paintNight(true); startNight(); wake(); }
     });
     // A cursor on the moon button is about to switch to night: paint the night
     // layers over the next few frames, so the switch starts with nothing left to
@@ -1856,11 +1896,19 @@ void main() {
     el.rel = "noopener";
   });
 
+  // the words follow the hill, not the visitor's clock or the button: they turn to night halfway through the
+  // switch, when the sky does, with a short fade (2026-11-19, my note: they changed the instant I clicked)
+  function setLabel(n) {
+    if (n === labelNight || !clock) return;
+    labelNight = n;
+    clearTimeout(labelT);
+    clock.classList.add("swap");
+    labelT = setTimeout(() => { tick(); clock.classList.remove("swap"); }, 260);
+  }
   function tick() {
     if (!clock) return;
-    // the words follow the hill, not the visitor's clock: morning while it's day, night once it turns dark
     const now = new Date();
-    const part = isNight ? "Night" : "Morning";
+    const part = labelNight ? "Night" : "Morning";
     clock.textContent = `${part} on the hill · ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} where you are`;
   }
   tick();

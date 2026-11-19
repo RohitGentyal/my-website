@@ -11,6 +11,12 @@
   if (!foot || !cv) return;
   const main = cv.getContext("2d");
   const skyCv = document.getElementById("meadowSky"), skyG = skyCv.getContext("2d");
+  // the night sky (with its stars) is painted once beside the day one and fades in over it on the page's
+  // night timeline (style.css, --nt), so switching theme never repaints the footer (2026-11-19)
+  const skyNightCv = document.createElement("canvas");
+  skyNightCv.className = "meadow"; skyNightCv.id = "meadowSkyNight"; skyNightCv.setAttribute("aria-hidden", "true");
+  skyCv.after(skyNightCv);
+  const skyNightG = skyNightCv.getContext("2d");
   const cloudBox = document.getElementById("meadowClouds");
   let drift = []; // { el, x, w } for each cloud
   let g = main;
@@ -101,22 +107,30 @@
   }
 
   // one cloud on its own little canvas, cropped to it, so it can drift by transform alone
-  function cloudOn(cx, base, u, pal) {
+  function cloudOn(cx, base, u) {
     const x0 = cx - 0.62 * u, y0 = base - 0.62 * u - 8 * S, w = 1.24 * u, h = 0.62 * u + 12 * S;
-    const el = document.createElement("canvas");
-    el.width = Math.ceil(w * dpr); el.height = Math.ceil(h * dpr);
-    el.style.width = w + "px"; el.style.height = h + "px";
-    const keep = g;
-    g = el.getContext("2d");
-    g.setTransform(dpr, 0, 0, dpr, -x0 * dpr, -y0 * dpr);
-    puff(cx, base, u, pal);
+    // a day and a night copy of the same cloud (same seed, same shape), drifting together as one
+    const el = document.createElement("div");
+    el.className = "cl";
+    const keep = g, at = seed;
+    [["d", DAY_CLOUD], ["n", NIGHT_CLOUD]].forEach(([cls, pal]) => {
+      const c = document.createElement("canvas");
+      c.className = cls;
+      c.width = Math.ceil(w * dpr); c.height = Math.ceil(h * dpr);
+      c.style.width = w + "px"; c.style.height = h + "px";
+      g = c.getContext("2d");
+      g.setTransform(dpr, 0, 0, dpr, -x0 * dpr, -y0 * dpr);
+      seed = at;
+      puff(cx, base, u, pal);
+      el.appendChild(c);
+    });
     g = keep;
     el.style.transform = `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px)`;
     cloudBox.appendChild(el);
     drift.push({ el, x: x0, y: y0, w });
   }
 
-  function clouds(pal) {
+  function clouds() {
     // a bank resting on the far hills (their bases hide behind them), smaller ones further off, and one
     // drifting high on the right; sized so they stay under the footer's words
     const max = narrow ? 150 : 230;
@@ -128,7 +142,7 @@
     xs.forEach((u, i) => {
       const x = u * W + r(-30, 30) * S, base = far(u * W) + 14 * S;
       const size = Math.min(r(0.62, 1) * max * S * (i % 2 ? 0.8 : 1), (base - clear) / 0.58);
-      if (size > 40 * S) cloudOn(x, base, size, pal);
+      if (size > 40 * S) cloudOn(x, base, size);
     });
   }
 
@@ -432,7 +446,7 @@
   // right to left over a longer, slower one, the field leaning and rocking, a flutter per blade, crests a
   // touch lighter. The cursor parts them with the hero's per-blade springs. Only while the footer is on
   // screen, never with reduced motion. Without WebGL2 the blades stay painted, still, on the canvas.
-  const swayCv = document.getElementById("meadowSway");
+  let swayCv = document.getElementById("meadowSway");
   const still = matchMedia("(prefers-reduced-motion: reduce)");
   let useGL = false, blades = [], clumps = [], pathShape = null;
   let gl = null, prog, vao, inst, bendBuf, U, count = 0, bends = new Float32Array(0), dirty = false;
@@ -478,6 +492,10 @@ void main() {
   function initGL() {
     if (gl !== null) return !!gl;
     gl = false;
+    // the canvas gets its final size BEFORE the context exists: resizing a WebGL canvas afterwards made the
+    // driver reallocate it, ~2s of frozen page on an AMD iGPU (2026-11-19). A later size change swaps in a
+    // fresh canvas and context instead (paint)
+    if (swayCv) { swayCv.width = Math.round(W * dpr); swayCv.height = Math.round(H * dpr); }
     const c = swayCv && swayCv.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
     if (!c) return false;
     const sh = (type, src) => { const s = c.createShader(type); c.shaderSource(s, src); c.compileShader(s); return c.getShaderParameter(s, c.COMPILE_STATUS) ? s : null; };
@@ -509,8 +527,20 @@ void main() {
   let grid = [], cols = 0, rows = 0, active = new Set(), springRaf = 0;
   function buildSway(night, dpr) {
     // keep off the path, the flower clumps and the foot of the tree, which are painted on top
+    // the path is drawn once into a small mask (2px cells) and each blade looks itself up there: asking the
+    // canvas isPointInPath for every blade took ~1s and froze the page (2026-11-19)
+    let onPath = () => false;
+    if (pathShape) {
+      const mw = Math.ceil(W / 2), mh = Math.ceil(H / 2);
+      const mc = document.createElement("canvas"); mc.width = mw; mc.height = mh;
+      const mg = mc.getContext("2d", { willReadFrequently: true });
+      mg.setTransform(1 / (2 * dpr), 0, 0, 1 / (2 * dpr), 0, 0);
+      mg.fill(pathShape);
+      const px = mg.getImageData(0, 0, mw, mh).data;
+      onPath = (x, y) => { const i = (Math.floor(y / 2) * mw + Math.floor(x / 2)) * 4 + 3; return px[i] > 127; };
+    }
     const kept = blades.filter((b) => {
-      if (pathShape && g.isPointInPath(pathShape, b.x * dpr, b.y * dpr)) return false;
+      if (onPath(b.x, b.y)) return false;
       if (Math.abs(b.x - tree.x) < tree.h * 0.07 && Math.abs(b.y - tree.y) < 10 * S) return false;
       return !clumps.some((c) => Math.abs(b.x - c.x) < c.R * 0.95 && b.y > c.y - c.R * 0.35 && b.y < c.y + c.R * 0.35);
     });
@@ -525,7 +555,6 @@ void main() {
       const cx = clamp(Math.floor(b.x / CELL), 0, cols - 1), cy = clamp(Math.floor(b.y / CELL), 0, rows - 1);
       grid[cy * cols + cx].push(b);
     });
-    swayCv.width = Math.round(W * dpr); swayCv.height = Math.round(H * dpr);
     gl.bindBuffer(gl.ARRAY_BUFFER, inst); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
     bends = new Float32Array(kept.length);
     gl.bindBuffer(gl.ARRAY_BUFFER, bendBuf); gl.bufferData(gl.ARRAY_BUFFER, bends, gl.DYNAMIC_DRAW);
@@ -614,54 +643,54 @@ void main() {
   }, { passive: true });
   foot.addEventListener("pointerleave", () => { lastX = null; });
 
-  let painted = "", near_ = false, dpr = 1;
-  function paint() {
-    const night = document.documentElement.dataset.theme === "night";
+  // Painted once for both day and night, in small steps across idle moments (it took ~1.7s in one go and
+  // froze the scroll on the way down, 2026-11-19), when the footer is within about a screen. A width
+  // change repaints it the same way; the theme never does.
+  let painted = "", near_ = false, dpr = 1, job = 0;
+  const idle = () => new Promise((res) => (window.requestIdleCallback ? requestIdleCallback(() => res(), { timeout: 250 }) : setTimeout(res, 30)));
+  async function paint() {
     const w = foot.clientWidth, h = foot.clientHeight;
-    const key = `${w}x${h}:${night}`; // night repaints the sky and clouds; the land is the same
+    const key = `${w}x${h}`;
     if (!w || !h || key === painted) return;
     painted = key;
+    const mine = ++job, gone = () => mine !== job;
     W = w; H = h; narrow = W < 640; lift = narrow ? 0.09 : 0.05; S = clamp(W / 1440, 0.62, 1.15);
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    // skies first (cheap): day and night with its stars
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    skyCv.width = cv.width; skyCv.height = cv.height;
+    main.setTransform(dpr, 0, 0, dpr, 0, 0);
+    skyCv.width = skyNightCv.width = cv.width; skyCv.height = skyNightCv.height = cv.height;
     touchCv.width = cv.width; touchCv.height = cv.height;
     fl = { leaves: [], stems: [] };
     cloudBox.replaceChildren(); drift = [];
+    if (gl && swayCv && (swayCv.width !== Math.round(W * dpr) || swayCv.height !== Math.round(H * dpr))) {
+      const fresh = swayCv.cloneNode(false); swayCv.replaceWith(fresh); swayCv = fresh; gl = null;
+    }
     useGL = initGL(); blades = []; clumps = []; pathShape = null; count = 0;
     if (!useGL && swayCv) swayCv.hidden = true;
-    seed = 4242;
-    g = skyG; g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    sky(night ? NIGHT_SKY : DAY_SKY);
-    seed = 77;
-    if (night) stars();
-    g = main;
-    seed = 91;
-    clouds(night ? NIGHT_CLOUD : DAY_CLOUD);
-    // the land is painted in its day colours whatever the theme: at night .meadow-land carries the hill's
-    // exact night filter (style.css), so the footer's grass reads as the same grass as the hill's
-    seed = 13;
-    hills(night);
-    meadow();
+    g = skyG; g.setTransform(dpr, 0, 0, dpr, 0, 0); seed = 4242; sky(DAY_SKY);
+    g = skyNightG; g.setTransform(dpr, 0, 0, dpr, 0, 0); seed = 4242; sky(NIGHT_SKY); seed = 77; stars();
+    await idle(); if (gone()) return;
+    g = main; seed = 91; clouds();
+    await idle(); if (gone()) return;
+    // the land is painted in its day colours whatever the theme: at night scene.js gives .meadow-land the
+    // hill's exact filter, so the footer's grass reads as the same grass as the hill's
+    g = main; seed = 13; hills(false); meadow();
     const tx = (narrow ? 0.8 : 0.47) * W;
     tree = { x: tx, y: near(tx) + 6 * S, h: (narrow ? 0.17 : 0.34) * H };
-    seed = 5;
-    path();
-    seed = 8;
-    flowers();
-    seed = 21;
-    drawTree();
+    await idle(); if (gone()) return;
+    g = main; seed = 5; path(); seed = 8; flowers();
+    await idle(); if (gone()) return;
+    g = main; seed = 21; drawTree();
+    await idle(); if (gone()) return;
+    g = main;
     if (useGL) buildSway(false, dpr);
     drawFlowers();
     setLeaves(false);
     run();
   }
 
-  const later = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 60));
-  new IntersectionObserver(([e]) => { near_ = e.isIntersecting; if (near_) later(paint); }, { rootMargin: "900px 0px" }).observe(foot);
+  new IntersectionObserver(([e]) => { near_ = e.isIntersecting; if (near_) paint(); }, { rootMargin: "900px 0px" }).observe(foot);
   let rt = 0;
   addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (near_) paint(); else painted = ""; }, 200); });
-  // the theme switch repaints it (the footer is off screen while the switch is pressed at the top)
-  new MutationObserver(() => { if (near_) later(paint); else painted = ""; }).observe(document.documentElement, { attributeFilter: ["data-theme"] });
 })();
