@@ -59,7 +59,7 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 - **About:** minimal, without an "I'm Rohit" line (the name is in the hero).
 - **Contact:** the Email / LinkedIn / Twitter row at the end of About was removed 2026-11-17 (my ask); contact lives in the hero intro (Twitter, LinkedIn, copy my email) (the nav's Email was removed too, 2026-11-17). No GitHub link.
 
-## Digital Nexus AI case study (2026-11-19, NOT pushed yet: waiting for my review)
+## Digital Nexus AI case study (2026-11-19, pushed live 2026-11-19)
 
 - **v3 (2026-11-19, after a senior review):** problem section reframed as opportunity ("Strong products, and room to show them better"), no image used twice (Decision 1 = sculpture close-up, Decision 5 = type close-up), four silent loops (clip-hero / products / buttons / dna .mp4 with .jpg posters, recorded on a stepped clock; they play only on screen and never with reduced motion), and "View the live concept" links to **https://vantyx-concept.vercel.app** (Vercel project vantyx-concept, deployed from Desktop/work/digital-nexus-ai; fictional-brand note in its footer, noindex, photos self-hosted). Still my call before pushing: check my internship agreement.
 

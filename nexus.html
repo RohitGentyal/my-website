@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=Funnel+Display:wght@500&family=Funnel+Sans:wght@400&display=swap" rel="stylesheet">
   <script>let t = null; try { t = localStorage.getItem("theme"); } catch (e) {} if (t !== "day") document.documentElement.dataset.theme = "night";</script>
-  <link rel="stylesheet" href="case.css?v=13">
+  <link rel="stylesheet" href="case.css?v=15">
 </head>
 <body>
   <header class="bar">
@@ -23,7 +23,7 @@
   <main>
     <!-- ================= HERO ================= -->
     <section class="hero page">
-      <p class="kicker rv"><b>Digital Nexus AI</b> &middot; Website <span class="tag">Redesign concept</span></p>
+      <p class="kicker rv"><b>Digital Nexus AI</b> &middot; Website <span class="tag">Redesign concept</span><span class="read">5 min read</span></p>
       <div class="hero-top">
         <h1 class="rv">Show the <em>work,</em> not the hype.</h1>
         <div class="rv" style="--d:80ms"><p class="lead">How I redesigned an agentic-AI company&rsquo;s website so an enterprise buyer understands six products in one scroll, and trusts the team that built them.</p><a class="live" href="https://vantyx-concept.vercel.app" target="_blank" rel="noopener">View the live concept <span aria-hidden="true">&#8599;</span></a></div>
@@ -33,7 +33,7 @@
         <div><dt>Role</dt><dd>UI/UX design intern<span>then self-initiated</span></dd></div>
         <div><dt>Timeline</dt><dd>May &ndash; Dec 2025<span>Concept, 2026</span></dd></div>
         <div><dt>Scope</dt><dd>Direction &amp; interaction<span>Motion &amp; front-end</span></dd></div>
-        <div><dt>Tools</dt><dd>Figma, Three.js, GSAP<span>HTML, CSS, JS</span></dd></div>
+        <div><dt>Tools</dt><dd>Claude Code, Three.js, GSAP<span>HTML, CSS, JS</span></dd></div>
       </dl>
     </section>
 
@@ -62,8 +62,8 @@
               <ul class="deltas">
                 <li><b>6 &rarr; 1</b>identical cards became one product story</li>
                 <li><b>0</b>stock renders or broad claims</li>
-                <li><b>1</b>motion language across the site</li>
-                <li><b>3</b>screen widths checked on every change</li>
+                <li><b>1 &rarr; 11</b>one repeated template became 11 distinct section layouts</li>
+                <li><b>12 &rarr; 18.5</b>px for the smallest paragraph text</li>
               </ul>
             </div>
           </div>
@@ -147,7 +147,7 @@
                 <div><dt>What I did</dt><dd>One gradient underline for links, fills that stay inside buttons, borders that trace on hover, slower scroll.</dd></div>
                 <div><dt>Trade-off</dt><dd>Fewer &ldquo;wow&rdquo; moments per element. The 3D carries the spectacle so the interface can stay quiet.</dd></div>
               </dl>
-              <figure class="shot rv"><video class="clip" muted loop playsinline preload="none" poster="assets/nexus/clip-buttons.jpg" aria-label="Hovering the two hero buttons: a fill wipes across inside each, and the buttons stay in place"><source src="assets/nexus/clip-buttons.mp4" type="video/mp4"></video><figcaption class="cap">Button fills, slowed close-up. The button never moves; only the fill does.</figcaption></figure>
+              <figure class="shot compact rv"><video class="clip" muted loop playsinline preload="none" poster="assets/nexus/clip-buttons.jpg" aria-label="Hovering the two hero buttons: a fill wipes across inside each, and the buttons stay in place"><source src="assets/nexus/clip-buttons.mp4" type="video/mp4"></video><figcaption class="cap">Button fills, slowed close-up. The button never moves; only the fill does.</figcaption></figure>
             </article>
             <article>
               <div class="dec-head rv"><span class="dec-n">05</span><div><h3>Readable before beautiful</h3><span class="ties">Principle 3 &middot; Calm by default</span></div></div>
@@ -221,6 +221,7 @@
           <span class="label rv">Craft</span>
           <h2 class="rv">Checked, not just designed.</h2>
           <p class="body rv">I reviewed it the way a team would before shipping: with scripts, not just my eyes.</p>
+          <p class="body rv">Built with AI pair-programming (Claude Code). Every decision, review and fix was mine.</p>
           <div class="stats">
             <div class="rv"><b>3</b><span>screen widths audited on every change: 375, 1024, 1440px</span></div>
             <div class="rv" style="--d:80ms"><b>10+</b><span>layout bugs found and fixed with scripted checks</span></div>
