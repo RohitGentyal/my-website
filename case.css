@@ -165,3 +165,39 @@ h2 { font: 500 clamp(26px, 3vw, 34px)/1.15 var(--sans); letter-spacing: -.025em;
   .meta dt{margin:0}
   .meta dd{white-space:nowrap}
 }
+
+/* ============ Type scale +1 step (my ask: a bit bigger overall) ============ */
+body{font-size:18.5px;line-height:1.7}
+.bar{font-size:16px}
+.label{font-size:22px}
+.num{font-size:13.5px;width:36px;height:36px}
+.eyebrow{font-size:15.5px}
+.lede{font-size:clamp(19px,1.75vw,22px)}
+h2{font-size:clamp(28px,3.3vw,38px)}
+.hmw{font-size:clamp(30px,3.9vw,48px)}
+.meta dt{font-size:14px}
+.meta dd{font-size:16.5px}
+.meta dd span{font-size:15px}
+.tell span{font-size:14px}
+.tell b{font-size:17.5px}
+.tell p{font-size:16.5px;line-height:1.55}
+.dec-n{font-size:14.5px}
+.dec h3{font-size:clamp(23px,2.4vw,28px)}
+.why dt{font-size:14.5px}
+.why dd{font-size:18px;line-height:1.6}
+.shot figcaption{font-size:15.5px}
+.sw b{font-size:16.5px}
+.sw span{font-size:14.5px}
+.face b{font-size:16.5px}
+.face span{font-size:15.5px}
+.checks li{font-size:18px}
+.checks li span{font-size:14px;padding-top:4px}
+.note{font-size:15.5px}
+.end small{font-size:15px}
+@media (min-width:901px){.hero h1{font-size:clamp(36px,4.2vw,56px)}}
+@media (max-width:560px){
+  body{font-size:17px}
+  .why dd,.checks li{font-size:17px}
+  .tell p{font-size:16px}
+  .meta>div,.meta>div:first-child,.meta>div:nth-child(3){grid-template-columns:100px 1fr}
+}
