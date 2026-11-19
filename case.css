@@ -144,3 +144,24 @@ h2 { font: 500 clamp(26px, 3vw, 34px)/1.15 var(--sans); letter-spacing: -.025em;
 @media (max-width:900px){.hero h1{max-width:none}.hero-grid .shot{margin-top:8px}}
 .num{font-size:13px}
 :root[data-theme="night"] .band{background:#1a2030;box-shadow:inset 0 1px 0 #262b36,inset 0 -1px 0 #262b36}
+
+/* meta strip v2: one clear line + one quiet line per column, hairlines between, never hyphenated */
+.meta{gap:0;padding:0}
+.meta>div{padding:20px 24px 22px;border-left:1px solid var(--rule)}
+.meta>div:first-child{border-left:0;padding-left:0}
+.meta dt{font-size:13px;color:var(--ink-faint);margin-bottom:8px;letter-spacing:.01em}
+.meta dd{font-size:15px;line-height:1.45;color:var(--ink);hyphens:none;white-space:nowrap}
+.meta dd span{display:block;margin-top:2px;color:var(--ink-faint);font-size:14px}
+@media (max-width:900px){
+  .meta{grid-template-columns:1fr 1fr}
+  .meta>div:nth-child(3){border-left:0;padding-left:0}
+  .meta>div:nth-child(n+3){border-top:1px solid var(--rule)}
+}
+@media (max-width:420px){.meta dd{white-space:normal}}
+@media (max-width:560px){
+  .meta{grid-template-columns:1fr}
+  .meta>div,.meta>div:first-child,.meta>div:nth-child(3){display:grid;grid-template-columns:92px 1fr;align-items:baseline;padding:14px 0;border-left:0;border-top:1px solid var(--rule)}
+  .meta>div:first-child{border-top:0}
+  .meta dt{margin:0}
+  .meta dd{white-space:nowrap}
+}
