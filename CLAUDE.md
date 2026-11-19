@@ -61,6 +61,8 @@ My portfolio site. Live at **https://rohitgentyal.vercel.app** (Vercel project `
 
 ## Digital Nexus AI case study (2026-11-19, NOT pushed yet: waiting for my review)
 
+- **v3 (2026-11-19, after a senior review):** problem section reframed as opportunity ("Strong products, and room to show them better"), no image used twice (Decision 1 = sculpture close-up, Decision 5 = type close-up), four silent loops (clip-hero / products / buttons / dna .mp4 with .jpg posters, recorded on a stepped clock; they play only on screen and never with reduced motion), and "View the live concept" links to **https://vantyx-concept.vercel.app** (Vercel project vantyx-concept, deployed from Desktop/work/digital-nexus-ai; fictional-brand note in its footer, noindex, photos self-hosted). Still my call before pushing: check my internship agreement.
+
 - **nexus.html + case.css:** a short decision-led case study ("An AI company's website that shows the work, not the hype."), structured after my Behance reference (Dybo CMS): meta strip, statement hero, numbered sections 01-06 in bands, a "How might we" band, five decisions (Why / What I did + screen), visual design (5 swatches, 3 type specimens), screens, quality checks, next, honest note. Same tokens as style.css (paper by day, night first), Inter + Instrument Serif; Funnel Display/Sans load only for the specimens.
 - **My calls (2026-11-19):** real company name in the text; screens show the placeholder brand **Vantyx** with one note saying so; framed as internship (May-Dec 2025) plus a self-initiated concept; no results claimed.
 - **Screens:** `assets/nexus/*.webp`, captured with headless Chrome from the coded redesign (Desktop/work/digital-nexus-ai, served on :5173), plus `before-hero.webp` from digitalnexusai.com.

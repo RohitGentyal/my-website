@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=Funnel+Display:wght@500&family=Funnel+Sans:wght@400&display=swap" rel="stylesheet">
   <script>let t = null; try { t = localStorage.getItem("theme"); } catch (e) {} if (t !== "day") document.documentElement.dataset.theme = "night";</script>
-  <link rel="stylesheet" href="case.css?v=12">
+  <link rel="stylesheet" href="case.css?v=13">
 </head>
 <body>
   <header class="bar">
@@ -26,9 +26,9 @@
       <p class="kicker rv"><b>Digital Nexus AI</b> &middot; Website <span class="tag">Redesign concept</span></p>
       <div class="hero-top">
         <h1 class="rv">Show the <em>work,</em> not the hype.</h1>
-        <p class="lead rv" style="--d:80ms">How I redesigned an agentic-AI company&rsquo;s website so an enterprise buyer understands six products in one scroll, and trusts the team that built them.</p>
+        <div class="rv" style="--d:80ms"><p class="lead">How I redesigned an agentic-AI company&rsquo;s website so an enterprise buyer understands six products in one scroll, and trusts the team that built them.</p><a class="live" href="https://vantyx-concept.vercel.app" target="_blank" rel="noopener">View the live concept <span aria-hidden="true">&#8599;</span></a></div>
       </div>
-      <figure class="shot hero-shot rv"><img src="assets/nexus/hero.webp" width="1440" height="900" alt="The redesigned home page: 'The Agentic Layer for the Enterprise' over a glowing wave of sliced discs"></figure>
+      <figure class="shot hero-shot rv"><video class="clip" muted loop playsinline preload="none" poster="assets/nexus/clip-hero.jpg" aria-label="The redesigned home page: the cursor sweeps across a wave of sliced discs and they fan open" data-eager><source src="assets/nexus/clip-hero.mp4" type="video/mp4"></video></figure>
       <dl class="meta rv">
         <div><dt>Role</dt><dd>UI/UX design intern<span>then self-initiated</span></dd></div>
         <div><dt>Timeline</dt><dd>May &ndash; Dec 2025<span>Concept, 2026</span></dd></div>
@@ -41,7 +41,7 @@
       <aside class="index" aria-label="Sections">
         <nav>
           <a href="#overview"><span>01</span>Overview</a>
-          <a href="#problem"><span>02</span>Problem</a>
+          <a href="#problem"><span>02</span>Context</a>
           <a href="#principles"><span>03</span>Principles</a>
           <a href="#decisions"><span>04</span>Decisions</a>
           <a href="#iterations"><span>05</span>Iterations</a>
@@ -56,12 +56,12 @@
         <section id="overview">
           <span class="label rv">At a glance</span>
           <div class="glance">
-            <div class="rv"><h4>The problem</h4><p>Strong products, generic site. Stock AI art, claims nobody could check, and six identical cards that made every product weigh the same.</p></div>
+            <div class="rv"><h4>The problem</h4><p>Strong products, and a site that didn&rsquo;t yet show them: generic AI imagery, broad claims, and six cards that gave every product the same weight.</p></div>
             <div class="rv" style="--d:80ms"><h4>The approach</h4><p>Three principles, then five decisions measured against them. Built in code so motion and 3D could be judged for real, not imagined in a mockup.</p></div>
             <div class="rv" style="--d:160ms"><h4>What changed</h4>
               <ul class="deltas">
                 <li><b>6 &rarr; 1</b>identical cards became one product story</li>
-                <li><b>0</b>stock renders or unverifiable claims</li>
+                <li><b>0</b>stock renders or broad claims</li>
                 <li><b>1</b>motion language across the site</li>
                 <li><b>3</b>screen widths checked on every change</li>
               </ul>
@@ -71,9 +71,9 @@
 
         <!-- ================= 02 PROBLEM ================= -->
         <section id="problem">
-          <span class="label rv">The problem</span>
-          <h2 class="rv">It looked like every AI site of its year.</h2>
-          <p class="body rv">Digital Nexus AI builds agentic AI for enterprises: six products and four service lines. The offer was strong; the website made it hard to see. Four things stood out on the first screen alone.</p>
+          <span class="label rv">The starting point</span>
+          <h2 class="rv">Strong products, and room to show them better.</h2>
+          <p class="body rv">Digital Nexus AI builds agentic AI for enterprises: six products and four service lines. The ingredients were there; my aim was to let the products speak more clearly. Four opportunities stood out on the first screen.</p>
           <div class="annot rv" style="margin-top:var(--gap)">
             <figure class="shot">
               <div style="position:relative">
@@ -84,15 +84,15 @@
                 <span class="pin" style="left:24%;top:94%">4</span>
               </div>
             </figure>
-            <p class="cap"><b>Before:</b> the live site at the time.</p>
+            <p class="cap"><b>Starting point:</b> the company&rsquo;s site at the time.</p>
           </div>
           <ol class="notes">
-            <li class="rv"><i>1</i><div><b>Stock AI imagery</b><p>A neural-globe render says &ldquo;AI company&rdquo; and nothing about this one.</p></div></li>
-            <li class="rv" style="--d:60ms"><i>2</i><div><b>Gradient doing the talking</b><p>Colour carries the headline instead of what it says.</p></div></li>
-            <li class="rv"><i>3</i><div><b>Decoration behind navigation</b><p>Aurora streaks compete with the nav for attention.</p></div></li>
-            <li class="rv" style="--d:60ms"><i>4</i><div><b>A vague first action</b><p>&ldquo;Launch Platforms&rdquo; doesn&rsquo;t say what happens next.</p></div></li>
+            <li class="rv"><i>1</i><div><b>Imagery</b><p>A neural-globe render signals AI in general; a custom visual could signal this company.</p></div></li>
+            <li class="rv" style="--d:60ms"><i>2</i><div><b>Headline</b><p>The gradient carries the emphasis; the words could carry it instead.</p></div></li>
+            <li class="rv"><i>3</i><div><b>Background</b><p>Light streaks sit behind the navigation and compete for attention.</p></div></li>
+            <li class="rv" style="--d:60ms"><i>4</i><div><b>First action</b><p>&ldquo;Launch Platforms&rdquo; could say more clearly what happens next.</p></div></li>
           </ol>
-          <p class="aside rv"><b>Further down:</b> &ldquo;100% client satisfaction&rdquo; and &ldquo;&infin; ambition&rdquo;, then six identical product cards and the same section template (pill, gradient headline, card grid) repeated to the footer.</p>
+          <p class="aside rv"><b>Further down:</b> broad claims such as &ldquo;100% client satisfaction&rdquo;, six product cards with equal weight, and one section template repeated to the footer.</p>
         </section>
 
         <!-- ================= 03 PRINCIPLES ================= -->
@@ -116,11 +116,11 @@
             <article>
               <div class="dec-head rv"><span class="dec-n">01</span><div><h3>One crafted object instead of stock AI art</h3><span class="ties">Principle 1 &middot; Show, don&rsquo;t claim</span></div></div>
               <dl class="dec-grid rv">
-                <div><dt>Why</dt><dd>A render anyone could buy says nothing. One object made for the brand says someone cared.</dd></div>
+                <div><dt>Why</dt><dd>A stock render signals AI in general. One object made for the brand says someone cared.</dd></div>
                 <div><dt>What I did</dt><dd>A 3D wave of sliced discs that builds itself on load, fans open under the cursor and twists on scroll.</dd></div>
                 <div><dt>Trade-off</dt><dd>It costs GPU time, so it only renders while visible, at a capped resolution.</dd></div>
               </dl>
-              <figure class="shot rv"><img src="assets/nexus/hero.webp" width="1440" height="900" alt="The disc-wave sculpture in the hero" loading="lazy"></figure>
+              <figure class="shot rv"><img src="assets/nexus/sculpture.webp" width="2880" height="960" alt="Close-up of the sculpture: sliced discs fanning open under the cursor" loading="lazy"></figure>
             </article>
             <article>
               <div class="dec-head rv"><span class="dec-n">02</span><div><h3>Six products, one story</h3><span class="ties">Principle 2 &middot; One story, six products</span></div></div>
@@ -129,13 +129,13 @@
                 <div><dt>What I did</dt><dd>One pinned panel beside the list. Its light changes colour and shape as each product comes into view.</dd></div>
                 <div><dt>Trade-off</dt><dd>A pinned panel doesn&rsquo;t work on phones, so there each product carries its own image instead.</dd></div>
               </dl>
-              <figure class="shot rv"><img src="assets/nexus/products.webp" width="1440" height="900" alt="Products: a pinned light panel beside the second product" loading="lazy"></figure>
+              <figure class="shot rv"><video class="clip" muted loop playsinline preload="none" poster="assets/nexus/clip-products.jpg" aria-label="Scrolling through the products: the pinned light panel changes colour and shape for each one"><source src="assets/nexus/clip-products.mp4" type="video/mp4"></video></figure>
             </article>
             <article>
               <div class="dec-head rv"><span class="dec-n">03</span><div><h3>Proof instead of adjectives</h3><span class="ties">Principle 1 &middot; Show, don&rsquo;t claim</span></div></div>
               <dl class="dec-grid rv">
                 <div><dt>Why</dt><dd>Enterprise buyers trust outcomes they can check, not superlatives.</dd></div>
-                <div><dt>What I did</dt><dd>Removed the unverifiable claims and designed room for case studies with measured results.</dd></div>
+                <div><dt>What I did</dt><dd>Replaced broad claims with room for case studies and measured results.</dd></div>
                 <div><dt>Trade-off</dt><dd>It needs real client data and permission before launch. The concept holds the space with placeholders.</dd></div>
               </dl>
               <figure class="shot rv"><img src="assets/nexus/work.webp" width="1440" height="900" alt="Selected work: three case-study cards with outcome numbers" loading="lazy"></figure>
@@ -147,7 +147,7 @@
                 <div><dt>What I did</dt><dd>One gradient underline for links, fills that stay inside buttons, borders that trace on hover, slower scroll.</dd></div>
                 <div><dt>Trade-off</dt><dd>Fewer &ldquo;wow&rdquo; moments per element. The 3D carries the spectacle so the interface can stay quiet.</dd></div>
               </dl>
-              <figure class="shot rv"><img src="assets/nexus/stack.webp" width="1440" height="900" alt="The stack grid with line icons in each card" loading="lazy"></figure>
+              <figure class="shot rv"><video class="clip" muted loop playsinline preload="none" poster="assets/nexus/clip-buttons.jpg" aria-label="Hovering the two hero buttons: a fill wipes across inside each, and the buttons stay in place"><source src="assets/nexus/clip-buttons.mp4" type="video/mp4"></video><figcaption class="cap">Button fills, slowed close-up. The button never moves; only the fill does.</figcaption></figure>
             </article>
             <article>
               <div class="dec-head rv"><span class="dec-n">05</span><div><h3>Readable before beautiful</h3><span class="ties">Principle 3 &middot; Calm by default</span></div></div>
@@ -156,7 +156,7 @@
                 <div><dt>What I did</dt><dd>Funnel Display and Funnel Sans with one serif accent, body text at 22px, every label checked for contrast.</dd></div>
                 <div><dt>Trade-off</dt><dd>Bigger type means fewer words per screen, so the copy had to be cut to fit.</dd></div>
               </dl>
-              <figure class="shot rv"><img src="assets/nexus/cta.webp" width="1440" height="900" alt="Closing call to action: 'Ready to innovate?' above a ring of light" loading="lazy"></figure>
+              <figure class="shot rv"><img src="assets/nexus/type.webp" width="2520" height="1410" alt="Type close-up: large service names, quiet descriptions and an italic serif accent" loading="lazy"></figure>
             </article>
           </div>
         </section>
@@ -171,7 +171,7 @@
             <div class="steps three">
               <div class="step rv"><figure class="shot"><img src="assets/nexus/iter-dna-1.png" width="523" height="637" alt="First version: a particle helix inside a box" loading="lazy"></figure><p class="tagline"><b>v1</b><span>Particle helix</span></p><p class="why-not">Boxed in and decorative. It said nothing about humans or agents.</p></div>
               <div class="step rv" style="--d:80ms"><figure class="shot"><img src="assets/nexus/iter-dna-2.webp" width="1919" height="608" alt="Second version: a glossy 3D helix with a coloured glow" loading="lazy"></figure><p class="tagline"><b>v2</b><span>Glass and glow</span></p><p class="why-not">Read like a stock 3D render, the exact thing principle 1 rejects.</p></div>
-              <div class="step final rv" style="--d:160ms"><figure class="shot"><img src="assets/nexus/dna.webp" width="1440" height="900" alt="Final version: two strands in the brand colours" loading="lazy"></figure><p class="tagline"><b>Final</b><span>Two strands</span></p><p class="why-not">Human and agent strands in the brand colours, unzipping under the cursor.</p></div>
+              <div class="step final rv" style="--d:160ms"><figure class="shot"><video class="clip" muted loop playsinline preload="none" poster="assets/nexus/clip-dna.jpg" aria-label="Final version: two strands in the brand colours unzip as the cursor passes"><source src="assets/nexus/clip-dna.mp4" type="video/mp4"></video></figure><p class="tagline"><b>Final</b><span>Two strands</span></p><p class="why-not">Human and agent strands in the brand colours, unzipping under the cursor.</p></div>
             </div>
           </div>
           <div class="iter">
@@ -252,6 +252,7 @@
 
     <div class="end page">
       <a href="index.html#work">&larr; Back to all work</a>
+      <a class="live" href="https://vantyx-concept.vercel.app" target="_blank" rel="noopener">View the live concept <span aria-hidden="true">&#8599;</span></a>
       <small>Rohit Gentyal &middot; 2026</small>
     </div>
   </main>
@@ -291,6 +292,17 @@
         e.preventDefault();
         scrollTo({ top: secs[i].getBoundingClientRect().top + scrollY - 40, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       }));
+    })();
+  </script>
+  <script>
+    (() => {
+      const vids = [...document.querySelectorAll("video.clip")];
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;   // posters only
+      const io = new IntersectionObserver((es) => es.forEach((e) => {
+        const v = e.target;
+        if (e.isIntersecting) { if (v.preload === "none") v.preload = "auto"; v.play().catch(() => {}); } else v.pause();
+      }), { threshold: 0.25 });
+      vids.forEach((v) => io.observe(v));
     })();
   </script>
   <script src="glide.js?v=2"></script>
