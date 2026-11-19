@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Digital Nexus AI, website redesign concept · Rohit Gentyal</title>
-  <meta name="description" content="A short case study: redesigning an AI company's website to show the work, not the hype. Design decisions, visual system and screens.">
+  <meta name="description" content="Case study: redesigning an AI company's website to show the work, not the hype. Principles, decisions and trade-offs, iterations, system and craft.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&family=Funnel+Display:wght@500&family=Funnel+Sans:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=Funnel+Display:wght@500&family=Funnel+Sans:wght@400&display=swap" rel="stylesheet">
   <script>let t = null; try { t = localStorage.getItem("theme"); } catch (e) {} if (t !== "day") document.documentElement.dataset.theme = "night";</script>
-  <link rel="stylesheet" href="case.css?v=7">
+  <link rel="stylesheet" href="case.css?v=12">
 </head>
 <body>
   <header class="bar">
@@ -21,164 +21,236 @@
   </header>
 
   <main>
-    <!-- HERO -->
-    <section class="hero wide">
+    <!-- ================= HERO ================= -->
+    <section class="hero page">
+      <p class="kicker rv"><b>Digital Nexus AI</b> &middot; Website <span class="tag">Redesign concept</span></p>
+      <div class="hero-top">
+        <h1 class="rv">Show the <em>work,</em> not the hype.</h1>
+        <p class="lead rv" style="--d:80ms">How I redesigned an agentic-AI company&rsquo;s website so an enterprise buyer understands six products in one scroll, and trusts the team that built them.</p>
+      </div>
+      <figure class="shot hero-shot rv"><img src="assets/nexus/hero.webp" width="1440" height="900" alt="The redesigned home page: 'The Agentic Layer for the Enterprise' over a glowing wave of sliced discs"></figure>
       <dl class="meta rv">
         <div><dt>Role</dt><dd>UI/UX design intern<span>then self-initiated</span></dd></div>
         <div><dt>Timeline</dt><dd>May &ndash; Dec 2025<span>Concept, 2026</span></dd></div>
         <div><dt>Scope</dt><dd>Direction &amp; interaction<span>Motion &amp; front-end</span></dd></div>
         <div><dt>Tools</dt><dd>Figma, Three.js, GSAP<span>HTML, CSS, JS</span></dd></div>
       </dl>
-      <div class="hero-grid">
-        <div>
-          <p class="eyebrow rv"><b>Digital Nexus AI</b> &middot; Website redesign concept</p>
-          <h1 class="rv">An AI company&rsquo;s website that shows the <em>work,</em> not the hype.</h1>
-          <p class="lede rv">I worked on Digital Nexus AI&rsquo;s website during my internship. Afterwards I took it further on my own: a site that explains six products in one scroll and earns trust through craft instead of buzzwords.</p>
-        </div>
-        <figure class="shot rv"><img src="assets/nexus/hero.webp" width="1440" height="900" alt="Redesigned home page: the headline 'The Agentic Layer for the Enterprise' over a glowing wave of sliced discs"></figure>
-      </div>
     </section>
 
-    <!-- 01 CONTEXT -->
-    <section class="sec wide" aria-labelledby="s1">
-      <span class="num rv">01</span>
-      <p class="label rv">Where it started</p>
-      <div class="split">
-        <div>
-          <h2 id="s1" class="rv">It looked like every AI site of its year.</h2>
-          <p class="rv">Digital Nexus AI builds agentic AI for enterprises: six products and four service lines. The offer was strong; the website made it hard to see.</p>
-        </div>
-        <figure class="shot rv"><img src="assets/nexus/before-hero.webp" width="1440" height="900" alt="The original home page: 'The New Era of Enterprise AI' with a glowing neural-globe render" loading="lazy"><figcaption>Before: the live site at the time</figcaption></figure>
-      </div>
-      <div class="tells">
-        <div class="tell rv" style="--d:0ms"><span>A</span><b>Stock AI imagery</b><p>Neural globes and aurora streaks that could belong to anyone.</p></div>
-        <div class="tell rv" style="--d:80ms"><span>B</span><b>Claims you can&rsquo;t check</b><p>&ldquo;100% client satisfaction&rdquo; and &ldquo;&infin; ambition&rdquo;.</p></div>
-        <div class="tell rv" style="--d:160ms"><span>C</span><b>Six identical cards</b><p>Every product weighed the same, so none stood out.</p></div>
-        <div class="tell rv" style="--d:240ms"><span>D</span><b>One section template</b><p>Pill, gradient headline, card grid, top to bottom.</p></div>
-      </div>
-    </section>
+    <div class="page layout">
+      <aside class="index" aria-label="Sections">
+        <nav>
+          <a href="#overview"><span>01</span>Overview</a>
+          <a href="#problem"><span>02</span>Problem</a>
+          <a href="#principles"><span>03</span>Principles</a>
+          <a href="#decisions"><span>04</span>Decisions</a>
+          <a href="#iterations"><span>05</span>Iterations</a>
+          <a href="#system"><span>06</span>System</a>
+          <a href="#craft"><span>07</span>Craft</a>
+          <a href="#reflection"><span>08</span>Reflection</a>
+        </nav>
+      </aside>
 
-    <!-- 02 DEFINING -->
-    <section class="band" aria-labelledby="s2">
-      <div class="wide">
-        <span class="num rv">02</span>
-        <p class="label rv">Defining the problem</p>
-        <p id="s2" class="hmw rv">How might we help an enterprise buyer understand six products in <em>one scroll,</em> and trust the team behind them?</p>
-      </div>
-    </section>
-
-    <!-- 03 DECISIONS -->
-    <section class="sec wide" aria-labelledby="s3">
-      <span class="num rv">03</span>
-      <p class="label rv">Five decisions</p>
-      <h2 id="s3" class="rv">What I changed, and why.</h2>
-      <div class="decisions">
-        <article class="dec">
-          <div class="dec-text">
-            <p class="dec-n rv">Decision 1</p>
-            <h3 class="rv">One crafted object instead of stock AI art</h3>
-            <dl class="why rv">
-              <div><dt>Why</dt><dd>A neural-globe render says &ldquo;AI company&rdquo; and nothing else. One object made for the brand says someone cared.</dd></div>
-              <div><dt>What I did</dt><dd>A 3D wave of sliced discs that builds itself on load, fans open under the cursor and twists as you scroll.</dd></div>
-            </dl>
+      <div class="content">
+        <!-- ================= 01 OVERVIEW ================= -->
+        <section id="overview">
+          <span class="label rv">At a glance</span>
+          <div class="glance">
+            <div class="rv"><h4>The problem</h4><p>Strong products, generic site. Stock AI art, claims nobody could check, and six identical cards that made every product weigh the same.</p></div>
+            <div class="rv" style="--d:80ms"><h4>The approach</h4><p>Three principles, then five decisions measured against them. Built in code so motion and 3D could be judged for real, not imagined in a mockup.</p></div>
+            <div class="rv" style="--d:160ms"><h4>What changed</h4>
+              <ul class="deltas">
+                <li><b>6 &rarr; 1</b>identical cards became one product story</li>
+                <li><b>0</b>stock renders or unverifiable claims</li>
+                <li><b>1</b>motion language across the site</li>
+                <li><b>3</b>screen widths checked on every change</li>
+              </ul>
+            </div>
           </div>
-          <figure class="shot rv"><img src="assets/nexus/hero.webp" width="1440" height="900" alt="The disc-wave sculpture in the hero" loading="lazy"></figure>
-        </article>
-        <article class="dec">
-          <div class="dec-text">
-            <p class="dec-n rv">Decision 2</p>
-            <h3 class="rv">Six products, one story</h3>
-            <dl class="why rv">
-              <div><dt>Why</dt><dd>Six identical cards flatten the offer. A buyer should feel the difference between an agent and a vision product.</dd></div>
-              <div><dt>What I did</dt><dd>One pinned panel beside the list. As you scroll, its light changes colour and shape for each product, so each gets its own moment.</dd></div>
-            </dl>
-          </div>
-          <figure class="shot rv"><img src="assets/nexus/products.webp" width="1440" height="900" alt="Products section: a pinned light panel beside the second product" loading="lazy"></figure>
-        </article>
-        <article class="dec">
-          <div class="dec-text">
-            <p class="dec-n rv">Decision 3</p>
-            <h3 class="rv">Proof instead of adjectives</h3>
-            <dl class="why rv">
-              <div><dt>Why</dt><dd>Enterprise buyers trust outcomes they can check, not superlatives.</dd></div>
-              <div><dt>What I did</dt><dd>Removed the claims nobody can verify and designed room for real case studies with measured results. Placeholder data in this concept.</dd></div>
-            </dl>
-          </div>
-          <figure class="shot rv"><img src="assets/nexus/work.webp" width="1440" height="900" alt="Selected work: three case-study cards with outcome numbers" loading="lazy"></figure>
-        </article>
-        <article class="dec">
-          <div class="dec-text">
-            <p class="dec-n rv">Decision 4</p>
-            <h3 class="rv">One motion language</h3>
-            <dl class="why rv">
-              <div><dt>Why</dt><dd>Motion should confirm what you did, not perform for you.</dd></div>
-              <div><dt>What I did</dt><dd>Links share one gradient underline, buttons fill in place and never move, grid cards trace their border on hover, and scrolling was slowed so the 3D has room.</dd></div>
-            </dl>
-          </div>
-          <figure class="shot rv"><img src="assets/nexus/stack.webp" width="1440" height="900" alt="The stack grid with line icons in each card" loading="lazy"></figure>
-        </article>
-        <article class="dec">
-          <div class="dec-text">
-            <p class="dec-n rv">Decision 5</p>
-            <h3 class="rv">Readable before beautiful</h3>
-            <dl class="why rv">
-              <div><dt>Why</dt><dd>Early drafts used small monospace labels. They looked technical but were hard to read.</dd></div>
-              <div><dt>What I did</dt><dd>Moved to Funnel Display and Funnel Sans with one Instrument Serif accent, raised body text to 22px and checked every label for contrast.</dd></div>
-            </dl>
-          </div>
-          <figure class="shot rv"><img src="assets/nexus/cta.webp" width="1440" height="900" alt="Closing call to action: 'Ready to innovate?' above a ring of light" loading="lazy"></figure>
-        </article>
-      </div>
-    </section>
+        </section>
 
-    <!-- 04 VISUAL DESIGN -->
-    <section class="sec wide" aria-labelledby="s4">
-      <span class="num rv">04</span>
-      <p class="label rv">Visual design</p>
-      <h2 id="s4" class="rv">Dark, quiet, and one colour story.</h2>
-      <p class="rv" style="max-width:56ch">Near-black lets the 3D carry the colour. The palette keeps the company&rsquo;s blue and violet and brings in the orange its logo already had but never used.</p>
-      <div class="swatches">
-        <div class="sw rv" style="--d:0ms"><i style="background:#050506"></i><b>Ink</b><br><span>#050506 &middot; base</span></div>
-        <div class="sw rv" style="--d:60ms"><i style="background:#4F7BFF"></i><b>Signal blue</b><br><span>#4F7BFF</span></div>
-        <div class="sw rv" style="--d:120ms"><i style="background:#8B5CF6"></i><b>Violet</b><br><span>#8B5CF6</span></div>
-        <div class="sw rv" style="--d:180ms"><i style="background:#E879F9"></i><b>Orchid</b><br><span>#E879F9</span></div>
-        <div class="sw rv" style="--d:240ms"><i style="background:#FFB547"></i><b>Amber</b><br><span>#FFB547 &middot; from the logo</span></div>
-      </div>
-      <div class="type">
-        <div class="face rv"><span class="aa" style="font-family:'Funnel Display',var(--sans);font-weight:500">Aa</span><b>Funnel Display</b><span>Headlines and numbers</span></div>
-        <div class="face rv" style="--d:80ms"><span class="aa" style="font-family:'Funnel Sans',var(--sans)">Aa</span><b>Funnel Sans</b><span>Text and interface</span></div>
-        <div class="face rv" style="--d:160ms"><span class="aa" style="font-family:var(--serif);font-style:italic">Aa</span><b>Instrument Serif Italic</b><span>One accent word per headline</span></div>
-      </div>
-    </section>
+        <!-- ================= 02 PROBLEM ================= -->
+        <section id="problem">
+          <span class="label rv">The problem</span>
+          <h2 class="rv">It looked like every AI site of its year.</h2>
+          <p class="body rv">Digital Nexus AI builds agentic AI for enterprises: six products and four service lines. The offer was strong; the website made it hard to see. Four things stood out on the first screen alone.</p>
+          <div class="annot rv" style="margin-top:var(--gap)">
+            <figure class="shot">
+              <div style="position:relative">
+                <img src="assets/nexus/before-hero.webp" width="1440" height="900" alt="The original home page: 'The New Era of Enterprise AI' beside a glowing neural-globe render" loading="lazy">
+                <span class="pin" style="left:72%;top:58%">1</span>
+                <span class="pin" style="left:43%;top:55%">2</span>
+                <span class="pin" style="left:79%;top:22%">3</span>
+                <span class="pin" style="left:24%;top:94%">4</span>
+              </div>
+            </figure>
+            <p class="cap"><b>Before:</b> the live site at the time.</p>
+          </div>
+          <ol class="notes">
+            <li class="rv"><i>1</i><div><b>Stock AI imagery</b><p>A neural-globe render says &ldquo;AI company&rdquo; and nothing about this one.</p></div></li>
+            <li class="rv" style="--d:60ms"><i>2</i><div><b>Gradient doing the talking</b><p>Colour carries the headline instead of what it says.</p></div></li>
+            <li class="rv"><i>3</i><div><b>Decoration behind navigation</b><p>Aurora streaks compete with the nav for attention.</p></div></li>
+            <li class="rv" style="--d:60ms"><i>4</i><div><b>A vague first action</b><p>&ldquo;Launch Platforms&rdquo; doesn&rsquo;t say what happens next.</p></div></li>
+          </ol>
+          <p class="aside rv"><b>Further down:</b> &ldquo;100% client satisfaction&rdquo; and &ldquo;&infin; ambition&rdquo;, then six identical product cards and the same section template (pill, gradient headline, card grid) repeated to the footer.</p>
+        </section>
 
-    <!-- 05 SCREENS -->
-    <section class="sec wide" aria-labelledby="s5">
-      <span class="num rv">05</span>
-      <p class="label rv">Screens</p>
-      <h2 id="s5" class="rv">The rest of the scroll.</h2>
-      <div class="gallery">
-        <figure class="shot rv"><img src="assets/nexus/moments.webp" width="1440" height="900" alt="Moments: event cards that scroll sideways while the page holds" loading="lazy"><figcaption>Moments scroll sideways while the page holds still</figcaption></figure>
-        <figure class="shot tall rv" style="--d:80ms"><img src="assets/nexus/mobile-hero.webp" width="390" height="844" alt="The home page on a phone" loading="lazy"><figcaption>On a phone</figcaption></figure>
-        <figure class="shot rv"><img src="assets/nexus/dna.webp" width="1440" height="900" alt="Our DNA: a double helix of human and agent strands" loading="lazy"><figcaption>&ldquo;Our DNA&rdquo;: human and agent strands that unzip under the cursor</figcaption></figure>
+        <!-- ================= 03 PRINCIPLES ================= -->
+        <section id="principles">
+          <div class="band" style="margin-top:0;border-radius:24px;padding:clamp(56px,7vw,96px) clamp(28px,5vw,72px)">
+            <span class="label rv">How might we</span>
+            <p class="hmw rv">help an enterprise buyer understand six products in <em>one scroll,</em> and trust the team behind them?</p>
+            <div class="principles">
+              <div class="rv"><span>Principle 1</span><h3>Show, don&rsquo;t claim</h3><p>Every superlative is replaced by something you can see or check.</p></div>
+              <div class="rv" style="--d:80ms"><span>Principle 2</span><h3>One story, six products</h3><p>The products share one stage, and each gets its own moment on it.</p></div>
+              <div class="rv" style="--d:160ms"><span>Principle 3</span><h3>Calm by default, alive on intent</h3><p>The page stays quiet until you scroll, hover or click.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 04 DECISIONS ================= -->
+        <section id="decisions">
+          <span class="label rv">Five decisions</span>
+          <h2 class="rv">Each one tied to a principle, each with a cost.</h2>
+          <div class="decs">
+            <article>
+              <div class="dec-head rv"><span class="dec-n">01</span><div><h3>One crafted object instead of stock AI art</h3><span class="ties">Principle 1 &middot; Show, don&rsquo;t claim</span></div></div>
+              <dl class="dec-grid rv">
+                <div><dt>Why</dt><dd>A render anyone could buy says nothing. One object made for the brand says someone cared.</dd></div>
+                <div><dt>What I did</dt><dd>A 3D wave of sliced discs that builds itself on load, fans open under the cursor and twists on scroll.</dd></div>
+                <div><dt>Trade-off</dt><dd>It costs GPU time, so it only renders while visible, at a capped resolution.</dd></div>
+              </dl>
+              <figure class="shot rv"><img src="assets/nexus/hero.webp" width="1440" height="900" alt="The disc-wave sculpture in the hero" loading="lazy"></figure>
+            </article>
+            <article>
+              <div class="dec-head rv"><span class="dec-n">02</span><div><h3>Six products, one story</h3><span class="ties">Principle 2 &middot; One story, six products</span></div></div>
+              <dl class="dec-grid rv">
+                <div><dt>Why</dt><dd>Identical cards flatten the offer. An agent and a vision product should not feel the same.</dd></div>
+                <div><dt>What I did</dt><dd>One pinned panel beside the list. Its light changes colour and shape as each product comes into view.</dd></div>
+                <div><dt>Trade-off</dt><dd>A pinned panel doesn&rsquo;t work on phones, so there each product carries its own image instead.</dd></div>
+              </dl>
+              <figure class="shot rv"><img src="assets/nexus/products.webp" width="1440" height="900" alt="Products: a pinned light panel beside the second product" loading="lazy"></figure>
+            </article>
+            <article>
+              <div class="dec-head rv"><span class="dec-n">03</span><div><h3>Proof instead of adjectives</h3><span class="ties">Principle 1 &middot; Show, don&rsquo;t claim</span></div></div>
+              <dl class="dec-grid rv">
+                <div><dt>Why</dt><dd>Enterprise buyers trust outcomes they can check, not superlatives.</dd></div>
+                <div><dt>What I did</dt><dd>Removed the unverifiable claims and designed room for case studies with measured results.</dd></div>
+                <div><dt>Trade-off</dt><dd>It needs real client data and permission before launch. The concept holds the space with placeholders.</dd></div>
+              </dl>
+              <figure class="shot rv"><img src="assets/nexus/work.webp" width="1440" height="900" alt="Selected work: three case-study cards with outcome numbers" loading="lazy"></figure>
+            </article>
+            <article>
+              <div class="dec-head rv"><span class="dec-n">04</span><div><h3>One motion language</h3><span class="ties">Principle 3 &middot; Calm by default</span></div></div>
+              <dl class="dec-grid rv">
+                <div><dt>Why</dt><dd>Motion should confirm what you did, not perform for you.</dd></div>
+                <div><dt>What I did</dt><dd>One gradient underline for links, fills that stay inside buttons, borders that trace on hover, slower scroll.</dd></div>
+                <div><dt>Trade-off</dt><dd>Fewer &ldquo;wow&rdquo; moments per element. The 3D carries the spectacle so the interface can stay quiet.</dd></div>
+              </dl>
+              <figure class="shot rv"><img src="assets/nexus/stack.webp" width="1440" height="900" alt="The stack grid with line icons in each card" loading="lazy"></figure>
+            </article>
+            <article>
+              <div class="dec-head rv"><span class="dec-n">05</span><div><h3>Readable before beautiful</h3><span class="ties">Principle 3 &middot; Calm by default</span></div></div>
+              <dl class="dec-grid rv">
+                <div><dt>Why</dt><dd>Early drafts used small monospace labels. They looked technical and were hard to read.</dd></div>
+                <div><dt>What I did</dt><dd>Funnel Display and Funnel Sans with one serif accent, body text at 22px, every label checked for contrast.</dd></div>
+                <div><dt>Trade-off</dt><dd>Bigger type means fewer words per screen, so the copy had to be cut to fit.</dd></div>
+              </dl>
+              <figure class="shot rv"><img src="assets/nexus/cta.webp" width="1440" height="900" alt="Closing call to action: 'Ready to innovate?' above a ring of light" loading="lazy"></figure>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================= 05 ITERATIONS ================= -->
+        <section id="iterations">
+          <span class="label rv">What I threw away</span>
+          <h2 class="rv">Most of the work was deciding what to remove.</h2>
+          <div class="iter">
+            <h3 class="rv">&ldquo;Our DNA&rdquo;, three times</h3>
+            <p class="body rv">The section about the company&rsquo;s people needed one image for humans and AI working together.</p>
+            <div class="steps three">
+              <div class="step rv"><figure class="shot"><img src="assets/nexus/iter-dna-1.png" width="523" height="637" alt="First version: a particle helix inside a box" loading="lazy"></figure><p class="tagline"><b>v1</b><span>Particle helix</span></p><p class="why-not">Boxed in and decorative. It said nothing about humans or agents.</p></div>
+              <div class="step rv" style="--d:80ms"><figure class="shot"><img src="assets/nexus/iter-dna-2.webp" width="1919" height="608" alt="Second version: a glossy 3D helix with a coloured glow" loading="lazy"></figure><p class="tagline"><b>v2</b><span>Glass and glow</span></p><p class="why-not">Read like a stock 3D render, the exact thing principle 1 rejects.</p></div>
+              <div class="step final rv" style="--d:160ms"><figure class="shot"><img src="assets/nexus/dna.webp" width="1440" height="900" alt="Final version: two strands in the brand colours" loading="lazy"></figure><p class="tagline"><b>Final</b><span>Two strands</span></p><p class="why-not">Human and agent strands in the brand colours, unzipping under the cursor.</p></div>
+            </div>
+          </div>
+          <div class="iter">
+            <h3 class="rv">The ending, simplified</h3>
+            <p class="body rv">The last screen has one job: get the click.</p>
+            <div class="steps two">
+              <div class="step rv"><figure class="shot"><img src="assets/nexus/iter-finale-1.webp" width="1919" height="880" alt="Earlier ending: light rings flowing into a fluted-glass footer" loading="lazy"></figure><p class="tagline"><b>Before</b><span>Rings into fluted glass</span></p><p class="why-not">Impressive, and it buried the call to action under the effect.</p></div>
+              <div class="step final rv" style="--d:80ms"><figure class="shot"><img src="assets/nexus/cta.webp" width="1440" height="900" alt="Final ending: rings contained under the call to action" loading="lazy"></figure><p class="tagline"><b>Final</b><span>Contained, then quiet</span></p><p class="why-not">The rings stay under the headline and the footer stays still.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 06 SYSTEM ================= -->
+        <section id="system">
+          <span class="label rv">The system</span>
+          <h2 class="rv">Dark, quiet, one colour story.</h2>
+          <p class="body rv">Near-black lets the 3D carry the colour. The palette keeps the company&rsquo;s blue and violet and brings in the orange its logo already had but never used.</p>
+          <div class="sys">
+            <div class="swatches">
+              <div class="sw rv"><i style="background:#050506"></i><b>Ink</b><span>#050506</span></div>
+              <div class="sw rv" style="--d:50ms"><i style="background:#4F7BFF"></i><b>Blue</b><span>#4F7BFF</span></div>
+              <div class="sw rv" style="--d:100ms"><i style="background:#8B5CF6"></i><b>Violet</b><span>#8B5CF6</span></div>
+              <div class="sw rv" style="--d:150ms"><i style="background:#E879F9"></i><b>Orchid</b><span>#E879F9</span></div>
+              <div class="sw rv" style="--d:200ms"><i style="background:#FFB547"></i><b>Amber</b><span>#FFB547</span></div>
+            </div>
+            <div class="faces rv">
+              <div class="face"><span class="aa" style="font-family:'Funnel Display',var(--sans);font-weight:500">Aa</span><div><b>Funnel Display</b><span>Headlines and numbers</span></div></div>
+              <div class="face"><span class="aa" style="font-family:'Funnel Sans',var(--sans)">Aa</span><div><b>Funnel Sans</b><span>Text and interface</span></div></div>
+              <div class="face"><span class="aa" style="font-family:var(--serif);font-style:italic">Aa</span><div><b>Instrument Serif Italic</b><span>One accent word per headline</span></div></div>
+            </div>
+          </div>
+          <table class="spec rv">
+            <thead><tr><th>Element</th><th>Behaviour</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td>Links</td><td>A gradient underline draws in from the left and leaves to the right.</td><td>One cue for &ldquo;this goes somewhere&rdquo;.</td></tr>
+              <tr><td>Buttons</td><td>A fill wipes across inside; the button never moves.</td><td>A button that moves is harder to hit.</td></tr>
+              <tr><td>Grid cards</td><td>A line traces the border; a crosshair follows the cursor.</td><td>It shows the grid is the system.</td></tr>
+              <tr><td>Hero</td><td>Discs fan open under the cursor.</td><td>Rewards curiosity without blocking reading.</td></tr>
+              <tr><td>Scroll</td><td>About 45% slower, eased.</td><td>Gives the 3D scenes room.</td></tr>
+              <tr><td>Reduced motion</td><td>All of the above off.</td><td>Respects the setting, always.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ================= 07 CRAFT ================= -->
+        <section id="craft">
+          <span class="label rv">Craft</span>
+          <h2 class="rv">Checked, not just designed.</h2>
+          <p class="body rv">I reviewed it the way a team would before shipping: with scripts, not just my eyes.</p>
+          <div class="stats">
+            <div class="rv"><b>3</b><span>screen widths audited on every change: 375, 1024, 1440px</span></div>
+            <div class="rv" style="--d:80ms"><b>10+</b><span>layout bugs found and fixed with scripted checks</span></div>
+            <div class="rv" style="--d:160ms"><b>5</b><span>WebGL scenes, each paused while off screen</span></div>
+          </div>
+          <ul class="bugs">
+            <li class="rv"><b>A card row sat 900px off-screen</b><span>A centring rule on an over-wide row; anchored it to the edge.</span></li>
+            <li class="rv"><b>The floating nav touched the screen edge</b><span>Its max width beat the viewport at 1024px; capped it to the margins.</span></li>
+            <li class="rv"><b>Two buttons measured equal but looked unequal</b><span>A faint border vanished on dark; gave both the same visible edge.</span></li>
+          </ul>
+          <div class="screens">
+            <figure class="shot rv"><img src="assets/nexus/moments.webp" width="1440" height="900" alt="Moments: event cards that scroll sideways while the page holds" loading="lazy"><figcaption class="cap">Moments scroll sideways while the page holds still.</figcaption></figure>
+            <figure class="shot tall rv" style="--d:80ms"><img src="assets/nexus/mobile-hero.webp" width="390" height="844" alt="The home page on a phone" loading="lazy"><figcaption class="cap">On a phone.</figcaption></figure>
+          </div>
+        </section>
+
+        <!-- ================= 08 REFLECTION ================= -->
+        <section id="reflection">
+          <span class="label rv">Reflection</span>
+          <p class="pull rv">The hardest part wasn&rsquo;t the 3D. It was deciding <em>what to remove.</em></p>
+          <div class="learn">
+            <div class="rv"><h4>What I learned</h4><ul><li>Design motion in the real medium. 3D looked different in code than in my head.</li><li>Write the check, don&rsquo;t eyeball it. Scripts found bugs I would have shipped.</li><li>Restraint is a decision. Every effect had to earn its place against a principle.</li></ul></div>
+            <div class="rv" style="--d:80ms"><h4>What I&rsquo;d do next</h4><ul><li>Start from real content and client data.</li><li>Test the product story with two or three buyers before polishing.</li><li>Set a performance budget on a mid-range phone from day one.</li></ul></div>
+          </div>
+          <p class="note rv">An unofficial redesign concept, not the company&rsquo;s live site. Screens use a placeholder brand (Vantyx) and placeholder data; no business results are claimed.</p>
+        </section>
       </div>
-    </section>
+    </div>
 
-    <!-- 06 QUALITY -->
-    <section class="sec text" aria-labelledby="s6">
-      <span class="num rv">06</span>
-      <p class="label rv">Built like a product</p>
-      <h2 id="s6" class="rv">Checked, not just designed.</h2>
-      <p class="rv">I built it in code so the motion and 3D could be judged for real, then reviewed it the way a team would before shipping.</p>
-      <ul class="checks">
-        <li class="rv"><span>01</span>Scripted checks for overlapping text, overflow and alignment at 375, 1024 and 1440px.</li>
-        <li class="rv"><span>02</span>They caught real bugs: a card row sitting 900px off-screen, a floating nav touching the screen edge, buttons that measured equal but looked unequal.</li>
-        <li class="rv"><span>03</span>3D scenes render only while on screen, at a capped resolution, and respect reduced motion.</li>
-      </ul>
-      <p class="rv" style="margin-top:var(--gap)"><strong style="font-weight:500;color:var(--ink)">Next.</strong> With real content I&rsquo;d test the product story with a few buyers, replace the placeholder proof with real outcomes, and profile it on mid-range phones.</p>
-      <p class="note rv">An unofficial redesign concept, not the company&rsquo;s live site. The screens use a placeholder brand (Vantyx) and placeholder data; no results are claimed.</p>
-    </section>
-
-    <div class="end wide">
+    <div class="end page">
       <a href="index.html#work">&larr; Back to all work</a>
       <small>Rohit Gentyal &middot; 2026</small>
     </div>
@@ -203,6 +275,22 @@
       if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) { els.forEach((e) => e.classList.add("in")); return; }
       const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
       els.forEach((e) => io.observe(e));
+    })();
+    // section index: highlight the section being read; links scroll smoothly
+    (() => {
+      const links = [...document.querySelectorAll(".index a")];
+      const secs = links.map((a) => document.querySelector(a.getAttribute("href")));
+      const spy = () => {
+        const line = innerHeight * 0.35;
+        let cur = 0;
+        secs.forEach((s, i) => { if (s && s.getBoundingClientRect().top <= line) cur = i; });
+        links.forEach((a, i) => a.classList.toggle("on", i === cur));
+      };
+      addEventListener("scroll", spy, { passive: true }); spy();
+      links.forEach((a, i) => a.addEventListener("click", (e) => {
+        e.preventDefault();
+        scrollTo({ top: secs[i].getBoundingClientRect().top + scrollY - 40, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      }));
     })();
   </script>
   <script src="glide.js?v=2"></script>
