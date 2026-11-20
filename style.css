@@ -64,6 +64,18 @@ a { color: inherit; text-decoration: none; }
 .top nav { display: flex; align-items: center; gap: 22px; }
 .top nav a { color: var(--on-sky-soft); transition: color .2s, background-size .35s ease; }
 .top nav a:hover { color: var(--on-sky); }
+/* Resume link (2026-11-20, my ask: beside the day / night switch): quiet text like the intro links, a small arrow that slips up-right on hover */
+.top nav a.cv {
+  display: inline-flex; align-items: center; gap: 3px;
+  text-decoration: underline 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(255, 251, 234, .4);
+  transition: color .2s, text-decoration-color .25s ease;
+}
+.top nav a.cv:hover, .top nav a.cv:focus-visible { color: var(--on-sky); text-decoration-color: var(--on-sky); outline: none; }
+.cv svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s ease; }
+.cv:hover svg, .cv:focus-visible svg { transform: translate(2px, -2px); }
+@media (max-width: 560px) { .top nav { gap: 16px; } }
 
 /* Day / night switch: shows the moon by day, the sun by night */
 .mode {
