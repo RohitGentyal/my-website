@@ -65,14 +65,8 @@ a { color: inherit; text-decoration: none; }
 .top nav a { color: var(--on-sky-soft); transition: color .2s, background-size .35s ease; }
 .top nav a:hover { color: var(--on-sky); }
 /* Resume link (2026-11-20, my ask: beside the day / night switch): quiet text like the intro links, a small arrow that slips up-right on hover */
-.top nav a.cv {
-  display: inline-flex; align-items: center; gap: 3px;
-  text-decoration: underline 1px;
-  text-underline-offset: 4px;
-  text-decoration-color: rgba(255, 251, 234, .4);
-  transition: color .2s, text-decoration-color .25s ease;
-}
-.top nav a.cv:hover, .top nav a.cv:focus-visible { color: var(--on-sky); text-decoration-color: var(--on-sky); outline: none; }
+.top nav a.cv { display: inline-flex; align-items: center; gap: 3px; transition: color .2s; }
+.top nav a.cv:hover, .top nav a.cv:focus-visible { color: var(--on-sky); outline: none; }
 .cv svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s ease; }
 .cv:hover svg, .cv:focus-visible svg { transform: translate(2px, -2px); }
 @media (max-width: 560px) { .top nav { gap: 16px; } }
@@ -139,12 +133,8 @@ a { color: inherit; text-decoration: none; }
   font: inherit;
   color: var(--on-sky);
   cursor: pointer;
-  text-decoration: underline 1px;
-  text-underline-offset: 4px;
-  text-decoration-color: rgba(255, 251, 234, .4);
-  transition: text-decoration-color .25s ease;
 }
-.ul:hover, .ul:focus-visible { text-decoration-color: var(--on-sky); outline: none; }
+.ul:focus-visible { outline: none; }
 /* the hill always melts into the page at the very bottom, at any scroll, so it never ends in a line */
 .scene .blend { position: absolute; inset: auto 0 0 0; height: 34px; background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 0%, transparent), color-mix(in srgb, var(--paper) 45%, transparent) 60%, var(--paper)); pointer-events: none; } /* lowered 2026-11-19 (my ask: keep the hero uncluttered): only the last strip melts */
 /* Scene */
@@ -334,14 +324,20 @@ h2.sub { margin: var(--sub) 0 0; }
   70%, 100% { transform: scale(3.2); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .exp .now::after { animation: none; opacity: 0; } }
-.links { display: flex; gap: 20px; }
-.links a { color: var(--ink) !important; transition: background-size .35s ease; }
-/* a line draws in under the word on hover and slides back out on leave */
-.top nav a, .links a {
-  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
-  padding-bottom: 2px;
+/* One link line everywhere (2026-11-23, my ask: Resume showed two lines on hover, and links each had their
+   own hover): every text link rests on a faint line in its own colour, and on hover a solid line draws in
+   over it left to right, then slides back out on leave. Same weight, gap and timing for all of them. */
+.cv span, .ul, .hob, .verse, .foot-cols a, .foot-copy {
+  text-decoration: none;
+  background:
+    linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat,
+    linear-gradient(color-mix(in srgb, currentColor 35%, transparent), color-mix(in srgb, currentColor 35%, transparent)) left bottom / 100% 1px no-repeat;
+  padding-bottom: 3px;
+  transition: background-size .4s cubic-bezier(.22, 1, .36, 1), color .25s ease, opacity .25s ease;
 }
-.top nav a:hover, .links a:hover, .top nav a:focus-visible, .links a:focus-visible { background-size: 100% 1px; }
+.cv:hover span, .cv:focus-visible span, .ul:hover, .ul:focus-visible,
+.hob:hover, .hob:focus-visible, .hob.is-playing, .verse:hover, .verse:focus-visible,
+.foot-cols a:hover, .foot-cols a:focus-visible, .foot-copy:hover, .foot-copy:focus-visible { background-size: 100% 1px, 100% 1px; }
 
 /* "erased" and "deleted" are rubbed out, not struck through: the letters faded and a little soft, with a
    graphite smear rubbed sideways across them and faint eraser streaks; each at its own slight angle */
@@ -415,12 +411,9 @@ h2.sub { margin: var(--sub) 0 0; }
 .foot-cols a, .foot-copy {
   width: fit-content;
   font-size: 15px; color: var(--ink);
-  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
-  padding-bottom: 1px;
-  transition: background-size .35s ease;
 }
-.foot-copy { padding: 0 0 1px; border: 0; background-color: transparent; font: inherit; font-size: 15px; text-align: left; cursor: pointer; text-shadow: inherit; }
-.foot-cols a:hover, .foot-cols a:focus-visible, .foot-copy:hover, .foot-copy:focus-visible { background-size: 100% 1px; outline: none; }
+.foot-copy { margin: 0; border: 0; font: inherit; font-size: 15px; text-align: left; cursor: pointer; text-shadow: inherit; }
+.foot-cols a:focus-visible, .foot-copy:focus-visible { outline: none; }
 .foot-row {
   font-size: 13px;
   text-shadow: 0 1px 2px rgba(20, 36, 8, .55), 0 0 14px rgba(20, 36, 8, .35);
@@ -505,11 +498,8 @@ h2.sub { margin: var(--sub) 0 0; }
 .verse {
   font-size: 13px;
   color: var(--ink-faint);
-  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
-  padding-bottom: 2px;
-  transition: background-size .35s ease, color .25s ease, opacity .25s ease;
 }
-.verse:hover, .verse:focus-visible { background-size: 100% 1px; color: var(--ink); outline: none; }
+.verse:hover, .verse:focus-visible { color: var(--ink); outline: none; }
 .verse-arrow { display: inline-block; margin-left: 5px; opacity: 0; translate: -4px 0; transition: opacity .25s ease, translate .35s cubic-bezier(.34, 1.56, .64, 1); }
 .verse:hover .verse-arrow, .verse:focus-visible .verse-arrow { opacity: 1; translate: 0 0; }
 
@@ -534,19 +524,13 @@ a.hob { color: var(--ink); }
    cursor's capsule (below) says something; click plays the sound. Touch screens get a dotted line */
 .hob {
   display: inline;
-  padding: 0 0 2px;
   margin: 0;
   border: 0;
   font: inherit;
   color: var(--ink);
   cursor: pointer;
-  background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
-  transition: background-size .35s ease;
 }
-.hob:hover, .hob:focus-visible, .hob.is-playing { background-size: 100% 1px; outline: none; }
-@media (hover: none) {
-  .hob { background: none; text-decoration: underline dotted 1px; text-underline-offset: 4px; text-decoration-color: var(--ink-faint); }
-}
+.hob:focus-visible { outline: none; }
 
 /* The cursor's speech bubble (quips.js): one little comic bubble that trails the cursor over anything
    clickable, its tail pointing up at the arrow's tip, with a soft lag and no tilt. Crisp ink outline and a
