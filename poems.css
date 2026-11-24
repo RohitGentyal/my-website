@@ -85,7 +85,9 @@ a { color: inherit; text-decoration: none; }
 }
 /* the steps and flowers soften into the marble paper below, no hard edge */
 .gate::after { content: ""; position: absolute; inset: auto 0 0 0; height: 16%; z-index: 4; background: linear-gradient(to bottom, rgba(246, 243, 236, 0), var(--paper)); pointer-events: none; }
-.gate .gl { position: absolute; left: 0; width: 100%; object-fit: cover; object-position: 50% 100%; display: block; will-change: transform; pointer-events: none; user-select: none; }
+/* each layer bleeds 32px past both sides: they lean up to 20px toward the cursor (poems.js), and an exact
+   100% width opened a strip at the edge where the layers behind showed through */
+.gate .gl { position: absolute; left: -32px; width: calc(100% + 64px); object-fit: cover; object-position: 50% 100%; display: block; will-change: transform; pointer-events: none; user-select: none; }
 .gate .g-sky { top: -14%; height: 114%; object-position: 50% 70%; }
 .gate .g-front { bottom: 0; height: 100%; }
 /* the flowers sit low and out of focus, like a lens close to them */
