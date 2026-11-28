@@ -129,7 +129,8 @@ Earlier (2026-10-27): scroll parallax, larger type, darker greys, link hover und
 
 ## Pending (waiting on me)
 
-0. More poems for the poems page (`POEMS` in poems.js, newest first); "Mansion" is in.
+0. More poems for the poems page (`POEMS` in poems.js, newest first); "Mansion" and "Garden" are in.
+   - **Garden (2026-11-28, my ask: same as Mansion, my two images faint in the background):** text as I wrote it (apostrophes set as ’), no date, no lamp. Art in `assets/poems/garden/` from my two references, converted to WebP (only 735 wide, so a little soft; fine at 30% multiply): I `colosseum` (an overgrown Colosseum garden, every flower, every person; also the cover), II `arches` (ivy arches, the cut-back garden), III bare paper (the garden dying, the prayer), IV `arches` again (the gate left unlocked). Send larger versions to sharpen it.
 
 1. Genzo's live link: done (genzoui.vercel.app); move it to genzo.rohitgentyal.com when the domain is set up.
 2. My playlist link. Set `PLAYLIST_URL` in `scene.js` and add a small music link in the text marked `data-playlist`.
