@@ -372,11 +372,11 @@ html { scroll-behavior: smooth; }
   .empty p + p::after { animation: none; }
 }
 
-/* the cursor: a Roman stilus, the bronze pen for wax tablets (point to write, flat end to smooth the wax
-   clean), in the page's ink with a bronze collar and a paper edge so it reads on the photos too. Over
-   anything clickable it stands up as if about to press in, with the page's sky ✦ at its point.
-   Fine pointers only; plain CSS, so it costs nothing per frame. */
+/* the cursor: a laurel leaf, the poems side's own mark (the seal's wreath, the sprigs), pointing with its
+   tip, in the page's ink with a paper edge so it reads on the photos too. Over anything clickable it grows
+   into a small sprig of three leaves in sky, a crown being woven. Fine pointers only; plain CSS, so it
+   costs nothing per frame. (A stilus came first and read as a syringe.) */
 @media (pointer: fine) {
-  html, body { cursor: url("assets/poems/stilus.svg") 2 2, auto; }
-  a, button, summary, label, [role="button"], .index a { cursor: url("assets/poems/stilus-press.svg") 2 2, pointer; }
+  html, body { cursor: url("assets/poems/laurel.svg") 2 2, auto; }
+  a, button, summary, label, [role="button"], .index a { cursor: url("assets/poems/laurel-sprig.svg") 2 2, pointer; }
 }
